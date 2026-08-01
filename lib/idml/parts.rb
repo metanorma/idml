@@ -2,8 +2,19 @@
 
 module Idml
   module Parts
-    autoload :Raw,       "idml/parts/raw"
-    autoload :Designmap, "idml/parts/designmap"
+    autoload :Raw,          "idml/parts/raw"
+    autoload :Designmap,    "idml/parts/designmap"
+    autoload :Spread,       "idml/parts/spread"
+    autoload :MasterSpread, "idml/parts/master_spread"
+    autoload :Story,        "idml/parts/story"
+    autoload :BackingStory, "idml/parts/backing_story"
+    autoload :Fonts,        "idml/parts/fonts"
+    autoload :Graphic,      "idml/parts/graphic"
+    autoload :Style,        "idml/parts/style"
+    autoload :StyleMapping, "idml/parts/style_mapping"
+    autoload :Preferences,  "idml/parts/preferences"
+    autoload :Tags,         "idml/parts/tags"
+    autoload :Mapping,      "idml/parts/mapping"
 
     @registry = {}
 
