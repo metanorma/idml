@@ -10,11 +10,15 @@ module Idml
       part_file "XML/Mapping.xml"
 
       attribute :dom_version, :string
+      attribute :xml_export_map, Idml::Elements::XmlExportMap, collection: true
+      attribute :xml_import_map, Idml::Elements::XmlImportMap, collection: true
 
       xml do
         root "Mapping"
         namespace Idml::PackagingNamespace
         map_attribute "DOMVersion", to: :dom_version
+        map_element "XMLExportMap", to: :xml_export_map
+        map_element "XMLImportMap", to: :xml_import_map
       end
     end
   end
