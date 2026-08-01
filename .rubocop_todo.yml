@@ -24,3 +24,10 @@ RSpec/ExampleLength:
 
 RSpec/MultipleExpectations:
   Max: 5
+
+# Part models have large `xml do ... end` blocks with one declaration per
+# line. The size scales with the number of IDML attributes the part
+# exposes; this is intentional, not a code smell.
+Metrics/BlockLength:
+  Exclude:
+    - lib/idml/parts/**/*.rb

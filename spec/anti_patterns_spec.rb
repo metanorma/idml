@@ -60,7 +60,12 @@ RSpec.describe "Anti-patterns" do
         expect(violations).to be_empty, msg
       end
 
-      it "has no hand-rolled serialization methods" do
+      it "has no hand-rolled serialization methods on Serializable subclasses" do
+        # The check applies only to classes that inherit from
+        # Lutaml::Model::Serializable. Plain wrapper classes (e.g. a raw
+        # XML passthrough) may define from_xml/to_xml legitimately.
+        next unless source.match?(/<\s*::?Lutaml::Model::Serializable/)
+
         violations = HAND_ROLLED_SERIALIZATION.select do |method|
           source.match?(/^\s*def\s+#{method}\b/)
         end
