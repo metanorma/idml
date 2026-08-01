@@ -16,6 +16,7 @@ module Idml
   autoload :Validation,         "#{__dir__}/idml/validation"
   autoload :Composition,        "#{__dir__}/idml/composition"
   autoload :Geometry,           "#{__dir__}/idml/geometry"
+  autoload :CLI,                "#{__dir__}/idml/cli"
 
   # Convenience: open an IDML file. Equivalent to Package.new(path).
   def self.open(path)

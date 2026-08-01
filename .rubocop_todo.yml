@@ -39,6 +39,11 @@ Metrics/BlockLength:
   Exclude:
     - lib/idml/parts/**/*.rb
 
+# CLI methods are linear output routines; their length is proportional
+# to the number of subcommands they describe.
+Metrics/MethodLength:
+  Max: 15
+
 # `x` and `y` are conventional coordinate names; renaming to `x_coord`
 # would harm readability without improving clarity.
 Naming/MethodParameterName:

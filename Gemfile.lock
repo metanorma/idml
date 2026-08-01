@@ -6,6 +6,7 @@ PATH
       lutaml-model (~> 0.8.18)
       nokogiri
       rubyzip
+      thor
 
 GEM
   remote: https://rubygems.org/
@@ -160,6 +161,7 @@ DEPENDENCIES
   rubocop-rake
   rubocop-rspec
   simplecov
+  thor
 
 CHECKSUMS
   ast (2.4.3) sha256=954615157c1d6a382bc27d690d973195e79db7f55e9765ac7c481c60bdb4d383
