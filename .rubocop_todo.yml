@@ -16,3 +16,11 @@ RSpec/DescribeClass:
 Layout/LineLength:
   Exclude:
     - spec/anti_patterns_spec.rb
+
+# Integration-style specs naturally need more expectations and lines.
+# Round-trip and write tests bundle related assertions per scenario.
+RSpec/ExampleLength:
+  Max: 30
+
+RSpec/MultipleExpectations:
+  Max: 5
