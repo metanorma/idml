@@ -9,17 +9,31 @@ RSpec:
   Exclude:
     - spec/anti_patterns_spec.rb
     - spec/idml/round_trip_all_fixtures_spec.rb
+    - spec/idml/elements_spec.rb
 
 RSpec/DescribeClass:
   Exclude:
     - spec/anti_patterns_spec.rb
     - spec/idml/round_trip_spec.rb
     - spec/idml/round_trip_all_fixtures_spec.rb
+    - spec/idml/elements_spec.rb
+
+RSpec/BeforeAfterAll:
+  Exclude:
+    - spec/idml/elements_spec.rb
+
+RSpec/SpecFilePathFormat:
+  Exclude:
+    - spec/idml/composition/composition_spec.rb
+
+RSpec/SpecFilePathSuffix:
+  Exclude:
+    - spec/idml/composition/composition_spec.rb
 
 Layout/LineLength:
   Exclude:
     - spec/anti_patterns_spec.rb
-    - spec/idml/composition/composition_spec.rb
+    - spec/idml/composition/**/*.rb
     - spec/idml/validation/validator_spec.rb
     - scripts/**/*.rb
     - lib/idml/elements/**/*.rb
@@ -56,6 +70,8 @@ Metrics/MethodLength:
 Metrics/AbcSize:
   Exclude:
     - scripts/**/*.rb
+    - lib/idml/geometry.rb
+    - lib/idml/composition/**/*.rb
 
 Metrics/CyclomaticComplexity:
   Exclude:

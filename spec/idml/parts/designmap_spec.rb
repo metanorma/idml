@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require "bigdecimal"
 
 RSpec.describe Idml::Parts::Designmap do
   let(:fixture_path) do
@@ -27,10 +28,10 @@ RSpec.describe Idml::Parts::Designmap do
         rgb_profile_list cmyk_profile rgb_profile solid_color_intent
         after_blending_intent default_image_intent rgb_policy cmyk_policy
         accurate_lab_spots selected_page_items
-        transparency_attribute_default_property applied_mathml_font_size
-        applied_mathml_rgb_color tint_value prefer_mathml_in_epub_export
+        transparency_attribute_default_property applied_math_ml_font_size
+        applied_math_ml_rgb_color tint_value prefer_math_ml_in_epub_export
         active_process
-      ]
+      ].each(&:to_s)
       expect(described_class.attributes.keys).to match_array(expected)
     end
   end
