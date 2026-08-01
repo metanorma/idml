@@ -33,7 +33,8 @@ module Idml
         map_attribute "ColorOverride", to: :color_override
         map_attribute "BaseColor", to: :base_color
         map_attribute "ConvertToHsb", to: :convert_to_hsb
-        map_attribute "SpotInkAliasSpotColorReference", to: :spot_ink_alias_spot_color_reference
+        map_attribute "SpotInkAliasSpotColorReference",
+                      to: :spot_ink_alias_spot_color_reference
         map_attribute "AlternateSpace", to: :alternate_space
         map_attribute "AlternateColorValue", to: :alternate_color_value
         map_attribute "Name", to: :name
@@ -41,7 +42,8 @@ module Idml
         map_attribute "ColorRemovable", to: :color_removable
         map_attribute "Visible", to: :visible
         map_attribute "SwatchCreatorID", to: :swatch_creator_id
-        map_attribute "SwatchColorGroupReference", to: :swatch_color_group_reference
+        map_attribute "SwatchColorGroupReference",
+                      to: :swatch_color_group_reference
       end
     end
   end

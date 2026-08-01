@@ -19,8 +19,10 @@ module Idml
         map_attribute "Self", to: :self_attr
         map_attribute "MarkupTag", to: :markup_tag
         map_attribute "MappedStyle", to: :mapped_style
-        map_attribute "IncludeMasterPageStories", to: :include_master_page_stories
-        map_attribute "IncludePasteboardStories", to: :include_pasteboard_stories
+        map_attribute "IncludeMasterPageStories",
+                      to: :include_master_page_stories
+        map_attribute "IncludePasteboardStories",
+                      to: :include_pasteboard_stories
         map_attribute "IncludeEmptyStories", to: :include_empty_stories
       end
     end

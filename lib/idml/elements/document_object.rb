@@ -70,11 +70,13 @@ module Idml
         map_attribute "CMYKPolicy", to: :cmyk_policy
         map_attribute "AccurateLABSpots", to: :accurate_lab_spots
         map_attribute "SelectedPageItems", to: :selected_page_items
-        map_attribute "TransparencyAttributeDefaultProperty", to: :transparency_attribute_default_property
+        map_attribute "TransparencyAttributeDefaultProperty",
+                      to: :transparency_attribute_default_property
         map_attribute "AppliedMathMLFontSize", to: :applied_math_ml_font_size
         map_attribute "AppliedMathMLRgbColor", to: :applied_math_ml_rgb_color
         map_attribute "TintValue", to: :tint_value
-        map_attribute "PreferMathMLInEpubExport", to: :prefer_math_ml_in_epub_export
+        map_attribute "PreferMathMLInEpubExport",
+                      to: :prefer_math_ml_in_epub_export
         map_attribute "ActiveProcess", to: :active_process
       end
     end

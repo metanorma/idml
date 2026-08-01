@@ -352,11 +352,13 @@ module Idml
         map_attribute "RuleBelowRightIndent", to: :rule_below_right_indent
         map_attribute "RuleBelowWidth", to: :rule_below_width
         map_attribute "RuleBelowGapTint", to: :rule_below_gap_tint
-        map_attribute "HyphenateCapitalizedWords", to: :hyphenate_capitalized_words
+        map_attribute "HyphenateCapitalizedWords",
+                      to: :hyphenate_capitalized_words
         map_attribute "Hyphenation", to: :hyphenation
         map_attribute "HyphenateBeforeLast", to: :hyphenate_before_last
         map_attribute "HyphenateAfterFirst", to: :hyphenate_after_first
-        map_attribute "HyphenateWordsLongerThan", to: :hyphenate_words_longer_than
+        map_attribute "HyphenateWordsLongerThan",
+                      to: :hyphenate_words_longer_than
         map_attribute "HyphenateLadderLimit", to: :hyphenate_ladder_limit
         map_attribute "HyphenationZone", to: :hyphenation_zone
         map_attribute "HyphenWeight", to: :hyphen_weight
@@ -384,7 +386,8 @@ module Idml
         map_attribute "OTFFigureStyle", to: :otf_figure_style
         map_attribute "OTFOrdinal", to: :otf_ordinal
         map_attribute "OTFFraction", to: :otf_fraction
-        map_attribute "OTFDiscretionaryLigature", to: :otf_discretionary_ligature
+        map_attribute "OTFDiscretionaryLigature",
+                      to: :otf_discretionary_ligature
         map_attribute "OTFTitling", to: :otf_titling
         map_attribute "OTFContextualAlternate", to: :otf_contextual_alternate
         map_attribute "OTFSwash", to: :otf_swash
@@ -397,7 +400,8 @@ module Idml
         map_attribute "StrikeThroughTint", to: :strike_through_tint
         map_attribute "StrikeThroughGapTint", to: :strike_through_gap_tint
         map_attribute "StrikeThroughOverprint", to: :strike_through_overprint
-        map_attribute "StrikeThroughGapOverprint", to: :strike_through_gap_overprint
+        map_attribute "StrikeThroughGapOverprint",
+                      to: :strike_through_gap_overprint
         map_attribute "StrikeThroughOffset", to: :strike_through_offset
         map_attribute "StrikeThroughWeight", to: :strike_through_weight
         map_attribute "FillColor", to: :fill_color
@@ -406,60 +410,105 @@ module Idml
         map_attribute "KeepWithPrevious", to: :keep_with_previous
         map_attribute "SpanColumnType", to: :span_column_type
         map_attribute "SplitColumnInsideGutter", to: :split_column_inside_gutter
-        map_attribute "SplitColumnOutsideGutter", to: :split_column_outside_gutter
-        map_attribute "SpanColumnMinSpaceBefore", to: :span_column_min_space_before
-        map_attribute "SpanColumnMinSpaceAfter", to: :span_column_min_space_after
-        map_attribute "ParagraphShadingLeftOffset", to: :paragraph_shading_left_offset
-        map_attribute "ParagraphShadingRightOffset", to: :paragraph_shading_right_offset
-        map_attribute "ParagraphShadingTopOffset", to: :paragraph_shading_top_offset
-        map_attribute "ParagraphShadingBottomOffset", to: :paragraph_shading_bottom_offset
+        map_attribute "SplitColumnOutsideGutter",
+                      to: :split_column_outside_gutter
+        map_attribute "SpanColumnMinSpaceBefore",
+                      to: :span_column_min_space_before
+        map_attribute "SpanColumnMinSpaceAfter",
+                      to: :span_column_min_space_after
+        map_attribute "ParagraphShadingLeftOffset",
+                      to: :paragraph_shading_left_offset
+        map_attribute "ParagraphShadingRightOffset",
+                      to: :paragraph_shading_right_offset
+        map_attribute "ParagraphShadingTopOffset",
+                      to: :paragraph_shading_top_offset
+        map_attribute "ParagraphShadingBottomOffset",
+                      to: :paragraph_shading_bottom_offset
         map_attribute "ParagraphShadingWidth", to: :paragraph_shading_width
-        map_attribute "ParagraphShadingTopOrigin", to: :paragraph_shading_top_origin
-        map_attribute "ParagraphShadingBottomOrigin", to: :paragraph_shading_bottom_origin
-        map_attribute "ParagraphShadingClipToFrame", to: :paragraph_shading_clip_to_frame
-        map_attribute "ParagraphShadingSuppressPrinting", to: :paragraph_shading_suppress_printing
+        map_attribute "ParagraphShadingTopOrigin",
+                      to: :paragraph_shading_top_origin
+        map_attribute "ParagraphShadingBottomOrigin",
+                      to: :paragraph_shading_bottom_origin
+        map_attribute "ParagraphShadingClipToFrame",
+                      to: :paragraph_shading_clip_to_frame
+        map_attribute "ParagraphShadingSuppressPrinting",
+                      to: :paragraph_shading_suppress_printing
         map_attribute "ParagraphShadingOn", to: :paragraph_shading_on
-        map_attribute "ParagraphShadingOverprint", to: :paragraph_shading_overprint
+        map_attribute "ParagraphShadingOverprint",
+                      to: :paragraph_shading_overprint
         map_attribute "ParagraphShadingTint", to: :paragraph_shading_tint
         map_attribute "UserText", to: :user_text
         map_attribute "IsEndnoteStory", to: :is_endnote_story
         map_attribute "ParagraphBorderOn", to: :paragraph_border_on
-        map_attribute "ParagraphBorderOverprint", to: :paragraph_border_overprint
+        map_attribute "ParagraphBorderOverprint",
+                      to: :paragraph_border_overprint
         map_attribute "ParagraphBorderTint", to: :paragraph_border_tint
-        map_attribute "ParagraphBorderGapOverprint", to: :paragraph_border_gap_overprint
+        map_attribute "ParagraphBorderGapOverprint",
+                      to: :paragraph_border_gap_overprint
         map_attribute "ParagraphBorderGapTint", to: :paragraph_border_gap_tint
-        map_attribute "ParagraphBorderLeftLineWeight", to: :paragraph_border_left_line_weight
-        map_attribute "ParagraphBorderTopLineWeight", to: :paragraph_border_top_line_weight
-        map_attribute "ParagraphBorderRightLineWeight", to: :paragraph_border_right_line_weight
-        map_attribute "ParagraphBorderBottomLineWeight", to: :paragraph_border_bottom_line_weight
-        map_attribute "ParagraphBorderStrokeEndCap", to: :paragraph_border_stroke_end_cap
-        map_attribute "ParagraphBorderStrokeEndJoin", to: :paragraph_border_stroke_end_join
-        map_attribute "ParagraphShadingTopLeftCornerRadius", to: :paragraph_shading_top_left_corner_radius
-        map_attribute "ParagraphShadingTopLeftCornerOption", to: :paragraph_shading_top_left_corner_option
-        map_attribute "ParagraphShadingTopRightCornerRadius", to: :paragraph_shading_top_right_corner_radius
-        map_attribute "ParagraphShadingTopRightCornerOption", to: :paragraph_shading_top_right_corner_option
-        map_attribute "ParagraphShadingBottomLeftCornerRadius", to: :paragraph_shading_bottom_left_corner_radius
-        map_attribute "ParagraphShadingBottomLeftCornerOption", to: :paragraph_shading_bottom_left_corner_option
-        map_attribute "ParagraphShadingBottomRightCornerRadius", to: :paragraph_shading_bottom_right_corner_radius
-        map_attribute "ParagraphShadingBottomRightCornerOption", to: :paragraph_shading_bottom_right_corner_option
-        map_attribute "ParagraphBorderTopLeftCornerRadius", to: :paragraph_border_top_left_corner_radius
-        map_attribute "ParagraphBorderTopLeftCornerOption", to: :paragraph_border_top_left_corner_option
-        map_attribute "ParagraphBorderTopRightCornerRadius", to: :paragraph_border_top_right_corner_radius
-        map_attribute "ParagraphBorderTopRightCornerOption", to: :paragraph_border_top_right_corner_option
-        map_attribute "ParagraphBorderBottomLeftCornerRadius", to: :paragraph_border_bottom_left_corner_radius
-        map_attribute "ParagraphBorderBottomLeftCornerOption", to: :paragraph_border_bottom_left_corner_option
-        map_attribute "ParagraphBorderBottomRightCornerRadius", to: :paragraph_border_bottom_right_corner_radius
-        map_attribute "ParagraphBorderBottomRightCornerOption", to: :paragraph_border_bottom_right_corner_option
+        map_attribute "ParagraphBorderLeftLineWeight",
+                      to: :paragraph_border_left_line_weight
+        map_attribute "ParagraphBorderTopLineWeight",
+                      to: :paragraph_border_top_line_weight
+        map_attribute "ParagraphBorderRightLineWeight",
+                      to: :paragraph_border_right_line_weight
+        map_attribute "ParagraphBorderBottomLineWeight",
+                      to: :paragraph_border_bottom_line_weight
+        map_attribute "ParagraphBorderStrokeEndCap",
+                      to: :paragraph_border_stroke_end_cap
+        map_attribute "ParagraphBorderStrokeEndJoin",
+                      to: :paragraph_border_stroke_end_join
+        map_attribute "ParagraphShadingTopLeftCornerRadius",
+                      to: :paragraph_shading_top_left_corner_radius
+        map_attribute "ParagraphShadingTopLeftCornerOption",
+                      to: :paragraph_shading_top_left_corner_option
+        map_attribute "ParagraphShadingTopRightCornerRadius",
+                      to: :paragraph_shading_top_right_corner_radius
+        map_attribute "ParagraphShadingTopRightCornerOption",
+                      to: :paragraph_shading_top_right_corner_option
+        map_attribute "ParagraphShadingBottomLeftCornerRadius",
+                      to: :paragraph_shading_bottom_left_corner_radius
+        map_attribute "ParagraphShadingBottomLeftCornerOption",
+                      to: :paragraph_shading_bottom_left_corner_option
+        map_attribute "ParagraphShadingBottomRightCornerRadius",
+                      to: :paragraph_shading_bottom_right_corner_radius
+        map_attribute "ParagraphShadingBottomRightCornerOption",
+                      to: :paragraph_shading_bottom_right_corner_option
+        map_attribute "ParagraphBorderTopLeftCornerRadius",
+                      to: :paragraph_border_top_left_corner_radius
+        map_attribute "ParagraphBorderTopLeftCornerOption",
+                      to: :paragraph_border_top_left_corner_option
+        map_attribute "ParagraphBorderTopRightCornerRadius",
+                      to: :paragraph_border_top_right_corner_radius
+        map_attribute "ParagraphBorderTopRightCornerOption",
+                      to: :paragraph_border_top_right_corner_option
+        map_attribute "ParagraphBorderBottomLeftCornerRadius",
+                      to: :paragraph_border_bottom_left_corner_radius
+        map_attribute "ParagraphBorderBottomLeftCornerOption",
+                      to: :paragraph_border_bottom_left_corner_option
+        map_attribute "ParagraphBorderBottomRightCornerRadius",
+                      to: :paragraph_border_bottom_right_corner_radius
+        map_attribute "ParagraphBorderBottomRightCornerOption",
+                      to: :paragraph_border_bottom_right_corner_option
         map_attribute "ParagraphBorderWidth", to: :paragraph_border_width
-        map_attribute "ParagraphBorderTopOrigin", to: :paragraph_border_top_origin
-        map_attribute "ParagraphBorderBottomOrigin", to: :paragraph_border_bottom_origin
-        map_attribute "ParagraphBorderLeftOffset", to: :paragraph_border_left_offset
-        map_attribute "ParagraphBorderRightOffset", to: :paragraph_border_right_offset
-        map_attribute "ParagraphBorderTopOffset", to: :paragraph_border_top_offset
-        map_attribute "ParagraphBorderBottomOffset", to: :paragraph_border_bottom_offset
-        map_attribute "ParagraphBorderDisplayIfSplits", to: :paragraph_border_display_if_splits
-        map_attribute "ProviderHyphenationStyle", to: :provider_hyphenation_style
-        map_attribute "MergeConsecutiveParaBorders", to: :merge_consecutive_para_borders
+        map_attribute "ParagraphBorderTopOrigin",
+                      to: :paragraph_border_top_origin
+        map_attribute "ParagraphBorderBottomOrigin",
+                      to: :paragraph_border_bottom_origin
+        map_attribute "ParagraphBorderLeftOffset",
+                      to: :paragraph_border_left_offset
+        map_attribute "ParagraphBorderRightOffset",
+                      to: :paragraph_border_right_offset
+        map_attribute "ParagraphBorderTopOffset",
+                      to: :paragraph_border_top_offset
+        map_attribute "ParagraphBorderBottomOffset",
+                      to: :paragraph_border_bottom_offset
+        map_attribute "ParagraphBorderDisplayIfSplits",
+                      to: :paragraph_border_display_if_splits
+        map_attribute "ProviderHyphenationStyle",
+                      to: :provider_hyphenation_style
+        map_attribute "MergeConsecutiveParaBorders",
+                      to: :merge_consecutive_para_borders
         map_attribute "ParagraphKashidaWidth", to: :paragraph_kashida_width
         map_attribute "LastLineIndent", to: :last_line_indent
         map_attribute "HyphenateLastWord", to: :hyphenate_last_word
@@ -488,7 +537,8 @@ module Idml
         map_attribute "EndJoin", to: :end_join
         map_attribute "OTFOverlapSwash", to: :otf_overlap_swash
         map_attribute "OTFStylisticAlternate", to: :otf_stylistic_alternate
-        map_attribute "OTFJustificationAlternate", to: :otf_justification_alternate
+        map_attribute "OTFJustificationAlternate",
+                      to: :otf_justification_alternate
         map_attribute "OTFStretchedAlternate", to: :otf_stretched_alternate
         map_attribute "CharacterDirection", to: :character_direction
         map_attribute "KeyboardDirection", to: :keyboard_direction
@@ -544,8 +594,10 @@ module Idml
         map_attribute "RubyAutoAlign", to: :ruby_auto_align
         map_attribute "RubyOverhang", to: :ruby_overhang
         map_attribute "RubyAutoScaling", to: :ruby_auto_scaling
-        map_attribute "RubyParentScalingPercent", to: :ruby_parent_scaling_percent
-        map_attribute "RubyParentOverhangAmount", to: :ruby_parent_overhang_amount
+        map_attribute "RubyParentScalingPercent",
+                      to: :ruby_parent_scaling_percent
+        map_attribute "RubyParentOverhangAmount",
+                      to: :ruby_parent_overhang_amount
         map_attribute "Warichu", to: :warichu
         map_attribute "WarichuSize", to: :warichu_size
         map_attribute "WarichuLines", to: :warichu_lines
@@ -570,23 +622,29 @@ module Idml
         map_attribute "KinsokuHangType", to: :kinsoku_hang_type
         map_attribute "BunriKinshi", to: :bunri_kinshi
         map_attribute "Rensuuji", to: :rensuuji
-        map_attribute "RotateSingleByteCharacters", to: :rotate_single_byte_characters
+        map_attribute "RotateSingleByteCharacters",
+                      to: :rotate_single_byte_characters
         map_attribute "LeadingModel", to: :leading_model
         map_attribute "RubyAutoTcyDigits", to: :ruby_auto_tcy_digits
-        map_attribute "RubyAutoTcyIncludeRoman", to: :ruby_auto_tcy_include_roman
+        map_attribute "RubyAutoTcyIncludeRoman",
+                      to: :ruby_auto_tcy_include_roman
         map_attribute "RubyAutoTcyAutoScale", to: :ruby_auto_tcy_auto_scale
-        map_attribute "TreatIdeographicSpaceAsSpace", to: :treat_ideographic_space_as_space
-        map_attribute "AllowArbitraryHyphenation", to: :allow_arbitrary_hyphenation
+        map_attribute "TreatIdeographicSpaceAsSpace",
+                      to: :treat_ideographic_space_as_space
+        map_attribute "AllowArbitraryHyphenation",
+                      to: :allow_arbitrary_hyphenation
         map_attribute "ParagraphGyoudori", to: :paragraph_gyoudori
         map_attribute "LinkResourceId", to: :link_resource_id
         map_attribute "AppliedTOCStyle", to: :applied_toc_style
-        map_attribute "BulletsAndNumberingListType", to: :bullets_and_numbering_list_type
+        map_attribute "BulletsAndNumberingListType",
+                      to: :bullets_and_numbering_list_type
         map_attribute "NumberingExpression", to: :numbering_expression
         map_attribute "BulletsTextAfter", to: :bullets_text_after
         map_attribute "NumberingLevel", to: :numbering_level
         map_attribute "NumberingContinue", to: :numbering_continue
         map_attribute "NumberingStartAt", to: :numbering_start_at
-        map_attribute "NumberingApplyRestartPolicy", to: :numbering_apply_restart_policy
+        map_attribute "NumberingApplyRestartPolicy",
+                      to: :numbering_apply_restart_policy
         map_attribute "BulletsAlignment", to: :bullets_alignment
         map_attribute "NumberingAlignment", to: :numbering_alignment
         map_attribute "TrackChanges", to: :track_changes

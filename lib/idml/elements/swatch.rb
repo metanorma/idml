@@ -23,7 +23,8 @@ module Idml
         map_attribute "ColorRemovable", to: :color_removable
         map_attribute "Visible", to: :visible
         map_attribute "SwatchCreatorID", to: :swatch_creator_id
-        map_attribute "SwatchColorGroupReference", to: :swatch_color_group_reference
+        map_attribute "SwatchColorGroupReference",
+                      to: :swatch_color_group_reference
       end
     end
   end
