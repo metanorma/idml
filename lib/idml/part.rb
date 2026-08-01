@@ -12,7 +12,8 @@ module Idml
 
     module ClassMethods
       def part_file(pattern)
-        Idml::Parts.register(Regexp.new("\\A#{pattern}\\z"), self)
+        reg = pattern.is_a?(Regexp) ? pattern : /\A#{Regexp.escape(pattern)}\z/
+        Idml::Parts.register(reg, self)
       end
     end
   end
