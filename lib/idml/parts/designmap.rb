@@ -1,0 +1,94 @@
+# frozen_string_literal: true
+
+module Idml
+  module Parts
+    # Typed model for the package's `designmap.xml` part — the manifest
+    # listing every other part and document-level preferences.
+    #
+    # This initial model captures the document-level attributes that
+    # appear on the fixture and the high-level structural references
+    # (idPkg:* part pointers, Page/MasterSpread/Spread/Story references).
+    # Long-tail optional attributes and rare child elements are added as
+    # use cases demand; until then, callers needing full fidelity should
+    # use Package#read_part to get the raw XML.
+    class Designmap < Lutaml::Model::Serializable
+      include Idml::Part
+
+      part_file "designmap.xml"
+
+      attribute :dom_version, :string
+      attribute :self_attr, :string
+      attribute :story_list, :string
+      attribute :full_name, :string
+      attribute :visible, :boolean
+      attribute :file_path, :string
+      attribute :modified, :boolean
+      attribute :saved, :boolean
+      attribute :name, :string
+      attribute :zero_point, :string
+      attribute :active_layer, :string
+      attribute :unused_swatches, :string
+      attribute :converted, :boolean
+      attribute :recovered, :boolean
+      attribute :read_only, :boolean
+      attribute :id_attr, :integer
+      attribute :cmyk_profile_list, :string
+      attribute :rgb_profile_list, :string
+      attribute :cmyk_profile, :string
+      attribute :rgb_profile, :string
+      attribute :solid_color_intent, :string
+      attribute :after_blending_intent, :string
+      attribute :default_image_intent, :string
+      attribute :rgb_policy, :string
+      attribute :cmyk_policy, :string
+      attribute :accurate_lab_spots, :boolean
+      attribute :selected_page_items, :string
+      attribute :transparency_attribute_default_property, :string
+      attribute :applied_mathml_font_size, :decimal
+      attribute :applied_mathml_rgb_color, :string
+      attribute :tint_value, :decimal
+      attribute :prefer_mathml_in_epub_export, :boolean
+      attribute :active_process, :string
+
+      xml do
+        root "Document"
+        ordered
+        map_attribute "DOMVersion", to: :dom_version
+        map_attribute "Self", to: :self_attr
+        map_attribute "StoryList", to: :story_list
+        map_attribute "FullName", to: :full_name
+        map_attribute "Visible", to: :visible
+        map_attribute "FilePath", to: :file_path
+        map_attribute "Modified", to: :modified
+        map_attribute "Saved", to: :saved
+        map_attribute "Name", to: :name
+        map_attribute "ZeroPoint", to: :zero_point
+        map_attribute "ActiveLayer", to: :active_layer
+        map_attribute "UnusedSwatches", to: :unused_swatches
+        map_attribute "Converted", to: :converted
+        map_attribute "Recovered", to: :recovered
+        map_attribute "ReadOnly", to: :read_only
+        map_attribute "Id", to: :id_attr
+        map_attribute "CMYKProfileList", to: :cmyk_profile_list
+        map_attribute "RGBProfileList", to: :rgb_profile_list
+        map_attribute "CMYKProfile", to: :cmyk_profile
+        map_attribute "RGBProfile", to: :rgb_profile
+        map_attribute "SolidColorIntent", to: :solid_color_intent
+        map_attribute "AfterBlendingIntent", to: :after_blending_intent
+        map_attribute "DefaultImageIntent", to: :default_image_intent
+        map_attribute "RGBPolicy", to: :rgb_policy
+        map_attribute "CMYKPolicy", to: :cmyk_policy
+        map_attribute "AccurateLABSpots", to: :accurate_lab_spots
+        map_attribute "SelectedPageItems", to: :selected_page_items
+        map_attribute "TransparencyAttributeDefaultProperty",
+                      to: :transparency_attribute_default_property
+        map_attribute "AppliedMathMLFontSize", to: :applied_mathml_font_size
+        map_attribute "AppliedMathMLRgbColor", to: :applied_mathml_rgb_color
+        map_attribute "TintValue", to: :tint_value
+        map_attribute "PreferMathMLInEpubExport",
+                      to: :prefer_mathml_in_epub_export
+        map_attribute "ActiveProcess", to: :active_process
+      end
+    end
+  end
+end

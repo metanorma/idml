@@ -35,6 +35,17 @@ module Idml
       with_zip { |zip_file| zip_file.read(name) }
     end
 
+    # Returns a typed part instance for `name` when a class is registered
+    # for that file pattern (e.g. Designmap for designmap.xml). Falls
+    # back to Parts::Raw — a lossless XML wrapper — for unmodeled parts.
+    def part(name)
+      xml = read_part(name)
+      klass = Idml::Parts.class_for(name)
+      return Idml::Parts::Raw.from_xml(xml) unless klass
+
+      klass.from_xml(xml)
+    end
+
     def each_part
       return enum_for(:each_part) unless block_given?
 
