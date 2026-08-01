@@ -38,3 +38,9 @@ RSpec/MultipleExpectations:
 Metrics/BlockLength:
   Exclude:
     - lib/idml/parts/**/*.rb
+
+# `x` and `y` are conventional coordinate names; renaming to `x_coord`
+# would harm readability without improving clarity.
+Naming/MethodParameterName:
+  Exclude:
+    - lib/idml/geometry.rb

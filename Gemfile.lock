@@ -4,6 +4,7 @@ PATH
     idml (0.1.0)
       bigdecimal
       lutaml-model (~> 0.8.18)
+      nokogiri
       rubyzip
 
 GEM
@@ -151,6 +152,7 @@ PLATFORMS
 DEPENDENCIES
   idml!
   lutaml-model (~> 0.8.0)
+  nokogiri
   rake
   rspec
   rubocop
