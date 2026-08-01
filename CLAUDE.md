@@ -221,10 +221,18 @@ Use SimpleIDML's `tests/regressiontests/IDML/` fixtures as the corpus.
    meaningful throughout IDML (z-order in spreads, paragraph order in stories).
 7. **`ZIP_STORED` for the package.** IDML files are uncompressed; matching that
    is part of byte-faithful round-trip.
-8. **No Nokogiri.** The gem is fully model-driven through `lutaml-model`;
-   REXML (stdlib) is the stopgap for ad-hoc XML manipulation the typed models
-   don't yet cover. The anti-pattern spec hard-bans `require "nokogiri"` and
-   `Nokogiri::` references in `lib/`. See `TODO.complete/18-remove-nokogiri.md`.
+8. **lutaml-model only — no Nokogiri, no REXML.** The gem is fully
+   model-driven through `lutaml-model`; every XML query routes through
+   typed model methods. No `Lutaml::Xml::Document.parse`, no Moxml
+   directly, no Nokogiri, no REXML. The anti-pattern spec hard-bans
+   `require "nokogiri"`, `require "rexml/..."`, `Nokogiri::`, and
+   `REXML::` references in `lib/`. See `TODO.complete/18-remove-nokogiri.md`
+   and `TODO.complete/23-lutaml-only-no-rexml.md`.
+9. **Attribute lists come from the RNC schemas.** For any new element
+   class, generate the attribute list from the matching definition in
+   `reference-docs/schemas/package/**/*.rnc` (e.g.,
+   `Stories/Story.rnc` for the `<Story>` element). Don't guess — the
+   RNC is the authority. See `TODO.complete/26-rnc-faithful-models.md`.
 
 ## Workflow rules (non-negotiable, from global CLAUDE.md)
 

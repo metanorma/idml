@@ -1,27 +1,22 @@
 # frozen_string_literal: true
 
-require "rexml/document"
-
 module Idml
   module Composition
     # Insert one package's structural content into another. Both
     # packages are prefixed first to avoid Self collisions; then the
-    # source's BackingStory XML-structure children are appended to
-    # the destination's BackingStory, and the source's Stories are
-    # added to the destination's Stories/ directory.
+    # source's BackingStory XMLElement tree is appended to the
+    # destination's, and the source's Stories are added to the
+    # destination's package.
     #
-    # This is a STRUCTURAL merge: it preserves the XML structure tree
-    # and the text flows. It does NOT do the full XPath-based subtree
-    # slicing that SimpleIDML's insert_idml supports (deferred). See
-    # TODO.complete/13-insert-idml.md for the full plan.
+    # This is a STRUCTURAL merge. Full XPath-based subtree slicing
+    # (SimpleIDML's at:/only: semantics) is deferred — see
+    # TODO.complete/13-insert-idml.md. The merge itself goes through
+    # the typed BackingStory model — no ad-hoc XML libraries.
     class InsertIdml
       def initialize(package)
         @package = package
       end
 
-      # `at` and `only` (XPath arguments for the future full
-      # implementation) are accepted but not yet used by this
-      # structural-merge version. See TODO.complete/13-insert-idml.md.
       def call(source:, at: nil, only: nil) # rubocop:disable Lint/UnusedMethodArgument
         dest_prefixed = Prefix.new(@package).call(prefix: "dest_")
         source_prefixed = Prefix.new(source).call(prefix: "src_")
@@ -53,8 +48,8 @@ module Idml
         Package.write(parts: parts, to: path)
       end
 
-      # Append source's XML structure element children into the
-      # destination's BackingStory root. Uses REXML (stdlib).
+      # Append source's XMLElement children to dest's BackingStory via
+      # the typed BackingStory model.
       class BackingStoryMerger
         def initialize(dest_xml, source_xml)
           @dest_xml = dest_xml
@@ -62,14 +57,10 @@ module Idml
         end
 
         def call
-          dest_doc = REXML::Document.new(@dest_xml)
-          source_doc = REXML::Document.new(@source_xml)
-          source_doc.root.elements.each do |child|
-            dest_doc.root.add(child.deep_clone)
-          end
-          buffer = +""
-          dest_doc.write(buffer)
-          buffer
+          dest = Idml::Parts::BackingStory.from_xml(@dest_xml)
+          source = Idml::Parts::BackingStory.from_xml(@source_xml)
+          source.xml_element.each { |e| dest.xml_element << e }
+          Idml::Parts::BackingStory.to_xml(dest)
         end
       end
     end

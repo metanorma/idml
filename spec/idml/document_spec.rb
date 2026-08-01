@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "rexml/document"
 
 RSpec.describe Idml::Document do
   let(:fixture_path) do
@@ -18,10 +17,10 @@ RSpec.describe Idml::Document do
   end
 
   describe "#find_by_self" do
-    it "finds an element with the given Self in any part" do
-      node = document.find_by_self("uce")
-      expect(node).to be_a(REXML::Element)
-      expect(node.attribute("Self")&.value).to eq("uce")
+    it "finds the part containing the given Self id" do
+      part_name = document.find_by_self("uce")
+      expect(part_name).to be_a(String)
+      expect(part_name).to match(/\.xml\z/)
     end
 
     it "returns nil for an unknown Self" do
@@ -54,9 +53,9 @@ RSpec.describe Idml::Document do
   end
 
   describe "#xml_structure" do
-    it "returns BackingStory as a REXML document" do
+    it "returns the typed BackingStory instance" do
       structure = document.xml_structure
-      expect(structure).to be_a(REXML::Document)
+      expect(structure).to be_a(Idml::Parts::BackingStory)
     end
   end
 
