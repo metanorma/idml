@@ -1,0 +1,12 @@
+HyperlinkURLDestination_Object = element HyperlinkURLDestination {
+    attribute Self { xsd:string },
+    attribute DestinationUniqueKey { xsd:int }?,
+    attribute Name { xsd:string },
+    attribute DestinationURL { xsd:string }?,
+    attribute Hidden { xsd:boolean }?,
+    element Properties {
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+} ?
+}

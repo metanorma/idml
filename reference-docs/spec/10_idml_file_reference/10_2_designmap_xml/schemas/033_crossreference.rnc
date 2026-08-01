@@ -1,0 +1,11 @@
+CrossReference_Object = element CrossReference {
+    attribute Self { xsd:string },
+    attribute ReferencedTopic { xsd:string }?,
+    attribute CrossReferenceType { CrossReferenceType_EnumValue }?,
+    attribute CustomTypeString { xsd:string }?,
+    element Properties {
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+} ?
+}

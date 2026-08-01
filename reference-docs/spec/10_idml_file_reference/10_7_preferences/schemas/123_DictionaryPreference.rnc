@@ -1,0 +1,1 @@
+DictionaryPreference_Object = element DictionaryPreference { attribute Composition { ComposeUsing_EnumValue }?, attribute MergeUserDictionary { xsd:boolean }?, attribute RecomposeWhenChanged { xsd:boolean }? }

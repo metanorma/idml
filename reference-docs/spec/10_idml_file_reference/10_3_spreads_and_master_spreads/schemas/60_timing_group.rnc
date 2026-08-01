@@ -1,0 +1,4 @@
+TimingGroup_Object = element TimingGroup { attribute Self { xsd:string },
+    attribute Plays { xsd:int {minInclusive="1" maxInclusive="100" } }?,
+    attribute PlaysLoop { xsd:boolean }?,
+    ( TimingTarget_Object* ) }

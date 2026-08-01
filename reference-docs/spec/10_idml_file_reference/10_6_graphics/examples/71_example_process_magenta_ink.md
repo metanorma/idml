@@ -1,0 +1,1 @@
+<Ink Self="Ink\Process Magenta" Name="$ID/Process Magenta" AliasInkName="[No Alias]" Angle="15" ConvertToProcess="false" Frequency="70" NeutralDensity="0.76" PrintInk="true" TrapOrder="2" InkType="Normal"/>

@@ -1,0 +1,19 @@
+Layer_Object = element Layer {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string }?,
+    attribute Visible { xsd:boolean }?,
+    attribute Locked { xsd:boolean }?,
+    attribute IgnoreWrap { xsd:boolean }?,
+    attribute ShowGuides { xsd:boolean }?,
+    attribute LockGuides { xsd:boolean }?,
+    attribute UI { xsd:boolean }?,
+    attribute Expendable { xsd:boolean }?,
+    attribute Printable { xsd:boolean }?,
+    element Properties {
+        element LayerColor { InDesignUIColorType_TypeDef }?
+        &
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+} ?
+}

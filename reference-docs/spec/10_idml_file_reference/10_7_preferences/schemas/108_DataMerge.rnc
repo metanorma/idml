@@ -1,0 +1,1 @@
+DataMerge_Object = element DataMerge { attribute DataSourceFileType { DataSourceType_EnumValue }?, attribute DataSourceFile { xsd:string }?, ( DataMergeField_Object* ) }

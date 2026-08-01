@@ -1,0 +1,24 @@
+MasterSpread_Object = element MasterSpread { attribute Self { xsd:string },
+    attribute ItemTransform { TransformationMatrixType_TypeDef }?,
+    attribute OverriddenPageItemProps { list { xsd:int * } }?,
+    attribute Name { xsd:string }?,
+    attribute NamePrefix { xsd:string }?,
+    attribute BaseName { xsd:string }?,
+    attribute ShowMasterItems { xsd:boolean }?,
+    attribute PageCount { xsd:int }?,
+    element Properties { element PageColor { (InDesignUIColorType_TypeDef ) |
+            (enum_type,
+                PageColorOptions_EnumValue ) }? &
+        element Label { element KeyValuePair { KeyValuePair_TypeDef }* }? } ?,
+    ( Page_Object* &
+        Oval_Object* &
+        Rectangle_Object* &
+        GraphicLine_Object* &
+        TextFrame_Object* &
+        Polygon_Object* &
+        Group_Object* &
+        EPSText_Object* &
+        FormField_Object* &
+        Button_Object* &
+        MultiStateObject_Object* &
+        TimingSetting_Object? ) }

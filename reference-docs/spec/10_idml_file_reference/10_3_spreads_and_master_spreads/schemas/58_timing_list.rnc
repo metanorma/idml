@@ -1,0 +1,2 @@
+TimingList_Object = element TimingList { attribute Self { xsd:string } attribute TriggerEvent { DynamicTriggerEvents_EnumValue } ?,
+    ( TimingGroup_Object* ) }

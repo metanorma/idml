@@ -1,0 +1,21 @@
+TrapPreset_Object = element TrapPreset {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    attribute DefaultTrapWidth { xsd:double {minInclusive="0" maxInclusive="8" } }?,
+    attribute BlackWidth { xsd:double {minInclusive="0" maxInclusive="8" } }?,
+    attribute TrapJoin { EndJoin_EnumValue }?,
+    attribute TrapEnd { TrapEndTypes_EnumValue }?,
+    attribute ObjectsToImages { xsd:boolean }?,
+    attribute ImagesToImages { xsd:boolean }?,
+    attribute InternalImages { xsd:boolean }?,
+    attribute OneBitImages { xsd:boolean }?,
+    attribute ImagePlacement { TrapImagePlacementTypes_EnumValue }?,
+    attribute StepThreshold { xsd:double {minInclusive="1" maxInclusive="100" } }?,
+    attribute BlackColorThreshold { xsd:double {minInclusive="0" maxInclusive="100" } }?,
+    attribute BlackDensity { xsd:double {minInclusive="0" maxInclusive="10" } }?,
+    attribute SlidingTrapThreshold { xsd:double {minInclusive="0" maxInclusive="100" } }?,
+    attribute ColorReduction { xsd:double {minInclusive="0" maxInclusive="100" } }?,
+    element Properties {
+        element Label { element KeyValuePair { KeyValuePair_TypeDef }* }?
+    } ?
+}

@@ -1,0 +1,37 @@
+XMLElement_Object = element XMLElement {
+    attribute Self { xsd:string },
+    attribute MarkupTag { xsd:string }?,
+    attribute XMLContent { xsd:string }?,
+    attribute NoTextMarker { xsd:boolean }?,
+    (
+        XMLAttribute_Object* &
+        XMLElement_Object* &
+        XMLComment_Object* &
+        XMLInstruction_Object* &
+        Table_Object* &
+        Footnote_Object* &
+        Note_Object* &
+        GaijiOwnedItemObject_Object* &
+        TextVariableInstance_Object* &
+        HyperlinkTextDestination_Object* &
+        Change_Object* &
+        HiddenText_Object* &
+        DTD_Object* &
+        Oval_Object* &
+        Rectangle_Object* &
+        GraphicLine_Object* &
+        Polygon_Object* &
+        Group_Object* &
+        TextFrame_Object* &
+        Button_Object* &
+        FormField_Object* &
+        MultiStateObject_Object* &
+        EPSText_Object* &
+        HyperlinkTextSource_Object* &
+        ParagraphStyleRange_Object* &
+        CharacterStyleRange_Object* &
+        Link_Object* &
+        element Content {text }* &
+        element Br {empty }*
+    )
+}

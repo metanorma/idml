@@ -1,0 +1,3 @@
+BlendingSetting_Object = element BlendingSetting { attribute BlendMode { BlendMode_EnumValue }?,
+    attribute KnockoutGroup { xsd:boolean }?,
+    attribute IsolateBlending { xsd:boolean }? }

@@ -1,0 +1,17 @@
+HyperlinkPageDestination_Object = element HyperlinkPageDestination {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    attribute NameManually { xsd:boolean }?,
+    attribute DestinationPage { xsd:string }?,
+    attribute ViewSetting { HyperlinkDestinationPageSetting_EnumValue }?,
+    attribute ViewPercentage { xsd:double {minInclusive="5" maxInclusive="4000" } }?,
+    attribute Hidden { xsd:boolean }?,
+    attribute DestinationUniqueKey { xsd:int }?,
+    element Properties {
+        element ViewBounds { UnitRectangleBoundsType_TypeDef }?
+        &
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+} ?
+}

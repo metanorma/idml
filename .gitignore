@@ -1,0 +1,26 @@
+# Adobe proprietary SDKs — obtain separately, do not redistribute.
+# These are referenced by CLAUDE.md for behavioral/structural guidance;
+# they are not required to build or test the gem.
+/reference-docs/plugin_sdk_21/
+/reference-docs/scripting/
+/reference-docs/server/
+
+# macOS metadata
+.DS_Store
+
+# Bundler
+/.bundle/
+/vendor/bundle/
+
+# Ruby build artifacts
+*.gem
+/pkg/
+/coverage/
+/spec/reports/
+/tmp/
+
+# Editor
+/.idea/
+/.vscode/
+*.swp
+*~

@@ -1,0 +1,7 @@
+DocumentUser_Object = element DocumentUser {
+    attribute Self { xsd:string },
+    attribute UserName { xsd:string },
+    element Properties {
+        element UserColor { InCopyUIColorType_TypeDef }?
+    } ?
+}

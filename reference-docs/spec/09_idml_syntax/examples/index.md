@@ -1,0 +1,10 @@
+# Examples
+
+```{toctree}
+:maxdepth: 1
+
+01_example_properties_expressed_as_attributes_or_elements_depending_on_their_value
+02_example_object_serialization
+03_example_record_type_serialization
+04_example_geometry_serialization
+```

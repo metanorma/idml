@@ -1,0 +1,1 @@
+<Tint Self="Tint\[Black] 40%" TintValue="40" BaseColor="Color\Black" Name="[Black] 40%" ColorOverride="Normal" AlternateSpace="NoAlternateColor" AlternateColorValue="" ColorEditable="true" ColorRemovable="true" Visible="true" SwatchCreatorID="7937"/>

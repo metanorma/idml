@@ -1,0 +1,51 @@
+RuleDataObject_Object = element RuleDataObject {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    attribute DataType { RuleDataType_EnumValue },
+    attribute Id { xsd:string }?,
+    element Properties {
+        element DataValue {
+            (string_type,
+                xsd:string )
+            |
+            (double_type,
+                xsd:double )
+            |
+            (long_type,
+                xsd:int )
+            |
+            (short_type,
+                xsd:short )
+            |
+            (bool_type,
+                xsd:boolean )
+            |
+            (object_type,
+                xsd:string )
+            |
+            (list_type,
+                element ListItem {
+                    (string_type,
+                        xsd:string )
+                    |
+                    (double_type,
+                        xsd:double )
+                    |
+                    (long_type,
+                        xsd:int )
+                    |
+                    (short_type,
+                        xsd:short )
+                    |
+                    (bool_type,
+                        xsd:boolean )
+                    |
+                    (object_type,
+                        xsd:string )
+                    |
+                    (list_type,
+                        element PreflightRuleDataListType { PreflightRuleDataListType_TypeDef }* )
+                }* )
+    }
+}
+}

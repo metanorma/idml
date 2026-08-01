@@ -1,0 +1,5 @@
+HyperlinkTextDestination_Object = element HyperlinkTextDestination { attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    attribute Hidden { xsd:boolean }?,
+    attribute DestinationUniqueKey { xsd:int }?,
+    element Properties { element Label { element KeyValuePair { KeyValuePair_TypeDef }* }? } ? }

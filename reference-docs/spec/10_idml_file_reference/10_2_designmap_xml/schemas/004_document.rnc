@@ -1,0 +1,108 @@
+Document_Object = element Document {
+    attribute DOMVersion { "7.0" },
+    attribute Self { xsd:string },
+    attribute ActiveProcess { xsd:string }?,
+    attribute TransparencyAttributeDefaultProperty { xsd:string }?,
+    attribute StoryList { list { xsd:string * } }?,
+    attribute FullName { xsd:string }?,
+    attribute Name { xsd:string }?,
+    attribute Visible { xsd:boolean }?,
+    attribute FilePath { xsd:string }?,
+    attribute Modified { xsd:boolean }?,
+    attribute Saved { xsd:boolean }?,
+    attribute ZeroPoint { UnitPointType_TypeDef }?,
+    attribute UnusedSwatches { list { xsd:string * } }?,
+    attribute ActiveLayer { xsd:string }?,
+    attribute Converted { xsd:boolean }?,
+    attribute Recovered { xsd:boolean }?,
+    attribute ReadOnly { xsd:boolean }?,
+    attribute Id { xsd:int }?,
+    attribute CMYKProfileList { list { xsd:string * } }?,
+    attribute RGBProfileList { list { xsd:string * } }?,
+    attribute CMYKProfile { xsd:string }?,
+    attribute RGBProfile { xsd:string }?,
+    attribute SolidColorIntent { RenderingIntent_EnumValue }?,
+    attribute AfterBlendingIntent { RenderingIntent_EnumValue }?,
+    attribute DefaultImageIntent { RenderingIntent_EnumValue }?,
+    attribute RGBPolicy { ColorSettingsPolicy_EnumValue }?,
+    attribute CMYKPolicy { ColorSettingsPolicy_EnumValue }?,
+    attribute AccurateLABSpots { xsd:boolean }?,
+    element Properties {
+        element InstanceList {
+            element IndexInstanceType { IndexInstanceType_TypeDef }*
+        }?
+    &
+    element Label {
+        element KeyValuePair { KeyValuePair_TypeDef }*
+    }?
+}?,
+(
+Language_Object*,
+element idPkg:Graphic { attribute src {"Resources/Graphic.xml" } }?,
+element idPkg:Fonts { attribute src {"Resources/Fonts.xml" } }?,
+KinsokuTable_Object*,
+MojikumiTable_Object*,
+element idPkg:Styles { attribute src {"Resources/Styles.xml" } }?,
+NumberingList_Object*,
+NamedGrid_Object*,
+MotionPreset_Object*,
+Condition_Object*,
+ConditionSet_Object*,
+(
+    element idPkg:Preferences { attribute src {"Resources/Preferences.xml" } }?
+    &
+    LinkedStoryOption_Object?
+    &
+    LinkedPageItemOption_Object?
+    &
+    TaggedPDFPreference_Object?
+    &
+    MetadataPacketPreference_Object?
+    &
+    WatermarkPreference_Object?
+    &
+    ConditionalTextPreference_Object?
+),
+TextVariable_Object*,
+element idPkg:Tags { attribute src {"XML/Tags.xml" } }?,
+Layer_Object*,
+element idPkg:MasterSpread { attribute src {xsd:string {pattern = ".*\.xml" } } }*,
+element idPkg:Spread { attribute src {xsd:string {pattern = ".*\.xml" } } }*,
+Section_Object*,
+DocumentUser_Object*,
+CrossReferenceFormat_Object*,
+Index_Object*,
+element idPkg:BackingStory { attribute src {"XML/BackingStory.xml" } }?,
+element idPkg:Story { attribute src {xsd:string {pattern = ".*\.xml" } } }*,
+HyperlinkPageDestination_Object*,
+HyperlinkURLDestination_Object*,
+HyperlinkExternalPageDestination_Object*,
+HyperlinkPageItemSource_Object*,
+Hyperlink_Object*,
+element idPkg:Mapping { attribute src {"XML/Mapping.xml" } }?,
+Bookmark_Object*,
+(
+PreflightProfile_Object*
+&
+DataMergeImagePlaceholder_Object*
+&
+HyphenationException_Object*
+&
+ParaStyleMapping_Object*
+&
+CharStyleMapping_Object*
+&
+TableStyleMapping_Object*
+&
+CellStyleMapping_Object*
+&
+IndexingSortOption_Object*
+&
+ABullet_Object*
+&
+Assignment_Object*
+&
+Article_Object*
+)
+)
+}

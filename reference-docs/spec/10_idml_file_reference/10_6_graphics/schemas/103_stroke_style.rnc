@@ -1,0 +1,1 @@
+StrokeStyle_Object = element StrokeStyle { attribute Self { xsd:string }, attribute Name { xsd:string } }

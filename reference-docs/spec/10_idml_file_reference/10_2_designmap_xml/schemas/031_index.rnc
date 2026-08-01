@@ -1,0 +1,9 @@
+Index_Object = element Index {
+    attribute Self { xsd:string },
+    element Properties {
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+} ?,
+( Topic_Object* )
+}

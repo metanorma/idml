@@ -1,0 +1,1 @@
+CompositeFont_Object = element CompositeFont { attribute Self { xsd:string }, attribute Name { xsd:string }, element Properties { element Label { element KeyValuePair { KeyValuePair_TypeDef }* }? } ? , ( CompositeFontEntry_Object* ) }

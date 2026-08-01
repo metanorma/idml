@@ -1,0 +1,20 @@
+HyperlinkTextSource_Object = element HyperlinkTextSource { attribute Self { xsd:string },
+    attribute Name { xsd:string }?,
+    attribute Hidden { xsd:boolean }?,
+    attribute AppliedCharacterStyle { xsd:string }?,
+    element Properties { element Label { element KeyValuePair { KeyValuePair_TypeDef }* }? } ?,
+    ( GaijiOwnedItemObject_Object* &
+        Note_Object* &
+        Table_Object* &
+        TextVariableInstance_Object* &
+        Footnote_Object* &
+        HyperlinkTextDestination_Object* &
+        Change_Object* &
+        HiddenText_Object* &
+        XMLElement_Object* &
+        XMLInstruction_Object* &
+        XMLComment_Object* &
+        ParagraphStyleRange_Object* &
+        CharacterStyleRange_Object* &
+        element Content {text }* &
+        element Br {empty }* ) }

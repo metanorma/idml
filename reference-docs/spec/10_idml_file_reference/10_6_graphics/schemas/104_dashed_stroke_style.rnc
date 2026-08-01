@@ -1,0 +1,1 @@
+DashedStrokeStyle_Object = element DashedStrokeStyle { attribute Self { xsd:string }, attribute DashArray { list { xsd:double * } }?, attribute StrokeCornerAdjustment { StrokeCornerAdjustment_EnumValue }?, attribute EndCap { EndCap_EnumValue }?, attribute Name { xsd:string } }

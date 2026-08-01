@@ -1,0 +1,12 @@
+Guide_Object = element Guide { attribute Self { xsd:string },
+    attribute Orientation { HorizontalOrVertical_EnumValue }?,
+    attribute Location { xsd:double }?,
+    attribute FitToPage { xsd:boolean }?,
+    attribute ViewThreshold { xsd:double {minInclusive="5" maxInclusive="4000" } }?,
+    attribute Locked { xsd:boolean }?,
+    attribute ItemLayer { xsd:string }?,
+    attribute PageIndex { xsd:short }?,
+    attribute GuideType { GuideTypeOptions_EnumValue }?,
+    attribute GuideZone { xsd:double }?,
+    element Properties { element GuideColor { InDesignUIColorType_TypeDef }? &
+        element Label { element KeyValuePair { KeyValuePair_TypeDef }* }? } ? }

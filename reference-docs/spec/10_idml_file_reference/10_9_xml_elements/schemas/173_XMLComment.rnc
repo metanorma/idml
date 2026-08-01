@@ -1,0 +1,4 @@
+XMLComment_Object = element XMLComment {
+    attribute Self { xsd:string },
+    attribute Value { xsd:string }?
+}

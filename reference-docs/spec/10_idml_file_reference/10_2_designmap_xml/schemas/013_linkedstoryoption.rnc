@@ -1,0 +1,5 @@
+LinkedStoryOption_Object = element LinkedStoryOption {
+    attribute UpdateWhileSaving { xsd:boolean }?,
+    attribute WarnOnUpdateOfEditedStory { xsd:boolean }?,
+    attribute RemoveForcedLineBreaks { xsd:boolean }?
+}

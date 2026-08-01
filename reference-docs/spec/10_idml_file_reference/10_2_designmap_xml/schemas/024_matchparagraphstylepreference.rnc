@@ -1,0 +1,8 @@
+MatchParagraphStylePreference_Object = element MatchParagraphStylePreference {
+    attribute TextBefore { xsd:string }?,
+    attribute TextAfter { xsd:string }?,
+    attribute AppliedParagraphStyle { xsd:string }?,
+    attribute SearchStrategy { SearchStrategies_EnumValue }?,
+    attribute ChangeCase { ChangeCaseOptions_EnumValue }?,
+    attribute DeleteEndPunctuation { xsd:boolean }?
+}

@@ -1,0 +1,3 @@
+| Name      | Type     | Req     | Description |
+| --------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BasedOn   | string   | no      | Areference to the paragraph style that this para- graph style is based on, as a unique ID (the value of the Self attribute of the <ParagraphStyle> element), or as a reference to the default '[No paragraph style]' element, in the form: $ID/[No paragraph style] . This is the default. |

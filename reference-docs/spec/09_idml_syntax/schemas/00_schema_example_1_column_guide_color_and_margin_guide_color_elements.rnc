@@ -1,0 +1,3 @@
+# Schema Example 1. Column Guide Color and Margin Guide Color Elements
+
+Document  Preference_Object = element Document  Preference { element Properties { element Column  Guide Color { In  Design UIColor  Type_Type  Def }?& element Margin  Guide Color { In  Design UIColor  Type_Type  Def }? } ? }

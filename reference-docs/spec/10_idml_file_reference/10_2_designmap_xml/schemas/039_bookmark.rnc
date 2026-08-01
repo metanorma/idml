@@ -1,0 +1,11 @@
+Bookmark_Object = element Bookmark {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string }?,
+    attribute Destination { xsd:string },
+    element Properties {
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+} ?,
+( Bookmark_Object* )
+}

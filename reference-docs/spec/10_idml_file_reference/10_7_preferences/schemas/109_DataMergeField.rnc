@@ -1,0 +1,1 @@
+DataMergeField_Object = element DataMergeField { attribute Self { xsd:string }, attribute FieldName { xsd:string }? }

@@ -1,0 +1,7 @@
+Topic_Object = element Topic {
+    attribute Self { xsd:string },
+    attribute SortOrder { xsd:string }?,
+    attribute Name { xsd:string },
+    ( Topic_Object* &
+        CrossReference_Object* )
+}

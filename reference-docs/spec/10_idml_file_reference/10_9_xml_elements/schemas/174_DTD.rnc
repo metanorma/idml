@@ -1,0 +1,13 @@
+DTD_Object = element DTD {
+    attribute Self { xsd:string },
+    element Properties {
+        element Contents {
+            (string_type,
+                xsd:string ) |
+            (enum_type,
+                SpecialCharacters_EnumValue ) |
+            (object_type,
+                xsd:string )
+        }?
+}?
+}

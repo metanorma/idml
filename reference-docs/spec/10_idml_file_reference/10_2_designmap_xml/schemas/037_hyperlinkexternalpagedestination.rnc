@@ -1,0 +1,17 @@
+HyperlinkExternalPageDestination_Object = element HyperlinkExternalPageDestination {
+    attribute Self { xsd:string },
+    attribute DestinationUniqueKey { xsd:int }?,
+    attribute Name { xsd:string }?,
+    attribute DocumentPath { xsd:string }?,
+    attribute DestinationPageIndex { xsd:int {minInclusive="1" maxInclusive="9999" } }?,
+    attribute ViewSetting { HyperlinkDestinationPageSetting_EnumValue }?,
+    attribute ViewPercentage { xsd:double {minInclusive="5" maxInclusive="4000" } }?,
+    attribute Hidden { xsd:boolean }?,
+    element Properties {
+        element ViewBounds { UnitRectangleBoundsType_TypeDef }?
+        &
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+} ?
+}

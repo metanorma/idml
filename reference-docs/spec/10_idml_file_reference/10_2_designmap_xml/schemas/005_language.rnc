@@ -1,0 +1,16 @@
+Language_Object = element Language {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    attribute SingleQuotes { xsd:string }?,
+    attribute DoubleQuotes { xsd:string }?,
+    attribute PrimaryLanguageName { xsd:string }?,
+    attribute SublanguageName { xsd:string }?,
+    attribute Id { xsd:int }?,
+    attribute HyphenationVendor { xsd:string }?,
+    attribute SpellingVendor { xsd:string }?,
+    element Properties {
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+}?
+}

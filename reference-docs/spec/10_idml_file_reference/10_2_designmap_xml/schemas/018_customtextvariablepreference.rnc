@@ -1,0 +1,14 @@
+CustomTextVariablePreference_Object = element CustomTextVariablePreference {
+    element Properties {
+        element Contents {
+            (string_type,
+                xsd:string )
+            |
+            (enum_type,
+                SpecialCharacters_EnumValue )
+            |
+            (object_type,
+                xsd:string )
+        }?
+} ?
+}

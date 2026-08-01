@@ -1,0 +1,1 @@
+FontFamily_Object = element FontFamily { attribute Self { xsd:string }, attribute Name { xsd:string }?, ( Font_Object* ) }

@@ -1,0 +1,10 @@
+NamedGrid_Object = element NamedGrid {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    element Properties {
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+}?,
+( GridDataInformation_Object? )
+}

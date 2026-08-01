@@ -1,0 +1,11 @@
+HyperlinkPageItemSource_Object = element HyperlinkPageItemSource {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string }?,
+    attribute SourcePageItem { xsd:string },
+    attribute Hidden { xsd:boolean }?,
+    element Properties {
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+} ?
+}

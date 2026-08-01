@@ -1,0 +1,1 @@
+ChapterNumberPreference_Object = element ChapterNumberPreference { attribute ChapterNumber { xsd:int }?, attribute ChapterNumberSource { ChapterNumberSources_EnumValue }?, element Properties { element ChapterNumberFormat { (enum_type, NumberingStyle_EnumValue) | (string_type, xsd:string) }? } ? }

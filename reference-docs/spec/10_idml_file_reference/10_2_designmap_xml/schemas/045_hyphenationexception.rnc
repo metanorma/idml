@@ -1,0 +1,6 @@
+HyphenationException_Object = element HyphenationException {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    attribute RemovedExceptions { list { xsd:string * } }?,
+    attribute AddedExceptions { list { xsd:string * } }?
+}

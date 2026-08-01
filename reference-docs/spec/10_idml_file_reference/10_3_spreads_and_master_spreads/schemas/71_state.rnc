@@ -1,0 +1,20 @@
+State_Object = element State { attribute Self { xsd:string },
+    attribute Active { xsd:boolean }?,
+    attribute Enabled { xsd:boolean }?,
+    element Properties { element Statetype { (enum_type,
+                StateTypes_EnumValue ) |
+            (long_type,
+                xsd:int ) }? } ?,
+    ( Oval_Object* &
+        Rectangle_Object* &
+        GraphicLine_Object* &
+        TextFrame_Object* &
+        Polygon_Object* &
+        Graphic_Object* &
+        Image_Object* &
+        EPS_Object* &
+        WMF_Object* &
+        PICT_Object* &
+        PDF_Object* &
+        Group_Object* &
+        EPSText_Object* ) }

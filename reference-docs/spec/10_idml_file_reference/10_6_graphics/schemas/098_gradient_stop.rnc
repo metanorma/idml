@@ -1,0 +1,1 @@
+GradientStop_Object = element GradientStop { attribute Self { xsd:string }, attribute StopColor { xsd:string }?, attribute Location { xsd:double {minInclusive="0" maxInclusive="100"} }?, attribute Midpoint { xsd:double {minInclusive="13" maxInclusive="87"} }? }

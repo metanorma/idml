@@ -1,0 +1,5 @@
+ChapterNumberVariablePreference_Object = element ChapterNumberVariablePreference {
+    attribute TextBefore { xsd:string }?,
+    attribute Format { VariableNumberingStyles_EnumValue }?,
+    attribute TextAfter { xsd:string }?
+}

@@ -1,0 +1,34 @@
+Hyperlink_Object = element Hyperlink {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string }?,
+    attribute Source { xsd:string },
+    attribute Visible { xsd:boolean }?,
+    attribute Highlight { HyperlinkAppearanceHighlight_EnumValue }?,
+    attribute Width { HyperlinkAppearanceWidth_EnumValue }?,
+    attribute BorderStyle { HyperlinkAppearanceStyle_EnumValue }?,
+    attribute Hidden { xsd:boolean }?,
+    attribute DestinationUniqueKey { xsd:int }?,
+    element Properties {
+        element BorderColor { InDesignUIColorType_TypeDef }?
+        &
+        element Destination {
+            (element FileName { string_type,
+                    xsd:string },
+                element Volumn { string_type,
+                    xsd:string },
+                element DirectoryId { long_type,
+                    xsd:int },
+                element DataLinkClassId { long_type,
+                    xsd:int },
+                element DestinationUid { long_type,
+                    xsd:int } )
+            |
+            (object_type,
+                xsd:string )
+        }?
+    &
+    element Label {
+        element KeyValuePair { KeyValuePair_TypeDef }*
+    }?
+} ?
+}

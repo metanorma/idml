@@ -1,0 +1,22 @@
+TextVariable_Object = element TextVariable {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    attribute VariableType { VariableTypes_EnumValue }?,
+    (
+        CustomTextVariablePreference_Object?
+        &
+        FileNameVariablePreference_Object?
+        &
+        PageNumberVariablePreference_Object?
+        &
+        ChapterNumberVariablePreference_Object?
+        &
+        DateVariablePreference_Object?
+        &
+        MatchCharacterStylePreference_Object?
+        &
+        MatchParagraphStylePreference_Object?
+        &
+        CaptionMetadataVariablePreference_Object?
+    )
+}

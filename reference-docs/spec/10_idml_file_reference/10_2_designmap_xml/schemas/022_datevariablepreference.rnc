@@ -1,0 +1,5 @@
+DateVariablePreference_Object = element DateVariablePreference {
+    attribute TextBefore { xsd:string }?,
+    attribute Format { xsd:string }?,
+    attribute TextAfter { xsd:string }?
+}

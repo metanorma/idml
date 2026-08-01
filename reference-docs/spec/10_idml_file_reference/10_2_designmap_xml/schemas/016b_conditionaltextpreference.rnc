@@ -1,0 +1,4 @@
+ConditionalTextPreference_Object = element ConditionalTextPreference {
+    attribute ShowConditionIndicators { ConditionIndicatorMode_EnumValue }?,
+    attribute ActiveConditionSet { xsd:string }?
+}

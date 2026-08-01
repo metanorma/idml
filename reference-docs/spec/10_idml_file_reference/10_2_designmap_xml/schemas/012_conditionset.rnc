@@ -1,0 +1,13 @@
+ConditionSet_Object = element ConditionSet {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    element Properties {
+        element SetConditions {
+            element VisibilityPair { VisibilityPair_TypeDef }*
+        }?
+    &
+    element Label {
+        element KeyValuePair { KeyValuePair_TypeDef }*
+    }?
+}?
+}

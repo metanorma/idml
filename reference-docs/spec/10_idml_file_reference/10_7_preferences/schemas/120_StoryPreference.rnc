@@ -1,0 +1,8 @@
+StoryPreference_Object = element StoryPreference {
+attribute OpticalMarginAlignment { xsd:boolean }?,
+attribute OpticalMarginSize { xsd:double {minInclusive="0.1"
+maxInclusive="1296"} }?,
+attribute FrameType { FrameTypes_EnumValue }?,
+attribute StoryOrientation { StoryHorizontalOrVertical_EnumValue }?,
+attribute StoryDirection { StoryDirectionOptions_EnumValue }?
+}

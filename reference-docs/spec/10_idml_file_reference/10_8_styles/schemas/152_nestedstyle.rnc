@@ -1,0 +1,19 @@
+element AllNestedStyles {
+    list_type,
+    element ListItem {
+        record_type,
+        (
+            element AppliedCharacterStyle { object_type,
+                xsd:string } &
+            element Delimiter {
+                (string_type,
+                    xsd:string ) |
+                (enum_type,
+                    NestedStyleDelimiters_EnumValue )
+            } &
+        element Repetition { long_type,
+            xsd:int } &
+        element Inclusive { bool_type,
+            xsd:boolean } )
+}*
+}

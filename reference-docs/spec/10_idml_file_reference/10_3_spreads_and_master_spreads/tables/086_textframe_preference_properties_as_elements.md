@@ -1,0 +1,3 @@
+| Name           | Type                          | Req     | Description |
+| -------------- | ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| InsetSpacing   | double or ListItem elements   | no      | The text insets applied to the TextFrame. Rectangular TextFrames can use four inset values (for the left, top, right, and bottom of the frame); non-rectangular TextFrames can use a single value (all sides). Can contain up to four ListItem elements. |

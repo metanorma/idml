@@ -1,0 +1,11 @@
+AssignedStory_Object = element AssignedStory {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string }?,
+    attribute StoryReference { xsd:string }?,
+    attribute FilePath { xsd:string }?,
+    element Properties {
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+} ?
+}

@@ -1,0 +1,11 @@
+CrossReferenceFormat_Object = element CrossReferenceFormat {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string }?,
+    attribute AppliedCharacterStyle { xsd:string }?,
+    element Properties {
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+} ?,
+( BuildingBlock_Object* )
+}

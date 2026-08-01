@@ -1,0 +1,1 @@
+ContourOption_Object = element ContourOption { attribute ContourType { ContourOptionsTypes_EnumValue }?, attribute IncludeInsideEdges { xsd:boolean }?, attribute ContourPathName { xsd:string }? }

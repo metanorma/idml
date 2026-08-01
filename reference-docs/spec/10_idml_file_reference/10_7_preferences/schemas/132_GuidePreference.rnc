@@ -1,0 +1,1 @@
+GuidePreference_Object = element GuidePreference { attribute GuidesInBack { xsd:boolean }?, attribute GuidesShown { xsd:boolean }?, attribute GuidesLocked { xsd:boolean }?, attribute GuidesSnapto { xsd:boolean }?, attribute RulerGuidesViewThreshold { xsd:double }?, element Properties { element RulerGuidesColor { InDesignUIColorType_TypeDef }? } ? }

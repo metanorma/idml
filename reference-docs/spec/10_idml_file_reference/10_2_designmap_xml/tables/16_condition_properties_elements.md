@@ -1,0 +1,3 @@
+| Name             | Type                                                   | Req     | Description |
+| ---------------- | ------------------------------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| IndicatorColor   | list of 3 doubles or InDesign UIColorType_TypeDef   | no      | The color for the condition indicator, specified either as an array of three doubles, each in the range 0 to 255 and representing R, G, and B val- ues, or as a UI color. |

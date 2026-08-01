@@ -1,0 +1,9 @@
+FlattenerPreference_Object = element FlattenerPreference { attribute LineArtAndTextResolution { xsd:double }?,
+    attribute GradientAndMeshResolution { xsd:double }?,
+    attribute ClipComplexRegions { xsd:boolean }?,
+    attribute ConvertAllStrokesToOutlines { xsd:boolean }?,
+    attribute ConvertAllTextToOutlines { xsd:boolean }?,
+    element Properties { element RasterVectorBalance { (enum_type,
+                FlattenerLevel_EnumValue ) |
+            (double_type,
+                xsd:double {minInclusive="0" maxInclusive="100" } ) }? } ? }

@@ -1,0 +1,16 @@
+TOCStyle_Object = element TOCStyle {
+    attribute Self { xsd:string },
+    attribute TitleStyle { xsd:string }?,
+    attribute Title { xsd:string }?,
+    attribute Name { xsd:string },
+    attribute RunIn { xsd:boolean }?,
+    attribute IncludeHidden { xsd:boolean }?,
+    attribute IncludeBookDocuments { xsd:boolean }?,
+    attribute CreateBookmarks { xsd:boolean }?,
+    attribute SetStoryDirection { HorizontalOrVertical_EnumValue }?,
+    element Properties {
+        element Label { element KeyValuePair { KeyValuePair_TypeDef }* }?
+    } ?,
+( TOCStyleEntry_Object* )
+attribute NumberedParagraphs { NumberedParagraphsOptions_EnumValue }?,
+}

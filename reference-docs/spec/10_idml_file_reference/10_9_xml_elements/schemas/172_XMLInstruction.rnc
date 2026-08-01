@@ -1,0 +1,5 @@
+XMLInstruction_Object = element XMLInstruction {
+    attribute Self { xsd:string },
+    attribute Target { xsd:string },
+    attribute Data { xsd:string }?
+}

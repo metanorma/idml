@@ -1,0 +1,14 @@
+MotionPreset_Object = element MotionPreset {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string }?,
+    attribute EditLocked { xsd:boolean }?,
+    attribute DeleteLocked { xsd:boolean }?,
+    attribute NameLocked { xsd:boolean }?,
+    element Properties {
+        element Contents { xsd:string }?
+        &
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+}?
+}

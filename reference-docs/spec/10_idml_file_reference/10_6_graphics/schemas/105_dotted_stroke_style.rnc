@@ -1,0 +1,1 @@
+DottedStrokeStyle_Object = element DottedStrokeStyle { attribute Self { xsd:string }, attribute DotArray { list { xsd:double * } }?, attribute StrokeCornerAdjustment { StrokeCornerAdjustment_EnumValue }?, attribute Name { xsd:string } }

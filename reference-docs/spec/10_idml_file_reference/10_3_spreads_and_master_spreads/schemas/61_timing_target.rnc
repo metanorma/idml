@@ -1,0 +1,7 @@
+TimingTarget_Object = element TimingTarget { attribute Self { xsd:string },
+    attribute DynamicTarget { xsd:string }?,
+    attribute DelaySeconds { xsd:double {minInclusive="0" maxInclusive="60" } }?,
+    attribute ReverseAnimation { xsd:boolean }?,
+    attribute TargetRole { xsd:int }?,
+    attribute TargetAction { xsd:int }?,
+    attribute Placement { xsd:int }? }

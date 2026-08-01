@@ -1,0 +1,5 @@
+Behavior_Object = element Behavior { attribute Self { xsd:string },
+    attribute Name { xsd:string }?,
+    attribute EnableBehavior { xsd:boolean }?,
+    attribute BehaviorEvent { BehaviorEvents_EnumValue }?,
+    element Properties { element Label { element KeyValuePair { KeyValuePair_TypeDef }* }? } ? }
