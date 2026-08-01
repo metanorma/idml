@@ -35,38 +35,9 @@ RSpec.describe Idml::Composition::Prefix do
   end
 end
 
-RSpec.describe Idml::Composition::InsertIdml do
-  it "is implemented (see insert_idml_spec.rb for behavior)"
-end
-
-RSpec.describe Idml::Composition::AddPageFromIdml do
-  it "raises NotImplementedError" do
-    pkg = Idml::Package.new(File.expand_path(
-                              "../../fixtures/sample-with-image/sample-with-image.idml", __dir__
-                            ))
-    expect do
-      described_class.new(pkg).call(source: pkg, page_number: 1, at: "/Root",
-                                    only: "/Root/page[1]")
-    end
-      .to raise_error(NotImplementedError)
-  end
-end
-
-RSpec.describe Idml::Composition::ImportXml do
-  it "raises NotImplementedError" do
-    pkg = Idml::Package.new(File.expand_path(
-                              "../../fixtures/sample-with-image/sample-with-image.idml", __dir__
-                            ))
-    expect { described_class.new(pkg).call(xml_string: "<Root/>", at: "/Root") }
-      .to raise_error(NotImplementedError)
-  end
-end
-
-RSpec.describe Idml::Composition::ExportXml do
-  it "raises NotImplementedError" do
-    pkg = Idml::Package.new(File.expand_path(
-                              "../../fixtures/sample-with-image/sample-with-image.idml", __dir__
-                            ))
-    expect { described_class.new(pkg).call }.to raise_error(NotImplementedError)
-  end
-end
+# InsertIdml, AddPageFromIdml, ImportXml, ExportXml each have their own
+# dedicated spec file:
+#   spec/idml/composition/insert_idml_spec.rb
+#   spec/idml/composition/add_page_from_idml_spec.rb
+#   spec/idml/composition/import_xml_spec.rb
+#   spec/idml/composition/export_xml_spec.rb

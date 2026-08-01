@@ -24,6 +24,18 @@ module Idml
         map_element "XMLElement", to: :xml_element
         map_element "Content", to: :content
       end
+
+      def text_content
+        [
+          content.map(&:text),
+          xml_element.map(&:text_content),
+        ].join
+      end
+
+      def each_xml_element(&block)
+        yield self
+        xml_element.each { |c| c.each_xml_element(&block) }
+      end
     end
   end
 end
