@@ -1,6 +1,18 @@
 # frozen_string_literal: true
 
 module Idml
+  # Read/write access to an IDML package's ZIP container. A Package
+  # holds a path; ZIP and part reads are lazy. Typed part access goes
+  # through `#part(name)` which dispatches via `Idml::Parts.class_for`.
+  #
+  # @example Open a package and read the designmap
+  #   pkg = Idml::Package.new("path/to/file.idml")
+  #   dm = pkg.designmap
+  #   puts dm.dom_version
+  #
+  # @example Write a new package
+  #   parts = { "mimetype" => "...", "designmap.xml" => "..." }
+  #   Idml::Package.write(parts: parts, to: "out.idml")
   class Package
     # The IDML UCF container's mimetype entry name. Per the IDML spec, this
     # entry must appear first in the archive and be stored uncompressed.

@@ -36,15 +36,7 @@ RSpec.describe Idml::Composition::Prefix do
 end
 
 RSpec.describe Idml::Composition::InsertIdml do
-  it "raises NotImplementedError with a pointer to the TODO" do
-    pkg = Idml::Package.new(File.expand_path(
-                              "../../fixtures/sample-with-image/sample-with-image.idml", __dir__
-                            ))
-    expect do
-      described_class.new(pkg).call(source: pkg, at: "/Root", only: "/Root")
-    end
-      .to raise_error(NotImplementedError, /TODO\.complete\/10-composition/)
-  end
+  it "is implemented (see insert_idml_spec.rb for behavior)"
 end
 
 RSpec.describe Idml::Composition::AddPageFromIdml do
