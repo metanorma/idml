@@ -209,8 +209,8 @@ Use SimpleIDML's `tests/regressiontests/IDML/` fixtures as the corpus.
 3. **Anti-pattern spec is mandatory.** Port `sts-ruby/spec/anti_patterns_spec.rb`
    on day one; it checks every `lib/` file for `method_missing`,
    `instance_variable_set/get`, `.send(`, `respond_to?` type-checks,
-   `Object.const_get`, `require_relative`, internal `require`, and
-   hand-rolled serializers.
+   `Object.const_get`, `require_relative`, internal `require`, hand-rolled
+   serializers, and Nokogiri references.
 4. **Schema authority.** For any new element class, generate the attribute list
    from `reference-docs/idml-specification.pdf` (the relevant section). Don't
    copy from SimpleIDML/IDMLlib blindly — they disagree on edge attributes.
@@ -221,6 +221,10 @@ Use SimpleIDML's `tests/regressiontests/IDML/` fixtures as the corpus.
    meaningful throughout IDML (z-order in spreads, paragraph order in stories).
 7. **`ZIP_STORED` for the package.** IDML files are uncompressed; matching that
    is part of byte-faithful round-trip.
+8. **No Nokogiri.** The gem is fully model-driven through `lutaml-model`;
+   REXML (stdlib) is the stopgap for ad-hoc XML manipulation the typed models
+   don't yet cover. The anti-pattern spec hard-bans `require "nokogiri"` and
+   `Nokogiri::` references in `lib/`. See `TODO.complete/18-remove-nokogiri.md`.
 
 ## Workflow rules (non-negotiable, from global CLAUDE.md)
 

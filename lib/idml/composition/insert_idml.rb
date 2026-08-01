@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "nokogiri"
+require "rexml/document"
 
 module Idml
   module Composition
@@ -54,7 +54,7 @@ module Idml
       end
 
       # Append source's XML structure element children into the
-      # destination's BackingStory root.
+      # destination's BackingStory root. Uses REXML (stdlib).
       class BackingStoryMerger
         def initialize(dest_xml, source_xml)
           @dest_xml = dest_xml
@@ -62,12 +62,14 @@ module Idml
         end
 
         def call
-          dest_doc = Nokogiri::XML(@dest_xml, &:noblanks)
-          source_doc = Nokogiri::XML(@source_xml, &:noblanks)
-          source_doc.root.element_children.each do |child|
-            dest_doc.root.add_child(child.dup)
+          dest_doc = REXML::Document.new(@dest_xml)
+          source_doc = REXML::Document.new(@source_xml)
+          source_doc.root.elements.each do |child|
+            dest_doc.root.add(child.deep_clone)
           end
-          dest_doc.to_xml
+          buffer = +""
+          dest_doc.write(buffer)
+          buffer
         end
       end
     end

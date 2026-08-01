@@ -5,7 +5,6 @@ source "https://rubygems.org"
 gemspec
 
 gem "lutaml-model", "~> 0.8.0"
-gem "nokogiri"
 gem "rake"
 gem "rspec"
 gem "rubocop"

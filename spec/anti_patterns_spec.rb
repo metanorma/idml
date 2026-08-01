@@ -20,6 +20,20 @@ RSpec.describe "Anti-patterns" do
       ],
     )
     stub_const("ALLOWED_RESPOND_TO_USES", [])
+
+    # External gems and stdlib we permit at gem boot and in lib/.
+    # Anything else required from lib/ is an internal require — use autoload.
+    stub_const(
+      "EXTERNAL_REQUIRE_PREFIXES",
+      %w[lutaml forwardable zip fileutils tempfile open3 thor rexml].freeze,
+    )
+    stub_const("EXTERNAL_REQUIRE_EXACT", %w[json set].freeze)
+
+    # Hard ban: never re-introduce Nokogiri. The gem is fully model-driven
+    # through lutaml-model; REXML is the stopgap for ad-hoc XML manipulation
+    # the typed models don't yet cover. See TODO.complete/18-remove-nokogiri.md
+    # and CLAUDE.md "No Nokogiri" rule.
+    stub_const("FORBIDDEN_REQUIRES", %w[nokogiri].freeze)
   end
 
   rb_files.each do |path|
@@ -81,16 +95,23 @@ RSpec.describe "Anti-patterns" do
       end
 
       it "has no require with an internal library path" do
-        # External gems and stdlib (lutaml, zip, fileutils, etc.) are fine;
-        # internal paths (e.g. "idml/package") are not — use autoload.
         matches = source.scan(/^\s*require\s+["']([^"']+)["']/m)
         internal = matches.flatten.reject do |req|
-          req.start_with?("lutaml", "nokogiri", "forwardable", "zip",
-                          "fileutils", "tempfile", "open3", "thor") ||
-            req == "json" || req == "set"
+          EXTERNAL_REQUIRE_PREFIXES.any? { |p| req.start_with?(p) } ||
+            EXTERNAL_REQUIRE_EXACT.include?(req)
         end
         msg = "#{rel}: internal require forbidden (use autoload); found #{internal.inspect}"
         expect(internal).to be_empty, msg
+      end
+
+      it "has no Nokogiri (hard ban)" do
+        violations = FORBIDDEN_REQUIRES.select do |forbidden|
+          source.match?(/require\s+["']#{forbidden}/) ||
+            source.match?(/#{forbidden.capitalize}::/)
+        end
+        msg = "#{rel}: #{violations.inspect} forbidden (see CLAUDE.md); " \
+              "use lutaml-model or REXML"
+        expect(violations).to be_empty, msg
       end
     end
   end

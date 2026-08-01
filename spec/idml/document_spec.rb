@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require "rexml/document"
 
 RSpec.describe Idml::Document do
   let(:fixture_path) do
@@ -19,7 +20,7 @@ RSpec.describe Idml::Document do
   describe "#find_by_self" do
     it "finds an element with the given Self in any part" do
       node = document.find_by_self("uce")
-      expect(node).to be_a(Nokogiri::XML::Node)
+      expect(node).to be_a(REXML::Element)
       expect(node.attribute("Self")&.value).to eq("uce")
     end
 
@@ -53,9 +54,9 @@ RSpec.describe Idml::Document do
   end
 
   describe "#xml_structure" do
-    it "returns BackingStory as a Nokogiri document" do
+    it "returns BackingStory as a REXML document" do
       structure = document.xml_structure
-      expect(structure).to be_a(Nokogiri::XML::Document)
+      expect(structure).to be_a(REXML::Document)
     end
   end
 
