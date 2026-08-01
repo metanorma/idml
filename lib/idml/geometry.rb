@@ -6,16 +6,17 @@ module Idml
   # y increasing upward; page item coordinates are spread-relative.
   # When composing two packages, source coordinates must be translated
   # into the destination's coordinate space.
-  #
-  # Future implementation will port SimpleIDML's algorithm documented
-  # at SimpleIDML/doc/IDML_insert_idml_coordinate_transformation.*.
   module Geometry
+    Point = Struct.new(:x, :y)
+
     module_function
 
-    def translate(point, by:)
-      raise NotImplementedError,
-            "Geometry.translate is not yet implemented; " \
-            "see TODO.complete/10-composition.md"
+    def translate(point, by: offset(x: 0, y: 0))
+      Point.new(point.x + by.x, point.y + by.y)
+    end
+
+    def offset(x:, y:)
+      Point.new(x, y)
     end
   end
 end

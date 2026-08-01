@@ -62,6 +62,20 @@ module Idml
         Result.new(part_name, ok, errors)
       end
 
+      # Tolerate DOMVersion mismatches by blanking the attribute before
+      # validation. Useful for older IDML files: catches every schema
+      # violation except version drift, which is expected.
+      def loose_validate_part(part_name, xml)
+        loosened = xml.gsub(/DOMVersion="[^"]*"/, 'DOMVersion=""')
+        result = validate_part(part_name, loosened)
+        return result if result.ok?
+
+        non_version_errors = result.errors.reject do |e|
+          e.include?("DOMVersion")
+        end
+        Result.new(part_name, non_version_errors.empty?, non_version_errors)
+      end
+
       def validate_package(package)
         package.part_names.filter_map do |name|
           next if NON_SCHEMATIZED_PARTS.include?(name)

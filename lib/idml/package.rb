@@ -15,6 +15,72 @@ module Idml
 
     attr_reader :path
 
+    def designmap
+      @designmap ||= part("designmap.xml")
+    end
+
+    def backing_story
+      @backing_story ||= part("XML/BackingStory.xml")
+    end
+
+    def spreads
+      @spreads ||= part_names.grep(%r{\ASpreads/}).map { |n| part(n) }
+    end
+
+    def master_spreads
+      @master_spreads ||= part_names.grep(%r{\AMasterSpreads/}).map do |n|
+        part(n)
+      end
+    end
+
+    def stories
+      @stories ||= part_names.grep(%r{\AStories/}).map { |n| part(n) }
+    end
+
+    def fonts
+      return unless has_part?("Resources/Fonts.xml")
+
+      @fonts ||= part("Resources/Fonts.xml")
+    end
+
+    def graphic
+      return unless has_part?("Resources/Graphic.xml")
+
+      @graphic ||= part("Resources/Graphic.xml")
+    end
+
+    def style
+      return unless has_part?("Resources/Styles.xml")
+
+      @style ||= part("Resources/Styles.xml")
+    end
+
+    def style_mapping
+      if has_part?("Resources/StyleMapping.xml")
+        @style_mapping ||=
+          part("Resources/StyleMapping.xml")
+      end
+    end
+
+    def preferences
+      if has_part?("Resources/Preferences.xml")
+        @preferences ||=
+          part("Resources/Preferences.xml")
+      end
+    end
+
+    def tags
+      @tags ||= part("XML/Tags.xml") if has_part?("XML/Tags.xml")
+    end
+
+    def mapping
+      @mapping ||= part("XML/Mapping.xml") if has_part?("XML/Mapping.xml")
+    end
+
+    def dom_version
+      designmap&.dom_version
+    end
+
     def part_names
       @part_names ||= with_zip do |zip_file|
         names = []
