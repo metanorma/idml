@@ -5,21 +5,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project goal
 
 Build a premier Ruby gem (`idml`) for **parsing, manipulating, validating, and
-round-tripping Adobe InDesign documents in both `.idml` and `.indd` forms**.
-The gem must:
+round-tripping Adobe InDesign IDML files in pure Ruby**. The gem must:
 
 - Read and write `.idml` packages with full fidelity (round-trip: parse → model →
-  reserialize → byte-equivalent XML parts and a valid ZIP container).
-- Read and write `.indd` (proprietary binary) as a first-class peer of `.idml`.
-  `.indd` round-trip goes through InDesign Server SOAP via `IDSP.wsdl`
-  (`reference-docs/server/lib/IDSP.wsdl`); a future direct-binary parser is a
-  bonus, not a launch requirement. The SOAP path also covers `.indd` ↔ `.idml`
-  ↔ `.pdf` conversion (see `spec/fixtures/sample-with-image/` for the triple).
+  reserialize → byte-equivalent XML parts and a valid ZIP container). This is
+  the core scope and is pure-Ruby.
 - Provide composition operations (insert_idml, add_page_from_idml, XML
   import/export) ported from SimpleIDML.
 - Be modeled after `~/src/mn/sts-ruby/` — same gemspec/GHA/Rakefile shape, same
   `lutaml-model`-only serialization discipline, same anti-pattern spec, same
   autoload convention.
+
+### `.indd` is NOT a peer of `.idml` — it's a foreign format
+
+`.indd` is Adobe's proprietary binary format (magic bytes
+`06 06 ed f5 d8 1d 46 e5 bd 31 ef e7 fe 74 b7 1d`), not a ZIP container.
+`unzip` fails on it. It's an opaque serialization of InDesign's internal
+object graph; no production-quality open-source parser exists, and the
+format changes between InDesign versions.
+
+The gem does NOT parse `.indd` directly. Instead, it integrates with
+whatever converter the user has:
+
+- **InDesign desktop + JSX** (free, user-side) — manual `File → Export`, or
+  scripted via the Scripts panel. Most users do this once and feed the
+  resulting `.idml` to the gem.
+- **InDesign Server SOAP** (`IDSP.wsdl`) — server-side automation. Optional
+  integration via a future `Idml::InDesign::Client` (mirror of SimpleIDML's
+  `indesign/` module). Used when the workflow is headless server-side.
+
+Document this clearly in the README so users know to export `.indd` → `.idml`
+before invoking the gem. Treat `.indd` direct parsing as out of scope unless a
+maintainer steps up to maintain a version-aware binary parser.
 
 Today the repo is a stub (README + `reference-docs/idml-specification.pdf`).
 The first real work is bootstrap + spec extraction.
@@ -235,13 +252,14 @@ implementation work.
    `reference-docs/schemas/{single,package}/`, Adobe-bug patched via
    `fix-adobe-schema-bug.rb`, validated clean against
    `spec/fixtures/sample-with-image/sample-with-image.idml` (all 14 parts pass).
-4. **InDesign Server SOAP client** (`.indd` support, day-one). Port
-   SimpleIDML's `indesign/` module against `reference-docs/server/lib/IDSP.wsdl`.
-   Operations needed: `save_as(src, [{fmt: "idml"}, {fmt: "pdf"}, {fmt: "indd"}])`
-   and `export_package_as`. This is the bridge for all `.indd` ↔ `.idml` ↔ `.pdf`
-   conversions. SOAP samples at
+4. **InDesign Server SOAP client** (`.indd` integration, *optional/deferred*).
+   Only needed for headless server-side workflows. Port SimpleIDML's
+   `indesign/` module against `reference-docs/server/lib/IDSP.wsdl`.
+   Operations: `save_as(src, [{fmt: "idml"}, {fmt: "pdf"}, {fmt: "indd"}])`
+   and `export_package_as`. SOAP samples at
    `reference-docs/server/samples/sample-client/{java,aspnet}/` show the
-   request/response shapes; the `IDSP.wsdl` is the contract.
+   request/response shapes. **Most users do not need this** — they export
+   `.indd` → `.idml` once via InDesign desktop and feed the `.idml` to the gem.
 5. **Package layer.** `Idml::Package` — ZIP read/write, part lookup by name,
    working-copy semantics. Port from SimpleIDML's `IDMLPackage` minus the lazy
    XML caches (we use `lutaml-model` instead of `lxml.etree`).

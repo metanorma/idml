@@ -17,6 +17,7 @@
 /pkg/
 /coverage/
 /spec/reports/
+/spec/examples.txt
 /tmp/
 
 # Editor
