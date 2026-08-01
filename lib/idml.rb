@@ -11,6 +11,7 @@ module Idml
   autoload :PackagingNamespace, "#{__dir__}/idml/namespace"
   autoload :Part,               "#{__dir__}/idml/part"
   autoload :Parts,              "#{__dir__}/idml/parts"
+  autoload :Elements,           "#{__dir__}/idml/elements"
   autoload :Package,            "#{__dir__}/idml/package"
   autoload :Document,           "#{__dir__}/idml/document"
   autoload :Validation,         "#{__dir__}/idml/validation"

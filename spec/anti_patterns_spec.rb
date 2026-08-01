@@ -25,15 +25,16 @@ RSpec.describe "Anti-patterns" do
     # Anything else required from lib/ is an internal require — use autoload.
     stub_const(
       "EXTERNAL_REQUIRE_PREFIXES",
-      %w[lutaml forwardable zip fileutils tempfile open3 thor rexml].freeze,
+      %w[lutaml forwardable zip fileutils tempfile open3 thor].freeze,
     )
     stub_const("EXTERNAL_REQUIRE_EXACT", %w[json set].freeze)
 
-    # Hard ban: never re-introduce Nokogiri. The gem is fully model-driven
-    # through lutaml-model; REXML is the stopgap for ad-hoc XML manipulation
-    # the typed models don't yet cover. See TODO.complete/18-remove-nokogiri.md
-    # and CLAUDE.md "No Nokogiri" rule.
-    stub_const("FORBIDDEN_REQUIRES", %w[nokogiri].freeze)
+    # Hard ban: never re-introduce Nokogiri or REXML. The gem is fully
+    # model-driven through lutaml-model; every XML query routes through
+    # typed model methods. See TODO.complete/18-remove-nokogiri.md,
+    # TODO.complete/23-lutaml-only-no-rexml.md, and CLAUDE.md
+    # "lutaml-model only" rule.
+    stub_const("FORBIDDEN_REQUIRES", %w[nokogiri rexml].freeze)
   end
 
   rb_files.each do |path|
@@ -104,13 +105,13 @@ RSpec.describe "Anti-patterns" do
         expect(internal).to be_empty, msg
       end
 
-      it "has no Nokogiri (hard ban)" do
+      it "has no Nokogiri or REXML (hard ban)" do
         violations = FORBIDDEN_REQUIRES.select do |forbidden|
           source.match?(/require\s+["']#{forbidden}/) ||
             source.match?(/#{forbidden.capitalize}::/)
         end
         msg = "#{rel}: #{violations.inspect} forbidden (see CLAUDE.md); " \
-              "use lutaml-model or REXML"
+              "use lutaml-model only"
         expect(violations).to be_empty, msg
       end
     end
