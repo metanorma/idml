@@ -102,8 +102,8 @@ puts "attribute :_placeholder_, :string # remove me"
 puts
 puts "xml do"
 puts "  root \"#{xml_root.sub(/^idPkg:/, '')}\""
-attrs.each_key do |name|
-  puts %(  map_attribute "#{name}", to: :#{ruby_attr_name(name)})
+attrs.each do |name, _type| # rubocop:disable Style/HashEachMethods
+  puts %(  map_attribute "#{name}", to: :#{ruby_attr_name(name)}")
 end
 puts "end"
 puts
