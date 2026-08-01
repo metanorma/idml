@@ -1,0 +1,4 @@
+= Ruby parser for Adobe IDML
+
+IDML is the InDesign Markup Language from Adobe used by InDesign.
+
