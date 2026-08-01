@@ -1,0 +1,34 @@
+Page_Object = element Page { attribute Self { xsd:string },
+    attribute AppliedAlternateLayout { xsd:string }?,
+    attribute LayoutRule { LayoutRuleOptions_EnumValue }?,
+    attribute SnapshotBlendingMode { SnapshotBlendingModes_EnumValue }?,
+    attribute OptionalPage { xsd:boolean }?,
+    attribute GeometricBounds { list { xsd:double,
+            xsd:double,
+            xsd:double,
+            xsd:double } }?,
+    attribute ItemTransform { TransformationMatrixType_TypeDef }?,
+    attribute Name { xsd:string }?,
+    attribute AppliedTrapPreset { xsd:string }?,
+    attribute OverrideList { list { xsd:string * } }?,
+    attribute AppliedMaster { xsd:string }?,
+    attribute MasterPageTransform { TransformationMatrixType_TypeDef }?,
+    attribute TabOrder { list { xsd:string * } }?,
+    attribute GridStartingPoint { GridStartingPointOptions_EnumValue }?,
+    attribute UseMasterGrid { xsd:boolean }?,
+    element Properties { element Descriptor { list_type,
+            element ListItem { (string_type,
+                    xsd:string ) |
+                (enum_type,
+                    PageNumberStyle_EnumValue ) |
+                (bool_type,
+                    xsd:boolean ) |
+                (long_type,
+                    xsd:int {minInclusive="1" maxInclusive="999999" } ) }* }? &
+        element PageColor { (InDesignUIColorType_TypeDef ) |
+            (enum_type,
+                PageColorOptions_EnumValue ) }? &
+        element Label { element KeyValuePair { KeyValuePair_TypeDef }* }? } ?,
+    ( MarginPreference_Object? &
+        Guide_Object* &
+        GridDataInformation_Object? ) }

@@ -1,0 +1,1 @@
+TransparencySetting_Object = element TransparencySetting { ( BlendingSetting_Object?& DropShadowSetting_Object?& FeatherSetting_Object?& InnerShadowSetting_Object?& OuterGlowSetting_Object?& InnerGlowSetting_Object?& BevelAndEmbossSetting_Object?& SatinSetting_Object?& DirectionalFeatherSetting_Object?& GradientFeatherSetting_Object? ) }

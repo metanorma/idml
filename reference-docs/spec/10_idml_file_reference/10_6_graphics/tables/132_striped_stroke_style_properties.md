@@ -1,0 +1,4 @@
+| Name          | Type                                           | Req     | Description |
+| ------------- | ---------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name          | string                                         | no      | The name of the striped stroke style. |
+| StripeArray   | list of doubles as a space separated string   | no      | The width and position of stripes in a striped stroke pattern. Each stripe is specified by a start- end pair in the format start1, end1, start2, end2; each value indicates a percentage of the stroke weight. Each value must be greater than the pre- vious value. Range: 0 to 100. |

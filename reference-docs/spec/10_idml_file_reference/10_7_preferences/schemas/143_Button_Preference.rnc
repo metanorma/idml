@@ -1,0 +1,1 @@
+ButtonPreference_Object = element ButtonPreference { attribute Name { xsd:string }? }

@@ -1,0 +1,1 @@
+<AnchoredObjectSetting Self="dAnchoredObjectSetting1" AnchoredPosition="Inline Position" SpineRelative="false" LockPosition="false" PinPosition="true" AnchorPoint="BottomRightAnchor" HorizontalAlignment="Left Align" HorizontalReferencePoint="TextFrame" VerticalAlignment="TopAlign" VerticalReferencePoint="Line Baseline" AnchorXoffset="0" AnchorYoffset="0" AnchorSpaceAbove="0"/>

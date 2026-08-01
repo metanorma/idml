@@ -1,0 +1,13 @@
+PreflightProfileRule_Object = element PreflightProfileRule {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string }?,
+    attribute Id { xsd:string },
+    attribute Description { xsd:string }?,
+    attribute Flag { PreflightRuleFlag_EnumValue }?,
+    element Properties {
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+} ?,
+( RuleDataObject_Object* )
+}

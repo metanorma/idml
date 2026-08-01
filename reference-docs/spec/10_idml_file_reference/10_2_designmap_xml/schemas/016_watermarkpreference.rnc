@@ -1,0 +1,18 @@
+WatermarkPreference_Object = element WatermarkPreference {
+    attribute WatermarkVisibility { xsd:boolean }?,
+    attribute WatermarkDoPrint { xsd:boolean }?,
+    attribute WatermarkDrawInBack { xsd:boolean }?,
+    attribute WatermarkText { xsd:string }?,
+    attribute WatermarkFontFamily { xsd:string }?,
+    attribute WatermarkFontStyle { xsd:string }?,
+    attribute WatermarkFontPointSize { xsd:int }?,
+    attribute WatermarkOpacity { xsd:int }?,
+    attribute WatermarkRotation { xsd:int }?,
+    attribute WatermarkHorizontalPosition { WatermarkHorizontalPositionEnum_EnumValue }?,
+    attribute WatermarkHorizontalOffset { xsd:double }?,
+    attribute WatermarkVerticalPosition { WatermarkVerticalPositionEnum_EnumValue }?,
+    attribute WatermarkVerticalOffset { xsd:double }?,
+    element Properties {
+        element WatermarkFontColor { InDesignUIColorType_TypeDef }?
+    } ?
+}

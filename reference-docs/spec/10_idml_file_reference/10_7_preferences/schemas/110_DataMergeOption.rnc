@@ -1,0 +1,1 @@
+DataMergeOption_Object = element DataMergeOption { attribute FittingOption { Fitting_EnumValue }?, attribute CenterImage { xsd:boolean }?, attribute LinkImages { xsd:boolean }?, attribute RemoveBlankLines { xsd:boolean }?, attribute CreateNewDocument { xsd:boolean }?, attribute DocumentSize { xsd:int }? }

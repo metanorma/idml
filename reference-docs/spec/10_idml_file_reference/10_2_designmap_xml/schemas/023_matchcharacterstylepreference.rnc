@@ -1,0 +1,8 @@
+MatchCharacterStylePreference_Object = element MatchCharacterStylePreference {
+    attribute TextBefore { xsd:string }?,
+    attribute TextAfter { xsd:string }?,
+    attribute AppliedCharacterStyle { xsd:string }?,
+    attribute SearchStrategy { SearchStrategies_EnumValue }?,
+    attribute ChangeCase { ChangeCaseOptions_EnumValue }?,
+    attribute DeleteEndPunctuation { xsd:boolean }?
+}

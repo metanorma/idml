@@ -1,0 +1,1 @@
+MetadataPacketPreference_Object = element MetadataPacketPreference { element Properties { element Contents { xsd:string }? } ? }

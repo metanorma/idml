@@ -1,0 +1,4 @@
+NavigationPoint_Object = element NavigationPoint { attribute Self { xsd:string },
+    attribute Id { xsd:int }?,
+    attribute Name { xsd:string }?,
+    attribute Time { xsd:double }? }

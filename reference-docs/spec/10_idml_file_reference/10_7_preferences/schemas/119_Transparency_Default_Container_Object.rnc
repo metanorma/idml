@@ -1,0 +1,1 @@
+TransparencyDefaultContainerObject_Object = element TransparencyDefaultContainerObject { ( TransparencySetting_Object?& StrokeTransparencySetting_Object?& FillTransparencySetting_Object?& ContentTransparencySetting_Object? ) }

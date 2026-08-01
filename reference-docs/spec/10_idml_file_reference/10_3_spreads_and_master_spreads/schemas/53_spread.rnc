@@ -1,0 +1,30 @@
+Spread_Object = element Spread { attribute Self { xsd:string },
+    attribute FlattenerOverride { SpreadFlattenerLevel_EnumValue }?,
+    attribute AllowPageShuffle { xsd:boolean }?,
+    attribute ItemTransform { TransformationMatrixType_TypeDef }?,
+    attribute ShowMasterItems { xsd:boolean }?,
+    attribute PageCount { xsd:int }?,
+    attribute BindingLocation { xsd:int }?,
+    attribute PageTransitionType { PageTransitionTypeOptions_EnumValue }?,
+    attribute PageTransitionDirection { PageTransitionDirectionOptions_EnumValue }?,
+    attribute PageTransitionDuration { PageTransitionDurationOptions_EnumValue }?,
+    element Properties { element Label { element KeyValuePair { KeyValuePair_TypeDef }* }? } ?,
+    ( FlattenerPreference_Object?,
+        TimingSetting_Object?,
+        (Pumpkin_Object* &
+            Page_Object* &
+            Oval_Object* &
+            Rectangle_Object* &
+            GraphicLine_Object* &
+            TextFrame_Object* &
+            Polygon_Object* &
+            Group_Object* &
+            EPSText_Object* &
+            FormField_Object* &
+            Button_Object* &
+            MultiStateObject_Object* CheckBox_Object* &
+            ComboBox_Object* &
+            ListBox_Object* &
+            RadioButton_Object* &
+            TextBox_Object* &
+            SignatureField_Object* ) ) }

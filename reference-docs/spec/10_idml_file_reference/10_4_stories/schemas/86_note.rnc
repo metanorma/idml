@@ -1,0 +1,13 @@
+Note_Object = element Note { attribute Collapsed { xsd:boolean }?,
+    attribute CreationDate { xsd:dateTime }?,
+    attribute ModificationDate { xsd:dateTime }?,
+    attribute UserName { xsd:string }?,
+    attribute AppliedDocumentUser { xsd:string }?,
+    element Properties { element Label { element KeyValuePair { KeyValuePair_TypeDef }* }? } ?,
+    ( Footnote_Object* &
+        GaijiOwnedItemObject_Object* &
+        TextVariableInstance_Object* &
+        Table_Object* &
+        ParagraphStyleRange_Object* &
+        CharacterStyleRange_Object* &
+        HiddenText_Object* ) }

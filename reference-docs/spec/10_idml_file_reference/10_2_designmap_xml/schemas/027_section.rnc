@@ -1,0 +1,25 @@
+Section_Object = element Section {
+    attribute Self { xsd:string },
+    attribute Length { xsd:int }?,
+    attribute Name { xsd:string }?,
+    attribute AlternateLayoutLength { xsd:int }?,
+    attribute AlternateLayout { xsd:string }?,
+    attribute Pagination { PaginationOption_EnumValue }?,
+    attribute PaginationMaster { xsd:string }?,
+    attribute ContinueNumbering { xsd:boolean }?,
+    attribute IncludeSectionPrefix { xsd:boolean }?,
+    attribute PageNumberStart { xsd:int {minInclusive="1" maxInclusive="999999" } }?,
+    attribute Marker { xsd:string }?,
+    attribute PageStart { xsd:string }?,
+    attribute SectionPrefix { xsd:string }?,
+    element Properties {
+        element PageNumberStyle { (enum_type,
+                PageNumberStyle_EnumValue ) |
+            (string_type,
+                xsd:string ) }?
+        &
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+} ?
+}

@@ -1,0 +1,3 @@
+PDFAttribute_Object = element PDFAttribute { attribute PageNumber { xsd:int }?,
+    attribute PDFCrop { PDFCrop_EnumValue }?,
+    attribute TransparentBackground { xsd:boolean }? }

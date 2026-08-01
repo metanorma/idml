@@ -1,0 +1,3 @@
+| Name         | Type                                                                        | Req     | Description |
+| ------------ | --------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FrameColor   | list of doubles, InDesignUIColorType_TypeDef, or NothingEnum_EnumValue   | no      | The color of the assignment's frames, specified either as an array of three doubles, each in the range 0 to 255 and representing R, G, and B values, or as an InDesignUIColorType enumeration. |

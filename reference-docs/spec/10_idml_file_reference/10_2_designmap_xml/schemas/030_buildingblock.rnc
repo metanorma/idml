@@ -1,0 +1,8 @@
+BuildingBlock_Object = element BuildingBlock {
+    attribute Self { xsd:string },
+    attribute BlockType { BuildingBlockTypes_EnumValue },
+    attribute AppliedCharacterStyle { xsd:string }?,
+    attribute CustomText { xsd:string }?,
+    attribute AppliedDelimiter { xsd:string }?,
+    attribute IncludeDelimiter { xsd:boolean }?
+}

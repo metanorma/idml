@@ -1,0 +1,21 @@
+Assignment_Object = element Assignment {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string }?,
+    attribute UserName { xsd:string }?,
+    attribute ExportOptions { AssignmentExportOptions_EnumValue }?,
+    attribute IncludeLinksWhenPackage { xsd:boolean }?,
+    attribute FilePath { xsd:string },
+    element Properties {
+        element FrameColor {
+            (InDesignUIColorType_TypeDef )
+            |
+            (enum_type,
+                NothingEnum_EnumValue )
+        }?
+    &
+    element Label {
+        element KeyValuePair { KeyValuePair_TypeDef }*
+    }?
+} ?,
+( AssignedStory_Object* )
+}

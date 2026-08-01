@@ -1,0 +1,1 @@
+XMLImportMap_Object = element XMLImportMap { attribute Self { xsd:string }, attribute MarkupTag { xsd:string }, attribute MappedStyle { xsd:string } }

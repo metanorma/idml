@@ -1,0 +1,8 @@
+IndexingSortOption_Object = element IndexingSortOption {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    attribute Include { xsd:boolean }?,
+    attribute Priority { xsd:int }?,
+    attribute HeaderType { (HeaderTypes_EnumValue ) |
+        (NothingEnum_EnumValue ) }?
+}

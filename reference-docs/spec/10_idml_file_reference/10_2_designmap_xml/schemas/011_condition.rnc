@@ -1,0 +1,14 @@
+Condition_Object = element Condition {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    attribute IndicatorMethod { ConditionIndicatorMethod_EnumValue }?,
+    attribute UnderlineIndicatorAppearance { ConditionUnderlineIndicatorAppearance_EnumValue }?,
+    attribute Visible { xsd:boolean }?,
+    element Properties {
+        element IndicatorColor { InDesignUIColorType_TypeDef }?
+        &
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+}?
+}

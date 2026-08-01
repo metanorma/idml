@@ -1,0 +1,1 @@
+TinDocumentDataObject_Object = element TinDocumentDataObject { element Properties { element GaijiRefMaps { text }? } ? }

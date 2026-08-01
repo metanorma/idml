@@ -1,0 +1,11 @@
+Article_Object = element Article {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string }?,
+    attribute ArticleExportStatus { xsd:boolean }?,
+    element Properties {
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+} ?,
+( ArticleMember_Object* )
+}

@@ -1,0 +1,1 @@
+TransparencyPreference_Object = element TransparencyPreference { attribute BlendingSpace { BlendingSpace_EnumValue }?, attribute GlobalLightAngle { xsd:double {minInclusive="180" maxInclusive="180"} }?, attribute GlobalLightAltitude { xsd:double {minInclusive="0" maxInclusive="100"} }? }

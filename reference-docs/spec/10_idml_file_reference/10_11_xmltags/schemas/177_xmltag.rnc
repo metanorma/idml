@@ -1,0 +1,10 @@
+XMLTag_Object = element XMLTag {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    element Properties {
+        element TagColor { InDesignUIColorType_TypeDef }? &
+        element Label { 
+            element KeyValuePair { KeyValuePair_TypeDef }* 
+        }?
+    }?
+}

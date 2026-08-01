@@ -1,0 +1,22 @@
+TOCStyleEntry_Object = element TOCStyleEntry {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string }?,
+    attribute Level { xsd:short }?,
+    attribute PageNumberPosition { PageNumberPosition_EnumValue }?,
+    attribute Separator { xsd:string }?,
+    attribute SortAlphabet { xsd:boolean }?,
+    element Properties {
+        element FormatStyle { (object_type,
+                xsd:string ) |
+            (string_type,
+                xsd:string ) }? &
+        element PageNumberStyle { (object_type,
+                xsd:string ) |
+            (string_type,
+                xsd:string ) }? &
+        element SeparatorStyle { (object_type,
+                xsd:string ) |
+            (string_type,
+                xsd:string ) }?
+    } ?
+}

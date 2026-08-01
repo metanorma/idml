@@ -1,0 +1,9 @@
+ObjectStyleGroup_Object = element ObjectStyleGroup {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    element Properties {
+        element Label { element KeyValuePair { KeyValuePair_TypeDef }* }?
+    } ?,
+( ObjectStyle_Object* &
+    ObjectStyleGroup_Object* )
+}

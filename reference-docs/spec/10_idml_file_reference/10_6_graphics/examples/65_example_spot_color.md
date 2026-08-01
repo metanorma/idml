@@ -1,0 +1,1 @@
+<Color Self="Color\PANTONE 274 C" Model="Spot" Space="CMYK" ColorValue="100 100 0 28" ColorOverride="Normal" BaseColor="n" SpotInkAliasSpotColorReference="n" AlternateSpace="LAB" AlternateColorValue="12.549019607843137 23 -42" Name="PANTONE 274 C" ColorEditable="true" ColorRemovable="true" Visible="true" SwatchCreatorID="31500"/>

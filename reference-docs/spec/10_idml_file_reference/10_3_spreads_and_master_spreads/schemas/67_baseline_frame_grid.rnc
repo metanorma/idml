@@ -1,0 +1,5 @@
+BaselineFrameGridOption_Object = element BaselineFrameGridOption { attribute UseCustomBaselineFrameGrid { xsd:boolean }?,
+    attribute StartingOffsetForBaselineFrameGrid { xsd:double {minInclusive="0" maxInclusive="8640" } }?,
+    attribute BaselineFrameGridRelativeOption { BaselineFrameGridRelativeOption_EnumValue }?,
+    attribute BaselineFrameGridIncrement { xsd:double {minInclusive="1" maxInclusive="8640" } }?,
+    element Properties { element BaselineFrameGridColor { InDesignUIColorType_TypeDef }? } ? }

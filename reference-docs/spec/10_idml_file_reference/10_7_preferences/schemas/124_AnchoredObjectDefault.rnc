@@ -1,0 +1,1 @@
+AnchoredObjectDefault_Object = element AnchoredObjectDefault { attribute AnchorContent { ContentType_EnumValue }?, attribute InitialAnchorHeight { xsd:double }?, attribute InitialAnchorWidth { xsd:double }?, attribute AnchoredParagraphStyle { xsd:string }?, attribute AnchoredObjectStyle { xsd:string }? }

@@ -1,0 +1,3 @@
+TextWrapPreference_Object = element TextWrapPreference { attribute Inverse { xsd:boolean }?, attribute ApplyToMasterPageOnly { xsd:boolean }?, attribute TextWrapSide { TextWrapSideOptions_EnumValue }?, attribute TextWrapMode { TextWrapModes_EnumValue }?, element Properties { element TextWrapOffset { UnitRectangleBoundsType_TypeDef }?& element PathGeometry { element GeometryPathType { GeometryPathType_TypeDef }* }? } ? , ( ContourOption_Object? ) }
+
+ContourOption_Object = element ContourOption { attribute ContourType { ContourOptionsTypes_EnumValue }?, attribute IncludeInsideEdges { xsd:boolean }?, attribute ContourPathName { xsd:string }? }

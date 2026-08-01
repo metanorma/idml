@@ -1,0 +1,16 @@
+CrossReferenceSource_Object = element CrossReferenceSource { attribute Self { xsd:string },
+    attribute AppliedFormat { xsd:string },
+    attribute Name { xsd:string }?,
+    attribute Hidden { xsd:boolean }?,
+    attribute AppliedCharacterStyle { xsd:string }?,
+    element Properties { element Label { element KeyValuePair { KeyValuePair_TypeDef }* }? } ?,
+    ( GaijiOwnedItemObject_Object* &
+        TextVariableInstance_Object* &
+        HyperlinkTextDestination_Object* &
+        Change_Object* &
+        HiddenText_Object* &
+        XMLElement_Object* &
+        XMLInstruction_Object1* &
+        XMLComment_Object* &
+        ParagraphStyleRange_Object* &
+        CharacterStyleRange_Object* ) }

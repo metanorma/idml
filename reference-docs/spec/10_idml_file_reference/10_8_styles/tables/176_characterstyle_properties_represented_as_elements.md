@@ -1,0 +1,3 @@
+| Name      | Type     | Req     | Description |
+| --------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BasedOn   | string   | no      | A reference to the CharacterStyle that this character style is based on, as a unique ID (the value of the Self attribute of the <CharacterStyle> element), or as a reference to the default '[No CharacterStyle]' element, in the form: $ID/[No CharacterStyle]. This is the default. |

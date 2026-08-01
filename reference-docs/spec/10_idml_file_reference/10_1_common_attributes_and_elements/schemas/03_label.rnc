@@ -1,0 +1,7 @@
+element Properties {
+    element Label {
+        element KeyValuePair {
+            KeyValuePair_Type
+        }*
+}?
+}

@@ -1,0 +1,1 @@
+StripedStrokeStyle_Object = element StripedStrokeStyle { attribute Self { xsd:string }, attribute StripeArray { list { xsd:double * } }?, attribute Name { xsd:string } }

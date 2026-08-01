@@ -1,0 +1,1 @@
+FrameFittingOption_Object = element FrameFittingOption { attribute AutoFit { xsd:boolean }?, attribute LeftCrop { xsd:double }?, attribute TopCrop { xsd:double }?, attribute RightCrop { xsd:double }?, attribute BottomCrop { xsd:double }?, attribute FittingOnEmptyFrame { EmptyFrameFittingOptions_EnumValue }?, attribute FittingAlignment { AnchorPoint_EnumValue }? }

@@ -1,0 +1,3 @@
+| Name                   | Type                                                   | Req     | Description |
+| ---------------------- | ------------------------------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WatermarkFontColor   | list of 3 doubles or InDesign UIColorType_TypeDef   | no      | The color for the watermark, specified either as an array of three doubles, each in the range 0 to 255 and representing R, G, and B values, or as a UI color. |

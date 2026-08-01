@@ -1,0 +1,5 @@
+CaptionMetadataVariablePreference_Object = element CaptionMetadataVariablePreference {
+    attribute TextBefore { xsd:string }?,
+    attribute MetadataProviderName { xsd:string }?,
+    attribute TextAfter { xsd:string }?
+}

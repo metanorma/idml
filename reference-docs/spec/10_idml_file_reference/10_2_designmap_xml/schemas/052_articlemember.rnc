@@ -1,0 +1,4 @@
+ArticleMember_Object = element ArticleMember {
+    attribute Self { xsd:string },
+    attribute ItemRef { xsd:string }
+}

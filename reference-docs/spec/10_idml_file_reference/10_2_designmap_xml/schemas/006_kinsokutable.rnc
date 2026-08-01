@@ -1,0 +1,13 @@
+KinsokuTable_Object = element KinsokuTable {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    attribute CantBeginLineChars { xsd:string }?,
+    attribute CantEndLineChars { xsd:string }?,
+    attribute HangingPunctuationChars { xsd:string }?,
+    attribute CantBeSeparatedChars { xsd:string }?,
+    element Properties {
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+}?
+}

@@ -1,0 +1,7 @@
+Footnote_Object = element Footnote { element Properties { element Label { element KeyValuePair { KeyValuePair_TypeDef }* }? } ?,
+    ( Table_Object* &
+        GaijiOwnedItemObject_Object* &
+        TextVariableInstance_Object* &
+        ParagraphStyleRange_Object* &
+        CharacterStyleRange_Object* &
+        HiddenText_Object* ) }

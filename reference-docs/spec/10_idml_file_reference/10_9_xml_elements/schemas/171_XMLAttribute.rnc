@@ -1,0 +1,5 @@
+XMLAttribute_Object = element XMLAttribute {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    attribute Value { xsd:string }
+}

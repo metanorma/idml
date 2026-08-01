@@ -1,0 +1,1 @@
+<Color Self="Color\L=29 a=64 b=0" Model="Process" Space="LAB" ColorValue="29 64 0" ColorOverride="Normal" BaseColor="n" AlternateSpace="NoAlternateColor" AlternateColorValue="" Name="L=29 a=64 b=0" ColorEditable="true" ColorRemovable="true" Visible="true" SwatchCreatorID="7937"/>

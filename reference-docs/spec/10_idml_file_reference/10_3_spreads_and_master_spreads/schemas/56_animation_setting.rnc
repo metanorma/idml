@@ -1,0 +1,22 @@
+AnimationSetting_Object = element AnimationSetting { attribute TransformOffsets { list { xsd:double,
+            xsd:double } }?,
+    attribute Duration { xsd:double {minInclusive="0.125" maxInclusive="60" } }?,
+    attribute DesignOption { DesignOptions_EnumValue }?,
+    attribute EaseType { AnimationEaseOptions_EnumValue }?,
+    attribute Plays { xsd:int {minInclusive="1" maxInclusive="100" } }?,
+    attribute PlaysLoop { xsd:boolean }?,
+    attribute InitiallyHidden { xsd:boolean }?,
+    attribute HiddenAfter { xsd:boolean }?,
+    attribute HasCustomSettings { xsd:boolean }?,
+    element Properties { element Preset { (object_type,
+                xsd:string ) |
+            (string_type,
+                xsd:string ) |
+            (enum_type,
+                NothingEnum_EnumValue ) }? &
+        element MotionPathPoints { GeometryPathType_TypeDef }? &
+        element MotionPath { element AnimationDataPathKeyFrameType { AnimationDataPathKeyFrameType_TypeDef }* }? &
+        element OpacityArray { element AnimationDataKeyFrameType { AnimationDataKeyFrameType_TypeDef }* }? &
+        element RotationArray { element AnimationDataKeyFrameType { AnimationDataKeyFrameType_TypeDef }* }? &
+        element ScaleXArray { element AnimationDataKeyFrameType { AnimationDataKeyFrameType_TypeDef }* }? &
+        element ScaleYArray { element AnimationDataKeyFrameType { AnimationDataKeyFrameType_TypeDef }* }? } ? }

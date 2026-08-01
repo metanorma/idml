@@ -1,0 +1,14 @@
+MojikumiTable_Object = element MojikumiTable {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    attribute BasedOnMojikumiSet { MojikumiTableDefaults_EnumValue }?,
+    element Properties {
+        element OverrideMojikumiAkiList {
+            element OverrideMojikumiAkiType { OverrideMojikumiAkiType_TypeDef }*
+        }?
+    &
+    element Label {
+        element KeyValuePair { KeyValuePair_TypeDef }*
+    }?
+}?
+}

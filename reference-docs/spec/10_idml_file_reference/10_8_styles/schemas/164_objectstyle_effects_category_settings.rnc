@@ -1,0 +1,12 @@
+ObjectStyleFillEffectsCategorySettings_Object = element ObjectStyleFillEffectsCategorySettings {
+    attribute EnableTransparency { xsd:boolean }?,
+    attribute EnableDropShadow { xsd:boolean }?,
+    attribute EnableFeather { xsd:boolean }?,
+    attribute EnableInnerShadow { xsd:boolean }?,
+    attribute EnableOuterGlow { xsd:boolean }?,
+    attribute EnableInnerGlow { xsd:boolean }?,
+    attribute EnableBevelEmboss { xsd:boolean }?,
+    attribute EnableSatin { xsd:boolean }?,
+    attribute EnableDirectionalFeather { xsd:boolean }?,
+    attribute EnableGradientFeather { xsd:boolean }?
+}

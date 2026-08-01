@@ -1,0 +1,15 @@
+| Attribute                 | Data Type                                        | Req | Description |
+| ---                       | ---                                              | --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FlattenerOverride         | SpreadFlattener_Level_EnumValue                 | no  | The transparency FlattenerPreferences override for the spread. ( <Spread> only). Can be Default, None, or Custom . |
+| ItemTransform             | list of doubles                                  | no  | Atransformation matrix applied to the spread. In InDesign, spreads can be rotated, but not translated, scaled, or skewed, so this matrix will only specify rotation, and that only in 90-degree increments. |
+| ShowMasterItems           | Boolean                                          | no  | If true, displays master page items on document pages in the spread. |
+| PageCount                 | int                                              | no  | The number of pages in the spread. |
+| BindingLocation           | int                                              | no  | The location of the binding edge of the spread. ( <Spread> only) |
+| AllowPageShuffle          | Boolean                                          | no  | If true, allows the pages of the spread to move to other spreads during repagination. If false, keeps the pages of the spread together, regardless of repagination. ( <Spread> only) |
+| AppliedMaster             | string                                           | no  | Areference to the unique ID (the value of the Self attribute) of the master spread applied to the <Spread> or <MasterSpread>. |
+| Name                      | string                                           | no  | The name of the master spread. ( <MasterSpread> only) |
+| NamePrefix                | string                                           | no  | The name prefix of the master spread. ( <MasterSpread> only) |
+| BaseName                  | string                                           | no  | The base name of the master spread. ( <MasterSpread> only) |
+| PageTransitionDirection | PageTransitionTypeDirectionOptions_EnumValue | no  | The direction is based on the page transtion type. Can be: HorizontalIn, HorizontalOut, VerticalIn, VerticalOut, Down, Left, LeftDown, LeftUp, Right, RightDown, RightUp, or Up . |
+| PageTransitionDuration  | PageTransitionTypeDurationOptions_EnumValue  | no  | The duration of the page transition. Can be Fast, Medim, or Slow . |
+| PageTransitionType      | PageTransitionTypeOptions_EnumValue           | no  | The type of the page transition. Can be Blinds- Transition, BoxTransition, CombTransition, CoverTransition, DissolveTransition, Fade- Transition, NoneTransition, PageTurnTransition, PushTransition, SplitTransition, UncoverTransition, WipeTransition, ZoomInTransition, or ZoomOutTransition |

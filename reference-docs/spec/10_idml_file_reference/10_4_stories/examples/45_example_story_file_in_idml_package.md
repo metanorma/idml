@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging">
+    <Story Self="ucb">
+        <ParagraphStyleRange>
+            <CharacterStyleRange>
+                <Content>Hello World</Content>
+            </CharacterStyleRange>
+        </ParagraphStyleRange>
+    </Story>
+</idPkg:Story>

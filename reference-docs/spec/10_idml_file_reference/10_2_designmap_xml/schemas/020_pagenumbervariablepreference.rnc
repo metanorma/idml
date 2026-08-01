@@ -1,0 +1,6 @@
+PageNumberVariablePreference_Object = element PageNumberVariablePreference {
+    attribute TextBefore { xsd:string }?,
+    attribute Format { VariableNumberingStyles_EnumValue }?,
+    attribute TextAfter { xsd:string }?,
+    attribute Scope { VariableScopes_EnumValue }?
+}

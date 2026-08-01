@@ -1,0 +1,1 @@
+<AnchoredObjectDefault Self="dAnchoredObjectDefault1" AnchorContent="Unassigned" InitialAnchorHeight="72" InitialAnchorWidth="72" AnchoredParagraphStyle="ParagraphStyle\k[No paragraph style]" AnchoredObjectStyle="ObjectStyle\k[None]"/>

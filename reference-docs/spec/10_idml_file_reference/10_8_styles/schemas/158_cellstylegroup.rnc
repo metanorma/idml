@@ -1,0 +1,7 @@
+CellStyleGroup_Object = element CellStyleGroup {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    element Properties { }? } ?,
+( CellStyle_Object* &
+    CellStyleGroup_Object* )
+element Label { element KeyValuePair { KeyValuePair_TypeDef }* }

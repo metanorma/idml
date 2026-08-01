@@ -1,0 +1,28 @@
+ABullet_Object = element ABullet {
+    attribute Self { xsd:string },
+    attribute CharacterType { BulletCharacterType_EnumValue }?,
+    attribute CharacterValue { xsd:int }?,
+    element Properties {
+        element BulletsFont {
+            (object_type,
+                xsd:string )
+            |
+            (string_type,
+                xsd:string )
+            |
+            (enum_type,
+                AutoEnum_EnumValue )
+        }?
+    &
+    element BulletsFontStyle {
+        (string_type,
+            xsd:string )
+        |
+        (enum_type,
+            NothingEnum_EnumValue )
+        |
+        (enum_type,
+            AutoEnum_EnumValue )
+    }?
+} ?
+}

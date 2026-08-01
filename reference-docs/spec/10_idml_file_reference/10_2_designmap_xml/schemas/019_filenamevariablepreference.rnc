@@ -1,0 +1,6 @@
+FileNameVariablePreference_Object = element FileNameVariablePreference {
+    attribute TextBefore { xsd:string }?,
+    attribute IncludePath { xsd:boolean }?,
+    attribute IncludeExtension { xsd:boolean }?,
+    attribute TextAfter { xsd:string }?
+}

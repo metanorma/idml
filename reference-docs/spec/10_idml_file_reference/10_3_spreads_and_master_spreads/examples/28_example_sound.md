@@ -1,0 +1,1 @@
+<Sound Self="uf3" Name="abc.mp3" Description="" PlayOnPageTurn="false" SoundLoop="false" StopOnPageTurn="false" DoNotPrintPoster="false" EmbedInPDF="true" FilePath="C:\abc.mp3" ItemTransform="1 0 0 1 0 0" LocalDisplaySetting="Default" AppliedObjectStyle="ObjectStyle/$ID/[None]" Visible="true"/>

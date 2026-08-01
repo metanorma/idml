@@ -1,0 +1,3 @@
+| Name      | Type     | Req     | Description |
+| --------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BasedOn   | string   | no      | Areference to the cell style that this cell style is based on, as a unique ID (the value of the Self attribute of the <CellStyle> element), or as a reference to the default '[No cell style]' element, in the form: $ID/[No cell style] . This is the default. |

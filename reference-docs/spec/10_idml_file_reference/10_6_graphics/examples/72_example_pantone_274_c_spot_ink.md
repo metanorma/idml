@@ -1,0 +1,1 @@
+<Ink Self="Ink\cPANTONE 274 C" Name="PANTONE 274 C" AliasInkName="[No Alias]" Angle="45" ConvertToProcess="false" Frequency="70" NeutralDensity="1.6130121989933028" PrintInk="true" TrapOrder="5" InkType="Normal"/>

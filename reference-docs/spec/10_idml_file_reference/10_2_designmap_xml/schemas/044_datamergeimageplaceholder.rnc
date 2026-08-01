@@ -1,0 +1,5 @@
+DataMergeImagePlaceholder_Object = element DataMergeImagePlaceholder {
+    attribute Self { xsd:string },
+    attribute Field { xsd:string },
+    attribute PlaceholderPageItem { xsd:string }
+}

@@ -1,0 +1,11 @@
+NumberingList_Object = element NumberingList {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    attribute ContinueNumbersAcrossStories { xsd:boolean }?,
+    attribute ContinueNumbersAcrossDocuments { xsd:boolean }?,
+    element Properties {
+        element Label {
+            element KeyValuePair { KeyValuePair_TypeDef }*
+        }?
+}?
+}

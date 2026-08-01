@@ -1,0 +1,4 @@
+BackingStory_File = element idPkg:BackingStory {
+    attribute DOMVersion { "7.0" },
+    ( XmlStory_Object* )
+}

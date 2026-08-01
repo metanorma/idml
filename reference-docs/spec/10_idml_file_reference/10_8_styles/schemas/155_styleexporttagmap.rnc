@@ -1,0 +1,7 @@
+StyleExportTagMap_Object = element StyleExportTagMap {
+    attribute Self { xsd:string },
+    attribute ExportType { xsd:string },
+    attribute ExportTag { xsd:string },
+    attribute ExportClass { xsd:string },
+    attribute ExportAttributes { xsd:string }
+}

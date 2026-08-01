@@ -1,0 +1,7 @@
+CharacterStyleGroup_Object = element CharacterStyleGroup {
+    attribute Self { xsd:string },
+    attribute Name { xsd:string },
+    element Properties { }? } ?,
+( CharacterStyle_Object* &
+    CharacterStyleGroup_Object* )
+element Label { element KeyValuePair { KeyValuePair_TypeDef }* }
