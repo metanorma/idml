@@ -138,6 +138,7 @@ GEM
     unicode-name (1.14.0)
       unicode-types (~> 1.11)
     unicode-types (1.11.0)
+    yard (0.9.45)
 
 PLATFORMS
   aarch64-linux-gnu
@@ -162,6 +163,7 @@ DEPENDENCIES
   rubocop-rspec
   simplecov
   thor
+  yard
 
 CHECKSUMS
   ast (2.4.3) sha256=954615157c1d6a382bc27d690d973195e79db7f55e9765ac7c481c60bdb4d383
@@ -226,6 +228,7 @@ CHECKSUMS
   unicode-emoji (4.2.0) sha256=519e69150f75652e40bf736106cfbc8f0f73aa3fb6a65afe62fefa7f80b0f80f
   unicode-name (1.14.0) sha256=b350dcdeb503748c8ad05c472e8078570fbf3231a73be53431c15db10bbedbdd
   unicode-types (1.11.0) sha256=81d1201273260fa89b85471e7eebb93a51bb4e5f078a525508dcae7835d176f9
+  yard (0.9.45) sha256=52e211493f7cb8a3ebf7e104a25a1e73937a3103092545d34cb88fafebb3dc51
 
 BUNDLED WITH
   4.0.16
