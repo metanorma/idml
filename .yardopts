@@ -1,0 +1,4 @@
+--markup markdown
+--no-private
+--title "IDML — pure-Ruby Adobe IDML parser and round-trip library"
+lib/**/*.rb
