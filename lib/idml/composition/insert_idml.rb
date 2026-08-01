@@ -59,7 +59,7 @@ module Idml
         def call
           dest = Idml::Parts::BackingStory.from_xml(@dest_xml)
           source = Idml::Parts::BackingStory.from_xml(@source_xml)
-          source.xml_element.each { |e| dest.xml_element << e }
+          source.xml_story.each { |story| dest.xml_story << story }
           Idml::Parts::BackingStory.to_xml(dest)
         end
       end

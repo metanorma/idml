@@ -22,6 +22,7 @@ Layout/LineLength:
     - spec/idml/composition/composition_spec.rb
     - spec/idml/validation/validator_spec.rb
     - scripts/**/*.rb
+    - lib/idml/elements/**/*.rb
 
 RSpec/MultipleDescribes:
   Exclude:

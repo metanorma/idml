@@ -71,9 +71,11 @@ module Idml
       backing = @package.backing_story
       return [] unless backing
 
-      backing.xml_element.flat_map do |root|
-        root.each_xml_element.map do |element|
-          ["XML/BackingStory.xml", element.self_id, element.markup_tag]
+      backing.xml_story.flat_map do |story|
+        story.xml_element.flat_map do |root|
+          root.each_xml_element.map do |element|
+            ["XML/BackingStory.xml", element.self_attr, element.markup_tag]
+          end
         end
       end
     end
