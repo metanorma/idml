@@ -76,10 +76,12 @@ RSpec.describe "Anti-patterns" do
       end
 
       it "has no require with an internal library path" do
-        # External gems (lutaml, zip, etc.) are fine; internal paths are not.
+        # External gems and stdlib (lutaml, zip, fileutils, etc.) are fine;
+        # internal paths (e.g. "idml/package") are not — use autoload.
         matches = source.scan(/^\s*require\s+["']([^"']+)["']/m)
         internal = matches.flatten.reject do |req|
-          req.start_with?("lutaml", "nokogiri", "forwardable", "zip") ||
+          req.start_with?("lutaml", "nokogiri", "forwardable", "zip",
+                          "fileutils", "tempfile") ||
             req == "json" || req == "set"
         end
         msg = "#{rel}: internal require forbidden (use autoload); found #{internal.inspect}"
