@@ -21,6 +21,7 @@ Layout/LineLength:
     - spec/anti_patterns_spec.rb
     - spec/idml/composition/composition_spec.rb
     - spec/idml/validation/validator_spec.rb
+    - scripts/**/*.rb
 
 RSpec/MultipleDescribes:
   Exclude:
@@ -34,17 +35,37 @@ RSpec/ExampleLength:
 RSpec/MultipleExpectations:
   Max: 5
 
-# Part models have large `xml do ... end` blocks with one declaration per
-# line. The size scales with the number of IDML attributes the part
-# exposes; this is intentional, not a code smell.
+# Part and element models have large `xml do ... end` blocks with one
+# declaration per attribute. Size scales with the RNC; this is
+# intentional, not a code smell. Same applies to the codegen scripts.
 Metrics/BlockLength:
   Exclude:
     - lib/idml/parts/**/*.rb
+    - lib/idml/elements/**/*.rb
+    - scripts/**/*.rb
 
 # CLI methods are linear output routines; their length is proportional
 # to the number of subcommands they describe.
 Metrics/MethodLength:
   Max: 15
+  Exclude:
+    - scripts/**/*.rb
+
+Metrics/AbcSize:
+  Exclude:
+    - scripts/**/*.rb
+
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - scripts/**/*.rb
+
+Lint/DuplicateBranch:
+  Exclude:
+    - scripts/**/*.rb
+
+Metrics/PerceivedComplexity:
+  Exclude:
+    - scripts/**/*.rb
 
 # `x` and `y` are conventional coordinate names; renaming to `x_coord`
 # would harm readability without improving clarity.

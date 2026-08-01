@@ -22,7 +22,7 @@ module Idml
       end
 
       def self_id
-        inner&.self_id
+        inner&.self_attr
       end
 
       def text_content
