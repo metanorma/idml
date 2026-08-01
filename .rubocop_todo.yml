@@ -1,0 +1,18 @@
+# Empty initially. Cimas sync will populate this with grandfathered
+# offenses as the codebase grows. Keep this file last in .rubocop.yml's
+# inherit_from list (see comment there).
+
+# Anti-pattern spec is intentionally written with parameterized describe
+# using local variables from the surrounding scope. Matches the sts-ruby
+# pattern. Excluded from RSpec cops wholesale.
+RSpec:
+  Exclude:
+    - spec/anti_patterns_spec.rb
+
+RSpec/DescribeClass:
+  Exclude:
+    - spec/anti_patterns_spec.rb
+
+Layout/LineLength:
+  Exclude:
+    - spec/anti_patterns_spec.rb
