@@ -12,10 +12,17 @@ RSpec:
 RSpec/DescribeClass:
   Exclude:
     - spec/anti_patterns_spec.rb
+    - spec/idml/round_trip_spec.rb
 
 Layout/LineLength:
   Exclude:
     - spec/anti_patterns_spec.rb
+    - spec/idml/composition/composition_spec.rb
+    - spec/idml/validation/validator_spec.rb
+
+RSpec/MultipleDescribes:
+  Exclude:
+    - spec/idml/composition/composition_spec.rb
 
 # Integration-style specs naturally need more expectations and lines.
 # Round-trip and write tests bundle related assertions per scenario.

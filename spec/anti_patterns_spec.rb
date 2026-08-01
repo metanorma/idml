@@ -86,7 +86,7 @@ RSpec.describe "Anti-patterns" do
         matches = source.scan(/^\s*require\s+["']([^"']+)["']/m)
         internal = matches.flatten.reject do |req|
           req.start_with?("lutaml", "nokogiri", "forwardable", "zip",
-                          "fileutils", "tempfile") ||
+                          "fileutils", "tempfile", "open3") ||
             req == "json" || req == "set"
         end
         msg = "#{rel}: internal require forbidden (use autoload); found #{internal.inspect}"
