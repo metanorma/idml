@@ -25,6 +25,7 @@ module Idml
           font_ps_name: @font_ps_name,
           page_width: page_width,
           page_height: page_height,
+          layer_filter: @layer_filter,
         }
 
         ops = []
