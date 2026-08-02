@@ -14,5 +14,6 @@ module Idml
     autoload :Justifier,       "#{__dir__}/text_engine/justifier"
     autoload :VerticalLayout,  "#{__dir__}/text_engine/vertical_layout"
     autoload :PositionedGlyph, "#{__dir__}/text_engine/vertical_layout"
+    autoload :CjkLayout,       "#{__dir__}/text_engine/cjk_layout"
   end
 end
