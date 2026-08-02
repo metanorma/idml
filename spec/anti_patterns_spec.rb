@@ -25,7 +25,7 @@ RSpec.describe "Anti-patterns" do
     # Anything else required from lib/ is an internal require — use autoload.
     stub_const(
       "EXTERNAL_REQUIRE_PREFIXES",
-      %w[lutaml forwardable zip fileutils tempfile open3 thor ttfunk].freeze,
+      %w[lutaml forwardable zip fileutils tempfile open3 thor fontisan].freeze,
     )
     stub_const("EXTERNAL_REQUIRE_EXACT", %w[json set].freeze)
 
