@@ -21,6 +21,11 @@ module Idml
         format("%<c>.4f %<m>.4f %<y>.4f %<k>.4f k", c: c, m: m, y: y, k: k)
       end
 
+      # CMYK stroke: `c m y k K`.
+      def stroke_cmyk(c, m, y, k)
+        format("%<c>.4f %<m>.4f %<y>.4f %<k>.4f K", c: c, m: m, y: y, k: k)
+      end
+
       # Parse IDML color space value (space-separated 0–255 or 0–100
       # depending on model) to normalized 0.0–1.0.
       def normalize_channel(value, max = 255)
@@ -35,6 +40,26 @@ module Idml
       # White fill.
       def white_fill
         "1 g"
+      end
+
+      # Dispatch: accepts a color hash ({ model:, r:, g:, b: } or
+      # { model:, c:, m:, y:, k: }) and returns the appropriate
+      # fill operator string.
+      def fill_op(color)
+        case color[:model]
+        when :rgb then fill_rgb(color[:r], color[:g], color[:b])
+        when :cmyk then fill_cmyk(color[:c], color[:m], color[:y], color[:k])
+        end
+      end
+
+      # Dispatch: accepts a color hash and returns the appropriate
+      # stroke operator string.
+      def stroke_op(color)
+        case color[:model]
+        when :rgb then stroke_rgb(color[:r], color[:g], color[:b])
+        when :cmyk then stroke_cmyk(color[:c], color[:m], color[:y],
+                                    color[:k])
+        end
       end
     end
   end

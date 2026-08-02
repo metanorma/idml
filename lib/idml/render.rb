@@ -8,6 +8,7 @@ module Idml
     autoload :Image,            "#{__dir__}/render/image"
     autoload :FontEmbedder,     "#{__dir__}/render/font_embedder"
     autoload :ColorResolver,    "#{__dir__}/render/color_resolver"
+    autoload :StyleResolver,    "#{__dir__}/render/style_resolver"
     autoload :PdfWriter,        "#{__dir__}/render/pdf_writer"
     autoload :SpreadRenderer,   "#{__dir__}/render/spread_renderer"
     autoload :Pipeline,         "#{__dir__}/render/pipeline"

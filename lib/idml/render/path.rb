@@ -38,6 +38,11 @@ module Idml
         "S"
       end
 
+      # Set stroke line width: `w w`
+      def stroke_width(weight)
+        format("%<w>.2f w", w: weight)
+      end
+
       # Close, fill, and stroke the current path.
       def fill_stroke
         "B"
