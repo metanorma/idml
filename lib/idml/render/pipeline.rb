@@ -20,6 +20,7 @@ module Idml
         writer = PdfWriter.new
         base_dir = File.dirname(@package.path)
         font_ps_name = register_font(writer)
+        writer.set_info(default_metadata)
 
         @package.spreads.each do |spread|
           dims = spread.page_dimensions.first || { width: DEFAULT_WIDTH,
@@ -135,6 +136,17 @@ module Idml
       def build_font_resolver(paths)
         search = paths || TextEngine::FontResolver::DEFAULT_SEARCH_PATHS
         TextEngine::FontResolver.new(search_paths: search)
+      end
+
+      def default_metadata
+        {
+          Producer: "idml gem v#{Idml::VERSION}",
+          CreationDate: pdf_date(Time.now.utc),
+        }
+      end
+
+      def pdf_date(time)
+        time.strftime("D:%Y%m%d%H%M%S+00'00'")
       end
     end
   end

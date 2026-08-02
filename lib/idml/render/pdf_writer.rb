@@ -10,9 +10,11 @@ module Idml
         @pages = []
         @images = {}
         @embedded_fonts = {}
+        @info = {}
         @next_id = 1
         @catalog_id = alloc_id
         @pages_id = alloc_id
+        @info_id = alloc_id
       end
 
       def add_page(width:, height:, content:, fonts: {}, xobjects: [])
@@ -126,6 +128,12 @@ module Idml
         File.binwrite(path, build_pdf)
       end
 
+      # Set PDF metadata (Title, Author, Subject, etc.).
+      # Values should be strings; keys are PDF Info dictionary keys.
+      def set_info(hash)
+        @info.merge!(hash)
+      end
+
       private
 
       def alloc_id
@@ -176,7 +184,20 @@ module Idml
           objects[img[:id]] = build_image_xobject(img)
         end
 
+        objects[@info_id] = build_info_object
+
         assemble_pdf(objects)
+      end
+
+      def build_info_object
+        entries = @info.map do |key, value|
+          "/#{key} (#{escape_pdf_string(value.to_s)})"
+        end.join(" ")
+        "<< #{entries} >>"
+      end
+
+      def escape_pdf_string(str)
+        str.gsub("\\", "\\\\\\\\").gsub("(", "\\(").gsub(")", "\\)")
       end
 
       def build_page_objects(page, objects)
@@ -292,7 +313,8 @@ module Idml
                    "0000000000 65535 f \n"
                  end
         end
-        pdf << "trailer\n<< /Size #{@next_id} /Root #{@catalog_id} 0 R >>\n"
+        pdf << "trailer\n<< /Size #{@next_id} /Root #{@catalog_id} 0 R " \
+               "/Info #{@info_id} 0 R >>\n"
         pdf << "startxref\n#{xref_pos}\n%%EOF"
         pdf
       end

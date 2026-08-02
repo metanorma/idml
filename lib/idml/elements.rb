@@ -98,11 +98,16 @@ module Idml
     autoload :ParagraphStyleRange, "idml/elements/paragraph_style_range"
     autoload :PasteboardPreference, "idml/elements/pref_pasteboard_preference"
     autoload :PastedSmoothShade, "idml/elements/pasted_smooth_shade"
+    autoload :PathGeometry, "idml/elements/path_geometry"
+    autoload :PathPointArray, "idml/elements/path_point_array"
+    autoload :PathPointType, "idml/elements/path_point_type"
     autoload :Polygon, "idml/elements/polygon"
     autoload :PrintBookletOption, "idml/elements/pref_print_booklet_option"
     autoload :PrintBookletPrintPreference,
              "idml/elements/pref_print_booklet_print_preference"
     autoload :PrintPreference, "idml/elements/pref_print_preference"
+    autoload :Properties, "idml/elements/properties"
+    autoload :GeometryPathType, "idml/elements/geometry_path_type"
     autoload :Rectangle, "idml/elements/rectangle"
     autoload :RootCellStyleGroup, "idml/elements/root_cell_style_group"
     autoload :RootCharacterStyleGroup,

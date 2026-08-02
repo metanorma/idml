@@ -18,6 +18,7 @@ module Idml
       attribute :previous_text_frame, :string
       attribute :next_text_frame, :string
       attribute :name, :string
+      attribute :properties, Idml::Elements::Properties, collection: true
 
       xml do
         root "TextFrame"
@@ -33,10 +34,15 @@ module Idml
         map_attribute "PreviousTextFrame", to: :previous_text_frame
         map_attribute "NextTextFrame", to: :next_text_frame
         map_attribute "Name", to: :name
+        map_element "Properties", to: :properties
       end
 
       def text?
         content_type == "TextType" || !parent_story.nil?
+      end
+
+      def geometric_bounds
+        properties.first&.first_geometry&.bounding_box
       end
     end
   end

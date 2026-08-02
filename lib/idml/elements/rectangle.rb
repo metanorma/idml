@@ -17,6 +17,7 @@ module Idml
       attribute :stroke_tint, :float
       attribute :visible, :boolean
       attribute :name, :string
+      attribute :properties, Idml::Elements::Properties, collection: true
       attribute :image, Idml::Elements::Image, collection: true
 
       xml do
@@ -32,11 +33,21 @@ module Idml
         map_attribute "StrokeTint", to: :stroke_tint
         map_attribute "Visible", to: :visible
         map_attribute "Name", to: :name
+        map_element "Properties", to: :properties
         map_element "Image", to: :image
       end
 
       def graphic?
         content_type == "GraphicType"
+      end
+
+      # Derives [y1, x1, y2, x2] from the Properties/PathGeometry.
+      def geometric_bounds
+        first_geometry&.bounding_box
+      end
+
+      def first_geometry
+        properties.first&.first_geometry
       end
     end
   end

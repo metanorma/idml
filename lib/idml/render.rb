@@ -2,15 +2,18 @@
 
 module Idml
   module Render
-    autoload :Color,          "#{__dir__}/render/color"
-    autoload :Path,           "#{__dir__}/render/path"
-    autoload :Text,           "#{__dir__}/render/text"
-    autoload :Image,          "#{__dir__}/render/image"
-    autoload :FontEmbedder,   "#{__dir__}/render/font_embedder"
-    autoload :ColorResolver,  "#{__dir__}/render/color_resolver"
-    autoload :PdfWriter,      "#{__dir__}/render/pdf_writer"
-    autoload :SpreadRenderer, "#{__dir__}/render/spread_renderer"
-    autoload :Pipeline,       "#{__dir__}/render/pipeline"
+    autoload :Color,            "#{__dir__}/render/color"
+    autoload :Path,             "#{__dir__}/render/path"
+    autoload :Text,             "#{__dir__}/render/text"
+    autoload :Image,            "#{__dir__}/render/image"
+    autoload :FontEmbedder,     "#{__dir__}/render/font_embedder"
+    autoload :ColorResolver,    "#{__dir__}/render/color_resolver"
+    autoload :PdfWriter,        "#{__dir__}/render/pdf_writer"
+    autoload :SpreadRenderer,   "#{__dir__}/render/spread_renderer"
+    autoload :Pipeline,         "#{__dir__}/render/pipeline"
+    autoload :RenderContext,    "#{__dir__}/render/render_context"
+    autoload :PageItemRenderer, "#{__dir__}/render/page_item_renderer"
+    autoload :Renderers,        "#{__dir__}/render/renderers"
 
     DEFAULT_FONT = "Helvetica"
 
@@ -19,3 +22,24 @@ module Idml
     end
   end
 end
+
+Idml::Render::Renderers.autoload(
+  :RectangleRenderer,
+  "#{__dir__}/render/renderers/rectangle_renderer",
+)
+Idml::Render::Renderers.autoload(
+  :TextFrameRenderer,
+  "#{__dir__}/render/renderers/text_frame_renderer",
+)
+Idml::Render::Renderers.autoload(
+  :PolygonRenderer,
+  "#{__dir__}/render/renderers/polygon_renderer",
+)
+Idml::Render::Renderers.autoload(
+  :GraphicLineRenderer,
+  "#{__dir__}/render/renderers/graphic_line_renderer",
+)
+Idml::Render::Renderers.autoload(
+  :GroupRenderer,
+  "#{__dir__}/render/renderers/group_renderer",
+)
