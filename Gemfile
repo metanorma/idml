@@ -4,7 +4,6 @@ source "https://rubygems.org"
 
 gemspec
 
-gem "fontisan", path: File.expand_path("~/src/fontist/fontisan")
 gem "lutaml-model", "~> 0.8.0"
 gem "rake"
 gem "rspec"
