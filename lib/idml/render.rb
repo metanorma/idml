@@ -1,9 +1,16 @@
 # frozen_string_literal: true
 
+require "pdfrb"
+
 module Idml
   module Render
     autoload :Color,            "#{__dir__}/render/color"
+    autoload :ColorHelper,      "#{__dir__}/render/color_helper"
     autoload :Path,             "#{__dir__}/render/path"
+    autoload :Text,             "#{__dir__}/render/text"
+    autoload :Image,            "#{__dir__}/render/image"
+    autoload :FontEmbedder,     "#{__dir__}/render/font_embedder"
+    autoload :PdfrbWriter,      "#{__dir__}/render/pdfrb_writer"
     autoload :Text,             "#{__dir__}/render/text"
     autoload :Image,            "#{__dir__}/render/image"
     autoload :FontEmbedder,     "#{__dir__}/render/font_embedder"

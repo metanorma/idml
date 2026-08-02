@@ -14,3 +14,4 @@ gem "rubocop-rspec"
 gem "simplecov", require: false
 gem "thor"
 gem "yard"
+gem "pdfrb"

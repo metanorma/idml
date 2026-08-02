@@ -16,11 +16,11 @@ module Idml
         Idml::Elements::Table => "TableRenderer",
       }.freeze
 
-      def self.render(context)
+      def self.render(canvas, context)
         renderer = renderer_for(context.item)
         return nil unless renderer
 
-        renderer.render(context)
+        renderer.render(canvas, context)
       end
 
       def self.renderer_for(item)

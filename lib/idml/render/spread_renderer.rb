@@ -2,12 +2,7 @@
 
 module Idml
   module Render
-    # Renders a typed `Parts::Spread` into a PDF content stream.
-    # Iterates over the SpreadObject's child page items and dispatches
-    # each to the appropriate renderer via PageItemRenderer. All data
-    # comes from typed lutaml-model instances — no raw XML parsing.
-    # Master spread items are rendered first (background layer).
-    # Items on hidden layers are skipped via LayerFilter.
+    # Renders a typed `Parts::Spread` onto a Pdfrb::Content::Canvas.
     class SpreadRenderer
       def initialize(font_resolver: nil, font_ps_name: Render::DEFAULT_FONT,
                      package: nil, layer_filter: LayerFilter::EXCLUDE_NONE,
@@ -19,7 +14,7 @@ module Idml
         @font_ref_resolver = font_ref_resolver
       end
 
-      def render(spread, page_width:, page_height:, image_refs: [])
+      def render(canvas, spread, page_width:, page_height:)
         context_base = {
           package: @package,
           font_resolver: @font_resolver,
@@ -31,30 +26,32 @@ module Idml
           layer_filter: @layer_filter,
         }
 
-        ops = []
-        ops << Path.save_state
-        ops << render_background(page_width, page_height)
-        ops << render_images(image_refs)
-        ops << render_master_items(spread, context_base)
-        spread.each_page_item do |item|
-          next unless @layer_filter.visible?(item)
+        canvas.save_graphics_state do
+          render_background(canvas, page_width, page_height)
+          render_master_items(canvas, spread, context_base)
+          spread.each_page_item do |item|
+            next unless @layer_filter.visible?(item)
 
-          context = RenderContext.new(context_base.merge(item: item))
-          ops << PageItemRenderer.render(context)
+            context = RenderContext.new(context_base.merge(item: item))
+            PageItemRenderer.render(canvas, context)
+          end
         end
-        ops << Path.restore_state
-        ops.compact.join("\n")
       end
 
       private
 
-      def render_master_items(spread, context_base)
-        return "" unless @package
+      def render_background(canvas, width, height)
+        canvas.fill_color([:gray, 1.0])
+        canvas.rectangle(0, 0, width, height)
+        canvas.fill
+      end
 
-        master_ops = resolve_master_spreads(spread).map do |master|
-          render_master_page_items(master, context_base)
+      def render_master_items(canvas, spread, context_base)
+        return unless @package
+
+        resolve_master_spreads(spread).each do |master|
+          render_master_page_items(canvas, master, context_base)
         end
-        master_ops.compact.join("\n")
       end
 
       def resolve_master_spreads(spread)
@@ -68,36 +65,15 @@ module Idml
         masters
       end
 
-      def render_master_page_items(master_part, context_base)
-        master_part.master_spread.flat_map do |master_so|
-          items = master_so.each_page_item.select do |item|
-            @layer_filter.visible?(item)
-          end
-          items.map do |item|
+      def render_master_page_items(canvas, master_part, context_base)
+        master_part.master_spread.each do |master_so|
+          master_so.each_page_item do |item|
+            next unless @layer_filter.visible?(item)
+
             context = RenderContext.new(context_base.merge(item: item))
-            PageItemRenderer.render(context)
+            PageItemRenderer.render(canvas, context)
           end
-        end.compact.join("\n")
-      end
-
-      def render_background(width, height)
-        [
-          Color.white_fill,
-          Path.rectangle(x: 0, y: 0, width: width, height: height),
-          Path.fill,
-        ].join("\n")
-      end
-
-      def render_images(image_refs)
-        return "" if image_refs.empty?
-
-        image_refs.map do |ref|
-          placement = ref[:placement]
-          Image.draw_image(
-            name: ref[:name], x: placement[:x], y: placement[:y],
-            scale_x: placement[:scale_x], scale_y: placement[:scale_y]
-          )
-        end.join("\n")
+        end
       end
 
       def build_color_resolver
