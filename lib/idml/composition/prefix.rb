@@ -18,18 +18,55 @@ module Idml
 
       def call(prefix:)
         parts = @package.each_part.to_a.to_h do |name, xml|
-          [name, prefix_self_ids(name, xml, prefix)]
+          [name, prefix_references(name, xml, prefix)]
         end
         Package.write(parts: parts, to: tmp_path)
       end
 
       private
 
-      def prefix_self_ids(name, xml, prefix)
+      # Rewrite every Self reference in the package: the `Self="..."`
+      # attribute, plus every attribute that holds a Self-id reference
+      # (StoryList, ActiveLayer, FillColor, StrokeColor, ParentStory,
+      # XMLContent, etc.). All are prefixed the same way to keep
+      # cross-part references intact.
+      def prefix_references(name, xml, prefix)
         return xml if name == "mimetype"
 
-        xml.gsub(/Self="([^"]+)"/) do
-          %(Self="#{prefix}#{Regexp.last_match(1)}")
+        # Space-separated Self id lists (StoryList, UnusedSwatches,
+        # CMYKProfileList, etc.).
+        xml = prefix_space_list(xml, prefix, "StoryList")
+        xml = prefix_space_list(xml, prefix, "UnusedSwatches")
+        xml = prefix_space_list(xml, prefix, "CMYKProfileList")
+        xml = prefix_space_list(xml, prefix, "RGBProfileList")
+
+        # Single Self-id references. XMLContent holds a Story Self when
+        # an XMLElement points at a story. ActiveLayer is a layer Self.
+        # The remaining graphic/style references point at color/gradient
+        # Swatch Selfs.
+        single_id_attrs = %w[
+          Self ActiveLayer ParentStory XMLContent FillColor StrokeColor
+          AppliedParagraphStyle AppliedCharacterStyle AppliedNamedGrid
+          AppliedLayer AppliedTOCStyle
+          AppliedObjectStyle AppliedCellStyle AppliedTableStyle
+          GradientFillStartColor GradientFillEndColor StrokeColor
+          MarkupTag
+        ]
+        single_id_attrs.each do |attr|
+          xml = xml.gsub(/#{attr}="([^"]+)"/) do
+            next %(#{attr}="#{Regexp.last_match(1)}") if Regexp.last_match(1).empty?
+            next %(#{attr}="#{Regexp.last_match(1)}") if Regexp.last_match(1).start_with?("$ID/")
+
+            %(#{attr}="#{prefix}#{Regexp.last_match(1)}")
+          end
+        end
+        xml
+      end
+
+      def prefix_space_list(xml, prefix, attr)
+        xml.gsub(/#{attr}="([^"]+)"/) do
+          values = Regexp.last_match(1).split.map { |v| "#{prefix}#{v}" }
+          %(#{attr}="#{values.join(' ')}")
         end
       end
 

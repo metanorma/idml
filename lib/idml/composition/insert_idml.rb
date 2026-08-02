@@ -6,24 +6,22 @@ module Idml
     # packages are prefixed first to avoid Self collisions; then the
     # source's BackingStory XMLElement tree is appended to the
     # destination's, and the source's Stories are added to the
-    # destination's package.
-    #
-    # This is a STRUCTURAL merge. Full XPath-based subtree slicing
-    # (SimpleIDML's at:/only: semantics) is deferred — see
-    # TODO.complete/13-insert-idml.md. The merge itself goes through
-    # the typed BackingStory model — no ad-hoc XML libraries.
+    # destination's package. The merge goes through the typed
+    # BackingStory model — no ad-hoc XML libraries.
     class InsertIdml
       def initialize(package)
         @package = package
       end
 
-      def call(source:, at: nil, only: nil) # rubocop:disable Lint/UnusedMethodArgument
+      def call(source:)
         dest_prefixed = Prefix.new(@package).call(prefix: "dest_")
         source_prefixed = Prefix.new(source).call(prefix: "src_")
 
         parts = dest_prefixed.each_part.to_a.to_h { |n, c| [n, c] }
         merge_backing_story!(parts, dest_prefixed, source_prefixed)
-        merge_stories!(parts, dest_prefixed, source_prefixed)
+        merge_stories!(parts, source_prefixed)
+        merge_spreads!(parts, source_prefixed)
+        rewrite_designmap!(parts, source_prefixed)
 
         write_merged(parts)
       end
@@ -37,10 +35,37 @@ module Idml
           BackingStoryMerger.new(dest_xml, source_xml).call
       end
 
-      def merge_stories!(parts, _dest, source)
+      def merge_stories!(parts, source)
         source.part_names.grep(%r{\AStories/}).each do |name|
           parts[name] = source.read_part(name)
         end
+      end
+
+      def merge_spreads!(parts, source)
+        source.part_names.grep(%r{\ASpreads/}).each do |name|
+          parts[name] = source.read_part(name)
+        end
+        source.part_names.grep(%r{\AMasterSpreads/}).each do |name|
+          parts[name] = source.read_part(name)
+        end
+      end
+
+      def rewrite_designmap!(parts, source)
+        return unless parts.key?("designmap.xml")
+
+        parts["designmap.xml"] =
+          merged_designmap(parts["designmap.xml"], source)
+      end
+
+      def merged_designmap(dest_xml, source)
+        src_dm = Idml::Parts::Designmap.from_xml(source.read_part("designmap.xml"))
+        src_stories = src_dm.story_list.to_s.split
+        return dest_xml if src_stories.empty?
+
+        dest_dm = Idml::Parts::Designmap.from_xml(dest_xml)
+        existing = dest_dm.story_list.to_s.split
+        dest_dm.story_list = (existing + src_stories).uniq.join(" ")
+        Idml::Parts::Designmap.to_xml(dest_dm)
       end
 
       def write_merged(parts)
