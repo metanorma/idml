@@ -29,8 +29,9 @@ module Idml
         @image_names = {}
       end
 
-      def add_page(**)
+      def add_page(width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT)
         page = @document.pages.add
+        page[:MediaBox] = [0, 0, width, height]
         page.canvas
       end
 
@@ -77,6 +78,12 @@ module Idml
 
       def document
         @document
+      end
+
+      # Register a TrueType/OpenType font file. Returns the resource
+      # name (e.g., :F1) for use in canvas.text(font: name).
+      def register_font(path)
+        @document.fonts.add(path)
       end
     end
   end

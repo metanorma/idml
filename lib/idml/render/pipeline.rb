@@ -23,10 +23,11 @@ module Idml
         layer_filter = LayerFilter.from_designmap(@package.designmap)
         font_ref_resolver = FontReferenceResolver.build(@package)
         base_dir = File.dirname(@package.path)
+        font_name = register_font(writer)
 
         @package.spreads.each do |spread|
           render_spread_pages(writer, spread, base_dir, layer_filter,
-                              font_ref_resolver)
+                              font_ref_resolver, font_name)
         end
 
         writer.write(@output_path)
@@ -36,7 +37,7 @@ module Idml
       private
 
       def render_spread_pages(writer, spread, base_dir, layer_filter,
-                              font_ref_resolver)
+                              font_ref_resolver, font_name)
         pages = spread.spread.flat_map(&:page)
         image_refs = collect_images(writer, spread, base_dir, layer_filter)
 
@@ -45,7 +46,7 @@ module Idml
           canvas = writer.add_page(width: dims[:width], height: dims[:height])
           renderer = SpreadRenderer.new(
             font_resolver: @font_resolver,
-            font_ps_name: Render::DEFAULT_FONT,
+            font_ps_name: font_name,
             package: @package,
             layer_filter: layer_filter,
             font_ref_resolver: font_ref_resolver,
@@ -137,6 +138,38 @@ module Idml
       def build_font_resolver(paths)
         search = paths || TextEngine::FontResolver::DEFAULT_SEARCH_PATHS
         TextEngine::FontResolver.new(search_paths: search)
+      end
+
+      def register_font(writer)
+        return Render::DEFAULT_FONT unless @font_resolver
+
+        path = resolve_document_font_path
+        return Render::DEFAULT_FONT unless path
+
+        writer.register_font(path)
+      rescue StandardError
+        Render::DEFAULT_FONT
+      end
+
+      def resolve_document_font_path
+        return nil unless @package&.fonts
+
+        @package.fonts.font_family.each do |family|
+          path = find_font_file(family)
+          return path if path
+        end
+        nil
+      end
+
+      def find_font_file(family)
+        family.font.each do |font|
+          next unless font.post_script_name
+          next if font.status == "Missing"
+
+          metrics = @font_resolver.resolve_by_ps_name(font.post_script_name)
+          return metrics.path if metrics
+        end
+        nil
       end
 
       def default_metadata
