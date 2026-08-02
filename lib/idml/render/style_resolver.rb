@@ -4,11 +4,11 @@ module Idml
   module Render
     # Extracts styled text runs from an IDML Story. Each run carries the
     # text content plus the CharacterStyleRange attributes that affect
-    # rendering (font style, size, fill color).
+    # rendering (font style, size, fill color, applied font reference).
     class StyleResolver
       StyledRun = Struct.new(
         :text, :font_style, :point_size,
-        :fill_color, :fill_tint, keyword_init: true
+        :fill_color, :fill_tint, :applied_font, keyword_init: true
       )
 
       DEFAULT_POINT_SIZE = 12.0
@@ -32,10 +32,17 @@ module Idml
             point_size: csr.point_size || DEFAULT_POINT_SIZE,
             fill_color: csr.fill_color,
             fill_tint: csr.fill_tint,
+            applied_font: csr.applied_font,
           )
         end
       end
       private_class_method :csr_runs
+
+      # Concatenate runs into a single block. Used when the renderer
+      # can't handle per-run styling (e.g., no font metrics available).
+      def self.concatenate(runs)
+        runs.map(&:text).join
+      end
     end
   end
 end

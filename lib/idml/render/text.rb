@@ -49,6 +49,36 @@ module Idml
         ].join("\n")
       end
 
+      # Emit positioned glyphs. Groups glyphs by y coordinate into
+      # lines, sets the text matrix per-line for absolute positioning,
+      # then shows the line text. Multiple lines within one BT/ET block.
+      def show_positioned(glyphs)
+        return "" if glyphs.empty?
+
+        lines = group_by_line(glyphs)
+        lines.map do |line|
+          [
+            set_matrix(a: 1, b: 0, c: 0, d: 1,
+                       e: line.first.x, f: line.first.y),
+            show(line.map { |g| [g.codepoint].pack("U") }.join),
+          ].join("\n")
+        end.join("\n")
+      end
+
+      def group_by_line(glyphs)
+        result = []
+        current = nil
+        glyphs.each do |glyph|
+          if current.nil? || current.first.y != glyph.y
+            current = []
+            result << current
+          end
+          current << glyph
+        end
+        result
+      end
+      private_class_method :group_by_line
+
       # Escape characters that are special in PDF strings.
       def escape(str)
         str.to_s.gsub("\\", "\\\\\\\\").gsub("(", "\\(").gsub(")", "\\)")

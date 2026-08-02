@@ -15,6 +15,7 @@ module Idml
       attribute :visible, :boolean
       attribute :swatch_creator_id, :integer
       attribute :swatch_color_group_reference, :string
+      attribute :gradient_stop, Idml::Elements::GradientStop, collection: true
 
       xml do
         root "Gradient"
@@ -26,6 +27,7 @@ module Idml
         map_attribute "Visible", to: :visible
         map_attribute "SwatchCreatorID", to: :swatch_creator_id
         map_attribute "SwatchColorGroupReference", to: :swatch_color_group_reference
+        map_element "GradientStop", to: :gradient_stop
       end
     end
   end

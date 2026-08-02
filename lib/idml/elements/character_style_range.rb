@@ -62,6 +62,7 @@ module Idml
       attribute :hyphen_weight, :integer
       attribute :applied_paragraph_style, :string
       attribute :applied_character_style, :string
+      attribute :applied_font, :string
       attribute :kerning_value, :float
       attribute :font_style, :string
       attribute :point_size, :float
@@ -357,6 +358,7 @@ module Idml
         map_attribute "HyphenWeight", to: :hyphen_weight
         map_attribute "AppliedParagraphStyle", to: :applied_paragraph_style
         map_attribute "AppliedCharacterStyle", to: :applied_character_style
+        map_attribute "AppliedFont", to: :applied_font
         map_attribute "KerningValue", to: :kerning_value
         map_attribute "FontStyle", to: :font_style
         map_attribute "PointSize", to: :point_size

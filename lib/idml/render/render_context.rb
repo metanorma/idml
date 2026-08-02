@@ -10,6 +10,7 @@ module Idml
       :item,
       :package,
       :font_resolver,
+      :font_ref_resolver,
       :color_resolver,
       :font_ps_name,
       :page_width,

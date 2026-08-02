@@ -5,10 +5,8 @@ module Idml
     module Renderers
       # Renders an IDML TextFrame by resolving its ParentStory to a
       # Parts::Story, extracting styled runs via StyleResolver, and
-      # emitting PDF text operators. When a FontMetrics is available,
-      # runs the full text engine pipeline (Shaper → LineBreaker →
-      # Justifier → VerticalLayout); otherwise falls back to simple
-      # text output. Frame position/size derived from geometric_bounds.
+      # emitting PDF text operators. Each styled run becomes its own
+      # BT...ET block with per-run font, size, and color.
       class TextFrameRenderer
         DEFAULT_SIZE = 12.0
         MAX_TEXT = 1000
@@ -77,7 +75,7 @@ module Idml
           font = resolve_font(context)
           return simple_text(runs, context, box) unless font
 
-          shaped_text(runs, context, box, font)
+          per_run_shaped_text(runs, context, box, font)
         end
         private_class_method :emit_runs
 
@@ -91,7 +89,7 @@ module Idml
         private_class_method :resolve_font
 
         def self.simple_text(runs, context, box)
-          text = runs.map(&:text).join
+          text = StyleResolver.concatenate(runs)
           Render::Text.show_run(
             text_string: Render::Text.escape(text.slice(0, MAX_TEXT)),
             font_name: context.font_ps_name,
@@ -102,34 +100,69 @@ module Idml
         end
         private_class_method :simple_text
 
-        def self.shaped_text(runs, context, box, font)
-          run = runs.first
-          size = run.point_size
-          text = run.text
+        def self.per_run_shaped_text(runs, context, box, font)
+          ops = []
+          runs.each_with_index do |run, i|
+            ops << render_run(run, context, box, font, i)
+          end
+          ops.compact.join("\n")
+        end
+        private_class_method :per_run_shaped_text
 
-          glyphs = TextEngine::Shaper.shape(text: text, font: font, size: size)
-          lines = TextEngine::LineBreaker.break(glyphs: glyphs,
-                                                frame_width: box[:width])
+        def self.render_run(run, context, box, font, _run_index)
+          font_ps = resolve_run_font(run, context)
+          glyphs = TextEngine::Shaper.shape(
+            text: run.text, font: font, size: run.point_size,
+          )
+          lines = TextEngine::LineBreaker.break(
+            glyphs: glyphs, frame_width: box[:width],
+          )
           lines.each do |line|
             TextEngine::Justifier.justify(line: line, frame_width: box[:width])
           end
-          frame = TextEngine::VerticalLayout::Frame.new(
+          run_frame = TextEngine::VerticalLayout::Frame.new(
             box[:x], box[:y], box[:width], box[:height], 0, 0, 0, 0
           )
           positioned = TextEngine::VerticalLayout.layout(
-            lines: lines, frame: frame, font_size: size, leading: size * 1.2,
+            lines: lines, frame: run_frame, font_size: run.point_size,
+            leading: run.point_size * 1.2
           )
-          return "" if positioned.empty?
+          return nil if positioned.empty?
 
-          Render::Text.show_run(
-            text_string: positioned.map { |g| [g.codepoint].pack("U") }.join,
-            font_name: context.font_ps_name,
-            size: size,
-            x: positioned.first.x,
-            y: positioned.first.y,
-          )
+          run_operators(positioned, font_ps, run, context)
         end
-        private_class_method :shaped_text
+        private_class_method :render_run
+
+        def self.resolve_run_font(run, context)
+          return context.font_ps_name unless run.applied_font
+
+          ps = context.font_ref_resolver&.resolve(run.applied_font)
+          ps || context.font_ps_name
+        end
+        private_class_method :resolve_run_font
+
+        def self.run_operators(positioned, font_ps, run, context)
+          color = run_color_op(run, context)
+          [
+            "BT",
+            "/#{font_ps} #{run.point_size} Tf",
+            color,
+            Render::Text.show_positioned(positioned),
+            "ET",
+          ].compact.join("\n")
+        end
+        private_class_method :run_operators
+
+        def self.run_color_op(run, context)
+          return nil unless run.fill_color
+          return nil if run.fill_color == "Color/None"
+
+          color = context.color_resolver&.resolve(run.fill_color)
+          return nil unless color
+
+          Render::Color.fill_op(color)
+        end
+        private_class_method :run_color_op
       end
     end
   end

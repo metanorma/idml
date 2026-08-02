@@ -9,6 +9,9 @@ module Idml
     autoload :FontEmbedder,     "#{__dir__}/render/font_embedder"
     autoload :ColorResolver,    "#{__dir__}/render/color_resolver"
     autoload :StyleResolver,    "#{__dir__}/render/style_resolver"
+    autoload :FontReferenceResolver,
+             "#{__dir__}/render/font_reference_resolver"
+    autoload :GradientResolver, "#{__dir__}/render/gradient_resolver"
     autoload :LayerFilter,      "#{__dir__}/render/layer_filter"
     autoload :StoryThreader,    "#{__dir__}/render/story_threader"
     autoload :PdfWriter,        "#{__dir__}/render/pdf_writer"
@@ -45,4 +48,8 @@ Idml::Render::Renderers.autoload(
 Idml::Render::Renderers.autoload(
   :GroupRenderer,
   "#{__dir__}/render/renderers/group_renderer",
+)
+Idml::Render::Renderers.autoload(
+  :TableRenderer,
+  "#{__dir__}/render/renderers/table_renderer",
 )
