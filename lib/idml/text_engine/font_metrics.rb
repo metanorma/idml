@@ -80,18 +80,19 @@ module Idml
       def lookup_kerning(left_cp, right_cp)
         left_id = @code_map[left_cp] || 0
         right_id = @code_map[right_cp] || 0
-        table = @ttf.respond_to?(:kerning) ? @ttf.kerning : nil
+        table = kerning_table
         return 0 unless table
 
-        if table.respond_to?(:pairs)
-          table.pairs.dig(left_id, right_id) || 0
-        elsif table.respond_to?(:find)
-          table.find(left_id, right_id) || 0
-        else
-          0
-        end
+        pairs = table.respond_to?(:pairs) ? table.pairs : {}
+        pairs.dig(left_id, right_id) || 0
       rescue StandardError
         0
+      end
+
+      def kerning_table
+        return @kerning_table if defined?(@kerning_table)
+
+        @kerning_table = @ttf.respond_to?(:kerning) ? @ttf.kerning : nil
       end
 
       def build_code_map
