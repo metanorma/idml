@@ -36,6 +36,63 @@ module Idml
       # Register a JPEG image as a PDF image XObject (DCTDecode).
       # Returns the XObject name to use in content streams (e.g. "Im1").
       def add_jpeg_image(data:, width:, height:, colorspace: :DeviceRGB)
+        add_image_object(data: data, width: width, height: height,
+                         colorspace: colorspace, filter: :DCTDecode)
+      end
+
+      # Register a PNG image as a PDF image XObject (FlateDecode with
+      # PNG predictor). The IDAT chunk data is embedded directly; the
+      # PDF viewer handles decompression and unfiltering.
+      def add_png_image(data:, width:, height:, colorspace: :DeviceRGB)
+        idat = Render::Image.png_idat_data(data)
+        return nil unless idat
+
+        name = add_image_object(data: idat, width: width, height: height,
+                                colorspace: colorspace, filter: :FlateDecode)
+        @images[name][:decode_parms] = png_decode_parms(width, colorspace)
+        name
+      end
+
+      # Auto-detect format and register the image.
+      def add_image(data:)
+        format = Render::Image.detect_format(data)
+        return nil unless format
+
+        dims = image_dimensions(data, format)
+        return nil unless dims
+
+        cs = image_colorspace(data, format) || :DeviceRGB
+        register_format_image(data, format, dims, cs)
+      end
+
+      def image_dimensions(data, format)
+        if format == :png
+          Render::Image.png_dimensions(data)
+        else
+          Render::Image.jpeg_dimensions(data)
+        end
+      end
+
+      def image_colorspace(data, format)
+        if format == :png
+          Render::Image.png_colorspace(data)
+        else
+          Render::Image.jpeg_colorspace(data)
+        end
+      end
+
+      def register_format_image(data, format, dims, cs)
+        case format
+        when :jpeg
+          add_jpeg_image(data: data, width: dims[0], height: dims[1],
+                         colorspace: cs)
+        when :png
+          add_png_image(data: data, width: dims[0], height: dims[1],
+                        colorspace: cs)
+        end
+      end
+
+      def add_image_object(data:, width:, height:, colorspace:, filter:)
         name = "Im#{@images.length + 1}"
         id = alloc_id
         @images[name] = {
@@ -44,8 +101,14 @@ module Idml
           width: width,
           height: height,
           colorspace: colorspace,
+          filter: filter,
         }
         name
+      end
+
+      def png_decode_parms(width, colorspace)
+        colors = colorspace == :DeviceGray ? 1 : 3
+        "<< /Predictor 15 /Columns #{width} /Colors #{colors} /BitsPerComponent 8 >>"
       end
 
       # Register a TrueType font for embedding (FontFile2). Returns the
@@ -195,10 +258,14 @@ module Idml
 
       def build_image_xobject(img)
         data = img[:data]
+        filter = img[:filter] || :DCTDecode
         result = String.new(encoding: "ASCII-8BIT")
         result << "<< /Type /XObject /Subtype /Image /Width #{img[:width]} "
         result << "/Height #{img[:height]} /BitsPerComponent 8 "
-        result << "/ColorSpace /#{img[:colorspace]} /Filter /DCTDecode "
+        result << "/ColorSpace /#{img[:colorspace]} /Filter /#{filter} "
+        if img[:decode_parms]
+          result << "/DecodeParms #{img[:decode_parms]} "
+        end
         result << "/Length #{data.bytesize} >>\nstream\n"
         result << data
         result << "\nendstream"

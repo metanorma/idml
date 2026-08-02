@@ -58,12 +58,31 @@ module Idml
       end
     end
 
+    desc "render PATH [-o OUTPUT] [--font-path DIR]",
+         "Convert IDML to PDF"
+    method_option :output, aliases: "-o", type: :string, required: true
+    method_option :font_path, type: :array, default: [],
+                              desc: "Additional font search directories"
+    def render(path)
+      pkg = package(path)
+      Idml::Render.render(package: pkg, to: options[:output],
+                          font_search_paths: font_search_paths)
+      puts "Wrote #{options[:output]}"
+    rescue Idml::Errors::PackageNotFound => e
+      warn "Error: #{e.message}"
+      exit 1
+    end
+
     private
 
     def package(path)
       raise Idml::Errors::PackageNotFound, path unless File.exist?(path)
 
       Idml::Package.new(path)
+    end
+
+    def font_search_paths
+      options[:font_path].empty? ? nil : options[:font_path]
     end
 
     def print_validation_results(results)

@@ -3,10 +3,12 @@
 module Idml
   module Render
     # Top-level pipeline: IDML Package → PDF file.
-    # Orchestrates font resolution, spread rendering, and PDF writing.
+    # Orchestrates font resolution, image collection, spread rendering,
+    # and PDF writing. All data flows through typed models — no raw
+    # XML parsing.
     class Pipeline
-      PAGE_WIDTH = 612
-      PAGE_HEIGHT = 792
+      DEFAULT_WIDTH = 612
+      DEFAULT_HEIGHT = 792
 
       def initialize(package, output_path, font_search_paths = nil)
         @package = package
@@ -17,17 +19,18 @@ module Idml
       def call
         writer = PdfWriter.new
         base_dir = File.dirname(@package.path)
-        font_resource = register_font(writer)
+        font_ps_name = register_font(writer)
 
-        spread_names.each do |name|
-          raw_xml = @package.read_part(name)
-          image_refs = collect_images(writer, raw_xml, base_dir)
-          content = render_spread(raw_xml, image_refs)
+        @package.spreads.each do |spread|
+          dims = spread.page_dimensions.first || { width: DEFAULT_WIDTH,
+                                                   height: DEFAULT_HEIGHT }
+          image_refs = collect_images(writer, spread, base_dir)
+          content = render_spread(spread, dims, image_refs, font_ps_name)
           writer.add_page(
-            width: PAGE_WIDTH,
-            height: PAGE_HEIGHT,
+            width: dims[:width],
+            height: dims[:height],
             content: content,
-            fonts: { "F1" => font_resource },
+            fonts: { "F1" => font_ps_name },
             xobjects: image_refs.map { |r| r[:name] },
           )
         end
@@ -38,9 +41,6 @@ module Idml
 
       private
 
-      # Returns the PS name to use in page font resources. When the
-      # resolver finds a TrueType file for the default font, it is
-      # embedded (FontFile2). Otherwise falls back to Type1 base-14.
       def register_font(writer)
         return Render::DEFAULT_FONT unless @font_resolver
 
@@ -55,40 +55,81 @@ module Idml
         Render::DEFAULT_FONT
       end
 
-      def spread_names
-        @package.part_names.grep(%r{\ASpreads/Spread_})
+      def collect_images(writer, spread, base_dir)
+        refs = []
+        spread.each_page_item do |item|
+          images_for_item(item).each do |img|
+            ref = register_image(writer, img, item, base_dir)
+            refs << ref if ref
+          end
+        end
+        refs
       end
 
-      # Extract image references, register each JPEG as a PDF XObject,
-      # and compute placement for the renderer.
-      def collect_images(writer, raw_xml, base_dir)
-        Render::Image.extract_from_spread(raw_xml).filter_map do |ref|
-          path = Render::Image.resolve_path(ref[:uri], base_dir: base_dir)
-          next unless File.exist?(path)
-
-          data = File.binread(path)
-          dims = Render::Image.jpeg_dimensions(data)
-          next unless dims
-
-          name = writer.add_jpeg_image(
-            data: data, width: dims[0], height: dims[1],
-            colorspace: Render::Image.jpeg_colorspace(data) || :DeviceRGB
-          )
-          placement = Render::Image.compute_placement(
-            image_transform: ref[:transform],
-            parent_transform: ref[:parent_transform],
-            pixel_height: dims[1],
-            page_height: PAGE_HEIGHT,
-          )
-          { name: name, placement: placement }
+      def images_for_item(item)
+        case item
+        when Idml::Elements::Rectangle, Idml::Elements::Polygon
+          item.image
+        else
+          []
         end
       end
 
-      def render_spread(raw_xml, image_refs)
-        renderer = SpreadRenderer.new(font_resolver: @font_resolver)
-        renderer.render(raw_xml, page_width: PAGE_WIDTH,
-                                 page_height: PAGE_HEIGHT,
-                                 image_refs: image_refs)
+      def register_image(writer, image, parent, base_dir)
+        path = resolve_image_path(image, base_dir)
+        return nil unless path
+
+        data = File.binread(path)
+        format = Render::Image.detect_format(data)
+        return nil unless format
+
+        dims = image_dimensions_for(data, format)
+        return nil unless dims
+
+        name = writer.add_image(data: data)
+        return nil unless name
+
+        { name: name, placement: compute_placement_for(image, parent, dims[1]) }
+      end
+
+      def resolve_image_path(image, base_dir)
+        uri = image.resource_uri
+        return nil unless uri
+
+        path = Render::Image.resolve_path(uri, base_dir: base_dir)
+        File.exist?(path) ? path : nil
+      end
+
+      def image_dimensions_for(data, format)
+        if format == :png
+          Render::Image.png_dimensions(data)
+        else
+          Render::Image.jpeg_dimensions(data)
+        end
+      end
+
+      def compute_placement_for(image, parent, pixel_height)
+        Render::Image.compute_placement(
+          image_transform: parse_transform_safe(image.item_transform),
+          parent_transform: parse_transform_safe(parent.item_transform),
+          pixel_height: pixel_height,
+          page_height: DEFAULT_HEIGHT,
+        )
+      end
+
+      def parse_transform_safe(str)
+        Render::Image.parse_transform(str) || Render::Image.identity
+      end
+
+      def render_spread(spread, dims, image_refs, font_ps_name)
+        renderer = SpreadRenderer.new(
+          font_resolver: @font_resolver,
+          font_ps_name: font_ps_name,
+          package: @package,
+        )
+        renderer.render(spread, page_width: dims[:width],
+                                page_height: dims[:height],
+                                image_refs: image_refs)
       end
 
       def build_font_resolver(paths)

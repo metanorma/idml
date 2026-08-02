@@ -171,16 +171,36 @@ module Idml
         return nil unless data
 
         _format, count, string_offset = data[0, 6].unpack("nnn")
+        best = nil
+        best_priority = 99
         count.times do |i|
           rec = 6 + (i * 12)
-          platform_id, _encoding_id, _lang_id, id, length, str_off =
+          platform_id, encoding_id, _lang_id, id, length, str_off =
             data[rec, 12].unpack("nnnnnn")
           next unless id == name_id
 
+          priority = name_platform_priority(platform_id, encoding_id)
+          next if priority >= best_priority
+
           raw = data[string_offset + str_off, length]
-          return decode_name_string(raw, platform_id)
+          decoded = decode_name_string(raw, platform_id)
+          next unless decoded && !decoded.empty?
+
+          best = decoded
+          best_priority = priority
         end
-        nil
+        best
+      end
+
+      # Prefer Windows (platform 3, encoding 1) name records, then
+      # any Windows record, then Macintosh, then Unicode.
+      def name_platform_priority(platform_id, encoding_id)
+        case platform_id
+        when 3 then encoding_id == 1 ? 0 : 1
+        when 0 then 3
+        when 1 then 2
+        else 4
+        end
       end
 
       def decode_name_string(raw, platform_id)
