@@ -49,6 +49,15 @@ module Idml
       @stories ||= part_names.grep(%r{\AStories/}).map { |n| part(n) }
     end
 
+    def story_by_id(story_id)
+      return nil unless story_id
+
+      name = "Stories/Story_#{story_id}.xml"
+      return nil unless has_part?(name)
+
+      part(name)
+    end
+
     def fonts
       return unless has_part?("Resources/Fonts.xml")
 

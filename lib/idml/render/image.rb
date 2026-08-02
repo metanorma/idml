@@ -10,6 +10,18 @@ module Idml
 
       Transform = Struct.new(:a, :b, :c, :d, :e, :f)
 
+      PNG_MAGIC = "\x89PNG\r\n\x1a\n".b
+      JPEG_MAGIC_BYTES = [0xFF, 0xD8].freeze
+
+      # Detect image format from magic bytes.
+      # Returns :jpeg, :png, or nil.
+      def detect_format(data)
+        return :jpeg if data.getbyte(0) == 0xFF && data.getbyte(1) == 0xD8
+        return :png if data.bytesize >= 8 && data[0, 8] == PNG_MAGIC
+
+        nil
+      end
+
       # Read JPEG dimensions from the binary header.
       # Returns [width, height] or nil if not a valid JPEG.
       def jpeg_dimensions(data)
@@ -85,6 +97,87 @@ module Idml
       # SOF markers: 0xC0–0xCF except 0xC4 (DHT) and 0xC8 (JPG).
       def sof_marker?(byte)
         byte.between?(0xC0, 0xCF) && byte != 0xC4 && byte != 0xC8
+      end
+
+      # Read PNG dimensions from the IHDR chunk.
+      # Returns [width, height] or nil if not a valid PNG.
+      def png_dimensions(data)
+        return nil unless detect_format(data) == :png
+
+        read_png_ihdr(data) do |width, height, _bit_depth, _color_type|
+          return [width, height]
+        end
+        nil
+      end
+
+      # Detect PNG color space from the IHDR chunk's color type field.
+      # Returns :DeviceRGB, :DeviceGray, or nil.
+      def png_colorspace(data)
+        return nil unless detect_format(data) == :png
+
+        read_png_ihdr(data) do |_w, _h, _bit_depth, color_type|
+          return case color_type
+                 when 0, 4 then :DeviceGray
+                 when 2, 6 then :DeviceRGB
+                 end
+        end
+        nil
+      end
+
+      # Parse PNG IHDR chunk (starts at byte offset 8, after the signature).
+      # Yields width, height, bit_depth, color_type.
+      def read_png_ihdr(data)
+        ihdr_start = 8
+        return nil if data.bytesize < ihdr_start + 25
+
+        read_uint32(data, ihdr_start)
+        type = data[ihdr_start + 4, 4]
+        return nil unless type == "IHDR"
+
+        width = read_uint32(data, ihdr_start + 8)
+        height = read_uint32(data, ihdr_start + 12)
+        bit_depth = data.getbyte(ihdr_start + 16)
+        color_type = data.getbyte(ihdr_start + 17)
+        yield width, height, bit_depth, color_type
+      end
+
+      def read_uint32(data, offset)
+        return nil if offset.nil? || offset + 3 >= data.bytesize
+
+        (data.getbyte(offset) << 24) |
+          (data.getbyte(offset + 1) << 16) |
+          (data.getbyte(offset + 2) << 8) |
+          data.getbyte(offset + 3)
+      end
+
+      # Extract concatenated IDAT chunk data from a PNG file.
+      # PDF can embed this with FlateDecode + Predictor 15 to let the
+      # viewer handle PNG unfiltering during decompression.
+      def png_idat_data(data)
+        return nil unless detect_format(data) == :png
+
+        result = String.new(encoding: "ASCII-8BIT")
+        each_png_chunk(data) do |type, chunk_data|
+          break if type == "IEND"
+
+          result << chunk_data if type == "IDAT"
+        end
+        result.empty? ? nil : result
+      end
+
+      # Iterate PNG chunks, yielding (type, data) for each.
+      def each_png_chunk(data)
+        pos = 8
+        while pos + 8 <= data.bytesize
+          length = read_uint32(data, pos)
+          return unless length
+
+          chunk_type = data[pos + 4, 4]
+          pos += 8
+          chunk_data = data[pos, length]
+          yield chunk_type, chunk_data
+          pos += length + 4 # data + CRC
+        end
       end
 
       # Parse "a b c d e f" into a Transform.

@@ -116,4 +116,78 @@ RSpec.describe Idml::Render::Image do
       expect(result).to include("Q")
     end
   end
+
+  describe ".detect_format" do
+    let(:png_rgb) do
+      signature = "\x89PNG\r\n\x1a\n".b
+      ihdr_length = [13].pack("N")
+      ihdr_type = "IHDR"
+      ihdr_data = [2, 2, 8, 2].pack("NNCC")
+      ihdr_data += [0, 0, 0].pack("CCC")
+      ihdr_crc = [0].pack("N")
+      iend_length = [0].pack("N")
+      iend_type = "IEND"
+      iend_crc = [0].pack("N")
+      signature + ihdr_length + ihdr_type + ihdr_data + ihdr_crc +
+        iend_length + iend_type + iend_crc
+    end
+
+    it "detects JPEG" do
+      expect(described_class.detect_format(jpeg_rgb)).to eq(:jpeg)
+    end
+
+    it "detects PNG" do
+      expect(described_class.detect_format(png_rgb)).to eq(:png)
+    end
+
+    it "returns nil for unknown format" do
+      expect(described_class.detect_format("not an image")).to be_nil
+    end
+  end
+
+  describe ".png_dimensions" do
+    let(:png_rgb) do
+      signature = "\x89PNG\r\n\x1a\n".b
+      ihdr_data = [2, 2, 8, 2, 0, 0, 0].pack("NNCCCCC")
+      "#{[ihdr_data.length].pack('N')}IHDR#{ihdr_data}#{[0].pack('N')}#{[0].pack('N')}IEND#{[0].pack('N')}#{signature}"
+    end
+
+    it "reads width and height from IHDR" do
+      png = "\x89PNG\r\n\x1a\n".b
+      ihdr_data = [2, 2, 8, 2, 0, 0, 0].pack("NNCCCCC")
+      png += "#{[ihdr_data.length].pack('N')}IHDR#{ihdr_data}#{[0].pack('N')}"
+      png += "#{[0].pack('N')}IEND#{[0].pack('N')}"
+      expect(described_class.png_dimensions(png)).to eq([2, 2])
+    end
+
+    it "returns nil for non-PNG data" do
+      expect(described_class.png_dimensions(jpeg_rgb)).to be_nil
+    end
+  end
+
+  describe ".png_colorspace" do
+    it "detects RGB from color type 2" do
+      png = "\x89PNG\r\n\x1a\n".b
+      ihdr_data = [2, 2, 8, 2, 0, 0, 0].pack("NNCCCCC")
+      png += "#{[ihdr_data.length].pack('N')}IHDR#{ihdr_data}#{[0].pack('N')}"
+      png += "#{[0].pack('N')}IEND#{[0].pack('N')}"
+      expect(described_class.png_colorspace(png)).to eq(:DeviceRGB)
+    end
+  end
+
+  describe ".png_idat_data" do
+    it "extracts concatenated IDAT data" do
+      png = "\x89PNG\r\n\x1a\n".b
+      ihdr_data = [1, 1, 8, 2, 0, 0, 0].pack("NNCCCCC")
+      idat_data = "compressed_data"
+      png += "#{[ihdr_data.length].pack('N')}IHDR#{ihdr_data}#{[0].pack('N')}"
+      png += "#{[idat_data.length].pack('N')}IDAT#{idat_data}#{[0].pack('N')}"
+      png += "#{[0].pack('N')}IEND#{[0].pack('N')}"
+      expect(described_class.png_idat_data(png)).to eq("compressed_data")
+    end
+
+    it "returns nil for JPEG data" do
+      expect(described_class.png_idat_data(jpeg_rgb)).to be_nil
+    end
+  end
 end
