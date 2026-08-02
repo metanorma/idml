@@ -58,6 +58,15 @@ module Idml
       part(name)
     end
 
+    def master_spread_by_id(master_id)
+      return nil unless master_id
+
+      name = "MasterSpreads/MasterSpread_#{master_id}.xml"
+      return nil unless has_part?(name)
+
+      part(name)
+    end
+
     def fonts
       return unless has_part?("Resources/Fonts.xml")
 

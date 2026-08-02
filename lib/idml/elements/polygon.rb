@@ -13,6 +13,7 @@ module Idml
       attribute :stroke_color, :string
       attribute :stroke_weight, :float
       attribute :visible, :boolean
+      attribute :item_layer, :string
       attribute :properties, Idml::Elements::Properties, collection: true
       attribute :image, Idml::Elements::Image, collection: true
 
@@ -26,6 +27,7 @@ module Idml
         map_attribute "StrokeColor", to: :stroke_color
         map_attribute "StrokeWeight", to: :stroke_weight
         map_attribute "Visible", to: :visible
+        map_attribute "ItemLayer", to: :item_layer
         map_element "Properties", to: :properties
         map_element "Image", to: :image
       end

@@ -21,12 +21,14 @@ module Idml
         base_dir = File.dirname(@package.path)
         font_ps_name = register_font(writer)
         writer.set_info(default_metadata)
+        layer_filter = LayerFilter.from_designmap(@package.designmap)
 
         @package.spreads.each do |spread|
           dims = spread.page_dimensions.first || { width: DEFAULT_WIDTH,
                                                    height: DEFAULT_HEIGHT }
-          image_refs = collect_images(writer, spread, base_dir)
-          content = render_spread(spread, dims, image_refs, font_ps_name)
+          image_refs = collect_images(writer, spread, base_dir, layer_filter)
+          content = render_spread(spread, dims, image_refs, font_ps_name,
+                                  layer_filter)
           writer.add_page(
             width: dims[:width],
             height: dims[:height],
@@ -56,9 +58,11 @@ module Idml
         Render::DEFAULT_FONT
       end
 
-      def collect_images(writer, spread, base_dir)
+      def collect_images(writer, spread, base_dir, layer_filter)
         refs = []
         spread.each_page_item do |item|
+          next unless layer_filter.visible?(item)
+
           images_for_item(item).each do |img|
             ref = register_image(writer, img, item, base_dir)
             refs << ref if ref
@@ -122,11 +126,12 @@ module Idml
         Render::Image.parse_transform(str) || Render::Image.identity
       end
 
-      def render_spread(spread, dims, image_refs, font_ps_name)
+      def render_spread(spread, dims, image_refs, font_ps_name, layer_filter)
         renderer = SpreadRenderer.new(
           font_resolver: @font_resolver,
           font_ps_name: font_ps_name,
           package: @package,
+          layer_filter: layer_filter,
         )
         renderer.render(spread, page_width: dims[:width],
                                 page_height: dims[:height],

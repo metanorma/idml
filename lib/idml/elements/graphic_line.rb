@@ -11,6 +11,8 @@ module Idml
       attribute :stroke_weight, :float
       attribute :stroke_tint, :float
       attribute :visible, :boolean
+      attribute :item_layer, :string
+      attribute :properties, Idml::Elements::Properties, collection: true
 
       xml do
         root "GraphicLine"
@@ -20,6 +22,12 @@ module Idml
         map_attribute "StrokeWeight", to: :stroke_weight
         map_attribute "StrokeTint", to: :stroke_tint
         map_attribute "Visible", to: :visible
+        map_attribute "ItemLayer", to: :item_layer
+        map_element "Properties", to: :properties
+      end
+
+      def geometric_bounds
+        properties.first&.first_geometry&.bounding_box
       end
     end
   end

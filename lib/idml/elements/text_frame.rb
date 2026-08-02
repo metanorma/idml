@@ -18,6 +18,7 @@ module Idml
       attribute :previous_text_frame, :string
       attribute :next_text_frame, :string
       attribute :name, :string
+      attribute :item_layer, :string
       attribute :properties, Idml::Elements::Properties, collection: true
 
       xml do
@@ -34,6 +35,7 @@ module Idml
         map_attribute "PreviousTextFrame", to: :previous_text_frame
         map_attribute "NextTextFrame", to: :next_text_frame
         map_attribute "Name", to: :name
+        map_attribute "ItemLayer", to: :item_layer
         map_element "Properties", to: :properties
       end
 

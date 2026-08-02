@@ -17,6 +17,7 @@ module Idml
       attribute :stroke_tint, :float
       attribute :visible, :boolean
       attribute :name, :string
+      attribute :item_layer, :string
       attribute :properties, Idml::Elements::Properties, collection: true
       attribute :image, Idml::Elements::Image, collection: true
 
@@ -33,6 +34,7 @@ module Idml
         map_attribute "StrokeTint", to: :stroke_tint
         map_attribute "Visible", to: :visible
         map_attribute "Name", to: :name
+        map_attribute "ItemLayer", to: :item_layer
         map_element "Properties", to: :properties
         map_element "Image", to: :image
       end
