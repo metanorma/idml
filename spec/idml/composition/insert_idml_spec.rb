@@ -26,4 +26,23 @@ RSpec.describe Idml::Composition::InsertIdml do
     result = described_class.new(package).call(source: package)
     expect(result.part_names.grep(%r{\AStories/}).length).to be >= 4
   end
+
+  it "carries source spreads through" do
+    result = described_class.new(package).call(source: package)
+    expect(result.part_names.grep(%r{\ASpreads/}).length)
+      .to be >= package.part_names.grep(%r{\ASpreads/}).length
+  end
+
+  it "carries source master spreads through" do
+    result = described_class.new(package).call(source: package)
+    expect(result.part_names.grep(%r{\AMasterSpreads/}).length)
+      .to be >= package.part_names.grep(%r{\AMasterSpreads/}).length
+  end
+
+  it "rewrites designmap StoryList to include source's stories" do
+    result = described_class.new(package).call(source: package)
+    designmap = Idml::Parts::Designmap.from_xml(result.read_part("designmap.xml"))
+    expect(designmap.story_list.split.length)
+      .to be > package.designmap.story_list.split.length
+  end
 end

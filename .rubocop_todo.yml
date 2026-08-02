@@ -36,6 +36,7 @@ Layout/LineLength:
     - spec/idml/composition/**/*.rb
     - spec/idml/validation/validator_spec.rb
     - scripts/**/*.rb
+    - lib/idml/composition/**/*.rb
     - lib/idml/elements/**/*.rb
     - lib/idml/parts/**/*.rb
 
@@ -66,6 +67,7 @@ Metrics/MethodLength:
   Max: 15
   Exclude:
     - scripts/**/*.rb
+    - lib/idml/composition/**/*.rb
 
 Metrics/AbcSize:
   Exclude:
