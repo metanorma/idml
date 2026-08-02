@@ -11,6 +11,7 @@ module Idml
     autoload :Image,            "#{__dir__}/render/image"
     autoload :FontEmbedder,     "#{__dir__}/render/font_embedder"
     autoload :PdfrbWriter,      "#{__dir__}/render/pdfrb_writer"
+    autoload :PdfrbExt,         "#{__dir__}/render/pdfrb_ext"
     autoload :Text,             "#{__dir__}/render/text"
     autoload :Image,            "#{__dir__}/render/image"
     autoload :FontEmbedder,     "#{__dir__}/render/font_embedder"

@@ -30,7 +30,7 @@ RSpec.describe Idml::Render::PageItemRenderer do
   describe ".render" do
     it "returns nil for unregistered types" do
       context = Idml::Render::RenderContext.new(item: Object.new)
-      expect(described_class.render(context)).to be_nil
+      expect(described_class.render(nil, context)).to be_nil
     end
   end
 end
