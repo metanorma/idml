@@ -31,7 +31,40 @@ module Idml
         @cache[key] ||= find_font(family_name, style_name)
       end
 
+      # Search by PostScriptName (e.g., "MinionPro-Regular").
+      # More precise than family+style — maps directly to the font's
+      # internal PostScript name. Used when the IDML document references
+      # a specific PostScriptName from Fonts.xml.
+      def resolve_by_ps_name(ps_name)
+        return nil unless ps_name
+
+        @ps_cache ||= {}
+        return @ps_cache[ps_name] if @ps_cache.key?(ps_name)
+
+        @ps_cache[ps_name] = find_by_ps_name(ps_name)
+      end
+
       private
+
+      def find_by_ps_name(ps_name)
+        @search_paths.each do |dir|
+          next unless Dir.exist?(dir)
+
+          Dir.glob(File.join(dir, "**", "*.ttf")).each do |path|
+            font = safe_load(path)
+            next unless font
+
+            return FontMetrics.open(path) if font.postscript_name == ps_name
+          end
+          Dir.glob(File.join(dir, "**", "*.otf")).each do |path|
+            font = safe_load(path)
+            next unless font
+
+            return FontMetrics.open(path) if font.postscript_name == ps_name
+          end
+        end
+        nil
+      end
 
       def find_font(family, style)
         candidates = STYLE_ALIASES[style] || [style]

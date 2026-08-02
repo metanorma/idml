@@ -46,6 +46,8 @@ module Idml
       attribute :prefer_math_ml_in_epub_export, :boolean
       attribute :active_process, :string
 
+      attribute :layer, Idml::Elements::Layer, collection: true
+
       xml do
         root "Document"
         map_attribute "DOMVersion", to: :dom_version
@@ -82,6 +84,7 @@ module Idml
         map_attribute "TintValue", to: :tint_value
         map_attribute "PreferMathMLInEpubExport", to: :prefer_math_ml_in_epub_export
         map_attribute "ActiveProcess", to: :active_process
+        map_element "Layer", to: :layer
       end
     end
   end

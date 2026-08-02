@@ -30,7 +30,7 @@ RSpec.describe Idml::Parts::Designmap do
         accurate_lab_spots selected_page_items
         transparency_attribute_default_property applied_math_ml_font_size
         applied_math_ml_rgb_color tint_value prefer_math_ml_in_epub_export
-        active_process
+        active_process layer
       ].each(&:to_s)
       expect(described_class.attributes.keys).to match_array(expected)
     end
