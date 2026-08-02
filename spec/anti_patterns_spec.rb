@@ -27,7 +27,7 @@ RSpec.describe "Anti-patterns" do
       "EXTERNAL_REQUIRE_PREFIXES",
       %w[lutaml forwardable zip fileutils tempfile open3 thor fontisan pdfrb].freeze,
     )
-    stub_const("EXTERNAL_REQUIRE_EXACT", %w[json set].freeze)
+    stub_const("EXTERNAL_REQUIRE_EXACT", %w[json set stringio].freeze)
 
     # Hard ban: never re-introduce Nokogiri or REXML. The gem is fully
     # model-driven through lutaml-model; every XML query routes through

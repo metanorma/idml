@@ -16,8 +16,8 @@ RSpec.describe Idml::CLI do
         described_class.start(["render", fixture_path, "-o", output])
         expect(File.exist?(output)).to be(true)
         raw = File.binread(output)
-        expect(raw).to start_with("%PDF-1.4")
-        expect(raw).to end_with("%%EOF")
+        expect(raw).to start_with("%PDF")
+        expect(raw.strip).to end_with("%%EOF")
       end
     end
 

@@ -14,7 +14,7 @@ module Idml
         @font_ref_resolver = font_ref_resolver
       end
 
-      def render(canvas, spread, page_width:, page_height:)
+      def render(canvas, spread, page_width:, page_height:, image_refs: [])
         context_base = {
           package: @package,
           font_resolver: @font_resolver,
@@ -28,6 +28,7 @@ module Idml
 
         canvas.save_graphics_state do
           render_background(canvas, page_width, page_height)
+          render_images(canvas, image_refs)
           render_master_items(canvas, spread, context_base)
           spread.each_page_item do |item|
             next unless @layer_filter.visible?(item)
@@ -44,6 +45,19 @@ module Idml
         canvas.fill_color([:gray, 1.0])
         canvas.rectangle(0, 0, width, height)
         canvas.fill
+      end
+
+      def render_images(canvas, image_refs)
+        return if image_refs.empty?
+
+        image_refs.each do |ref|
+          placement = ref[:placement]
+          canvas.save_graphics_state do
+            canvas.concat(placement[:scale_x], 0, 0, placement[:scale_y],
+                          placement[:x], placement[:y])
+            canvas.emit_op(PdfrbExt::InvokeXObject, ref[:name])
+          end
+        end
       end
 
       def render_master_items(canvas, spread, context_base)
