@@ -24,7 +24,7 @@ module Idml
         @width_cache = {}
       end
 
-      attr_reader :units_per_em, :ascent, :descent, :line_gap
+      attr_reader :units_per_em, :ascent, :descent, :line_gap, :path
 
       def glyph_width(codepoint)
         @width_cache[codepoint] ||=
@@ -184,11 +184,16 @@ module Idml
       end
 
       def decode_name_string(raw, platform_id)
-        if platform_id == 3
-          raw.encode("UTF-8", "UTF-16BE").strip
-        else
-          raw.force_encoding("UTF-8").strip
-        end
+        result =
+          case platform_id
+          when 3, 0
+            raw.encode("UTF-8", "UTF-16BE", invalid: :replace, undef: :replace)
+          when 1
+            raw.encode("UTF-8", "MacRoman", invalid: :replace, undef: :replace)
+          else
+            raw.dup.force_encoding("UTF-8").scrub("")
+          end
+        result.strip
       end
     end
   end

@@ -101,6 +101,56 @@ RSpec.describe Idml::Render do
         expect(raw.scan("/Type /Page\n").length + raw.scan("/Type /Page ").length).to eq(3)
       end
     end
+
+    it "embeds JPEG images as XObjects with DCTDecode" do
+      writer = described_class.new
+      jpeg_data = "\xFF\xD8\xFF\xE0\u0000\u0010JFIF\u0000\u0001\u0001\u0000\u0000\u0001\u0000\u0001\u0000\u0000\xFF\xC0\u0000\v\b\u0000\u0002\u0000\u0002\u0001\u0001\u0011\u0000\xFF\xD9"
+      name = writer.add_jpeg_image(
+        data: jpeg_data, width: 2, height: 2, colorspace: :DeviceRGB,
+      )
+      writer.add_page(
+        width: 612, height: 792,
+        content: "q /#{name} Do Q", fonts: {}, xobjects: [name]
+      )
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "img.pdf")
+        writer.write(path)
+        raw = File.binread(path)
+        expect(raw).to include("/Subtype /Image")
+        expect(raw).to include("/Filter /DCTDecode")
+        expect(raw).to include("/ColorSpace /DeviceRGB")
+        expect(raw).to include("/Width 2")
+        expect(raw).to include("/XObject")
+        expect(raw).to include("/#{name} Do")
+      end
+    end
+
+    it "embeds TrueType fonts with FontFile2 and FontDescriptor" do
+      font_path = "/System/Library/Fonts/Supplemental/Arial.ttf"
+      skip "Arial.ttf not found" unless File.exist?(font_path)
+
+      metrics = Idml::TextEngine::FontMetrics.open(font_path)
+      data = File.binread(font_path)
+      writer = described_class.new
+      ps_name = writer.register_embedded_font(metrics: metrics, data: data)
+      writer.add_page(
+        width: 612, height: 792,
+        content: "BT /F1 12 Tf 72 720 Td (Hi) Tj ET",
+        fonts: { "F1" => ps_name }
+      )
+      raw = nil
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "font.pdf")
+        writer.write(path)
+        raw = File.binread(path)
+      end
+      expect(raw).to include("/Subtype /TrueType")
+      expect(raw).to include("/FontDescriptor")
+      expect(raw).to include("/FontFile2")
+      expect(raw).to include("/FirstChar 32")
+      expect(raw).to include("/LastChar 255")
+      expect(raw).to include("/Encoding /WinAnsiEncoding")
+    end
   end
 
   describe Idml::Render::Pipeline do
@@ -129,6 +179,16 @@ RSpec.describe Idml::Render do
         spread_count = package.part_names.grep(%r{\ASpreads/}).length
         page_count = raw.scan("/Type /Page\n").length + raw.scan("/Type /Page /").length
         expect(page_count).to eq(spread_count)
+      end
+    end
+
+    it "embeds linked JPEG images as XObjects" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "output.pdf")
+        described_class.new(package, path).call
+        raw = File.binread(path)
+        expect(raw).to include("/Subtype /Image")
+        expect(raw).to include("/Filter /DCTDecode")
       end
     end
   end
