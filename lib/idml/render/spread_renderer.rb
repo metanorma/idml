@@ -10,17 +10,20 @@ module Idml
     # Items on hidden layers are skipped via LayerFilter.
     class SpreadRenderer
       def initialize(font_resolver: nil, font_ps_name: Render::DEFAULT_FONT,
-                     package: nil, layer_filter: LayerFilter::EXCLUDE_NONE)
+                     package: nil, layer_filter: LayerFilter::EXCLUDE_NONE,
+                     font_ref_resolver: nil)
         @font_resolver = font_resolver
         @font_ps_name = font_ps_name
         @package = package
         @layer_filter = layer_filter
+        @font_ref_resolver = font_ref_resolver
       end
 
       def render(spread, page_width:, page_height:, image_refs: [])
         context_base = {
           package: @package,
           font_resolver: @font_resolver,
+          font_ref_resolver: @font_ref_resolver,
           color_resolver: build_color_resolver,
           font_ps_name: @font_ps_name,
           page_width: page_width,

@@ -13,6 +13,7 @@ module Idml
         Idml::Elements::Polygon => "PolygonRenderer",
         Idml::Elements::GraphicLine => "GraphicLineRenderer",
         Idml::Elements::Group => "GroupRenderer",
+        Idml::Elements::Table => "TableRenderer",
       }.freeze
 
       def self.render(context)

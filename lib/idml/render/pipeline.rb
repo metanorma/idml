@@ -10,10 +10,12 @@ module Idml
       DEFAULT_WIDTH = 612
       DEFAULT_HEIGHT = 792
 
-      def initialize(package, output_path, font_search_paths = nil)
+      def initialize(package, output_path, font_search_paths = nil,
+                 compliance: nil)
         @package = package
         @output_path = output_path
         @font_resolver = build_font_resolver(font_search_paths)
+        @compliance = compliance
       end
 
       def call
@@ -21,6 +23,7 @@ module Idml
         base_dir = File.dirname(@package.path)
         font_ps_name = register_font(writer)
         writer.set_info(default_metadata)
+        apply_compliance(writer) if @compliance
         layer_filter = LayerFilter.from_designmap(@package.designmap)
 
         @package.spreads.each do |spread|
@@ -182,6 +185,7 @@ module Idml
           font_ps_name: font_ps_name,
           package: @package,
           layer_filter: layer_filter,
+          font_ref_resolver: FontReferenceResolver.build(@package),
         )
         renderer.render(spread, page_width: dims[:width],
                                 page_height: dims[:height],
@@ -202,6 +206,38 @@ module Idml
 
       def pdf_date(time)
         time.strftime("D:%Y%m%d%H%M%S+00'00'")
+      end
+
+      def apply_compliance(writer)
+        writer.set_xmp(xmp_metadata)
+        writer.set_output_intent(srgb_icc_profile)
+      end
+
+      def xmp_metadata
+        <<~XMP
+          <?xpacket begin="" id="W5M0MpCehiHzreSzNTczkc9d"?>
+          <x:xmpmeta xmlns:x="adobe:ns:meta/">
+            <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+              <rdf:Description rdf:about=""
+                xmlns:dc="http://purl.org/dc/elements/1.1/">
+                <dc:format>application/pdf</dc:format>
+                <dc:creator><rdf:Seq><rdf:li>idml gem</rdf:li></rdf:Seq></dc:creator>
+              </rdf:Description>
+              <rdf:Description rdf:about=""
+                xmlns:pdfaid="http://www.aiim.org/pdfa/ns/id/">
+                <pdfaid:part>2</pdfaid:part>
+                <pdfaid:conformance>A</pdfaid:conformance>
+              </rdf:Description>
+            </rdf:RDF>
+          </x:xmpmeta>
+          <?xpacket end="w"?>
+        XMP
+      end
+
+      def srgb_icc_profile
+        # Minimal sRGB ICC profile placeholder. Real PDF/A requires a
+        # valid ICC profile binary; this stub enables structure testing.
+        "sRGB IEC61966-2.1".b
       end
     end
   end

@@ -141,6 +141,18 @@ module Idml
         @outlines << { title: title, page_index: page_index }
       end
 
+      # Set XMP metadata packet (XML string). Embedded as a stream
+      # object referenced from the Catalog.
+      def set_xmp(xml)
+        @xmp = xml
+      end
+
+      # Set OutputIntent with an ICC profile. Required for PDF/A.
+      # profile_data: binary ICC profile data.
+      def set_output_intent(profile_data)
+        @icc_profile = profile_data
+      end
+
       private
 
       def alloc_id
@@ -179,11 +191,7 @@ module Idml
       def build_pdf
         objects = {}
 
-        outlines_ref = build_outlines(objects)
-        catalog_dict = "<< /Type /Catalog /Pages #{@pages_id} 0 R"
-        catalog_dict << " /Outlines #{outlines_ref}" if outlines_ref
-        catalog_dict << " >>"
-        objects[@catalog_id] = catalog_dict
+        objects[@catalog_id] = build_catalog(objects)
 
         page_refs = @pages.map { |p| "#{p[:id]} 0 R" }.join(" ")
         objects[@pages_id] =
@@ -198,6 +206,17 @@ module Idml
         objects[@info_id] = build_info_object
 
         assemble_pdf(objects)
+      end
+
+      def build_catalog(objects)
+        dict = "<< /Type /Catalog /Pages #{@pages_id} 0 R"
+        outlines_ref = build_outlines(objects)
+        dict << " /Outlines #{outlines_ref}" if outlines_ref
+        xmp_ref = build_xmp(objects)
+        dict << " /Metadata #{xmp_ref}" if xmp_ref
+        output_ref = build_output_intent(objects)
+        dict << " /OutputIntents [#{output_ref}]" if output_ref
+        "#{dict} >>"
       end
 
       def build_outlines(objects)
@@ -246,6 +265,31 @@ module Idml
 
       def escape_pdf_string(str)
         str.gsub("\\", "\\\\\\\\").gsub("(", "\\(").gsub(")", "\\)")
+      end
+
+      def build_xmp(objects)
+        return nil unless @xmp
+
+        xmp_id = alloc_id
+        data = @xmp.dup.force_encoding("ASCII-8BIT")
+        objects[xmp_id] = "<< /Type /Metadata /Subtype /XML " \
+                          "/Length #{data.bytesize} >>\nstream\n#{data}\nendstream"
+        "#{xmp_id} 0 R"
+      end
+
+      def build_output_intent(objects)
+        return nil unless @icc_profile
+
+        icc_id = alloc_id
+        data = @icc_profile.dup.force_encoding("ASCII-8BIT")
+        objects[icc_id] = "<< /N 3 /Alternate /DeviceRGB " \
+                          "/Length #{data.bytesize} >>\nstream\n#{data}\nendstream"
+        intent_id = alloc_id
+        objects[intent_id] = "<< /Type /OutputIntent /S /GTS_PDFA1 " \
+                             "/OutputConditionIdentifier (sRGB) " \
+                             "/Info (sRGB IEC61966-2.1) " \
+                             "/DestOutputProfile #{icc_id} 0 R >>"
+        "#{intent_id} 0 R"
       end
 
       def build_page_objects(page, objects)

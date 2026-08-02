@@ -36,6 +36,8 @@ module Idml
           return nil unless rect.fill_color
           return nil if rect.fill_color == "Color/None"
 
+          return render_gradient_fill(rect, context, box) if Render::GradientResolver.gradient?(rect.fill_color)
+
           color = context.color_resolver&.resolve(rect.fill_color)
           return nil unless color
 
@@ -47,6 +49,25 @@ module Idml
           ].join("\n")
         end
         private_class_method :render_fill
+
+        def self.render_gradient_fill(rect, context, box)
+          resolver = gradient_resolver_for(context)
+          return nil unless resolver
+
+          resolver.render_gradient(rect.fill_color, x: box[:x], y: box[:y],
+                                                    width: box[:width],
+                                                    height: box[:height],
+                                                    color_resolver: context.color_resolver)
+        end
+        private_class_method :render_gradient_fill
+
+        def self.gradient_resolver_for(context)
+          graphic = context.package&.graphic
+          return nil unless graphic
+
+          Render::GradientResolver.build(graphic)
+        end
+        private_class_method :gradient_resolver_for
 
         def self.render_stroke(rect, context, box)
           return nil unless strokeable?(rect)

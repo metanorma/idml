@@ -70,6 +70,7 @@ module Idml
              "idml/elements/pref_layout_adjustment_preference"
     autoload :LayoutGridDataInformation,
              "idml/elements/pref_layout_grid_data_information"
+    autoload :Layer, "idml/elements/layer"
     autoload :Link, "idml/elements/link"
     autoload :MarginPreference, "idml/elements/pref_margin_preference"
     autoload :MasterSpreadObject, "idml/elements/master_spread_object"
@@ -130,6 +131,9 @@ module Idml
     autoload :Swatch, "idml/elements/swatch"
     autoload :TOCStyle, "idml/elements/toc_style"
     autoload :TOCStyleEntry, "idml/elements/toc_style_entry"
+    autoload :Table, "idml/elements/table"
+    autoload :TableCell, "idml/elements/table_cell"
+    autoload :TableRow, "idml/elements/table_row"
     autoload :TableStyle, "idml/elements/table_style"
     autoload :TableStyleGroup, "idml/elements/table_style_group"
     autoload :TextDefault, "idml/elements/pref_text_default"

@@ -26,6 +26,7 @@ module Idml
       attribute :polygon, Idml::Elements::Polygon, collection: true
       attribute :group, Idml::Elements::Group, collection: true
       attribute :graphic_line, Idml::Elements::GraphicLine, collection: true
+      attribute :table, Idml::Elements::Table, collection: true
 
       xml do
         root "Spread"
@@ -46,6 +47,7 @@ module Idml
         map_element "Polygon", to: :polygon
         map_element "Group", to: :group
         map_element "GraphicLine", to: :graphic_line
+        map_element "Table", to: :table
       end
 
       def each_page_item(&)
@@ -55,7 +57,7 @@ module Idml
       end
 
       def page_item_collections
-        [page, rectangle, text_frame, polygon, group, graphic_line]
+        [page, rectangle, text_frame, polygon, group, graphic_line, table]
       end
     end
   end
