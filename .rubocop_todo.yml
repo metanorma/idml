@@ -74,10 +74,17 @@ Metrics/AbcSize:
     - scripts/**/*.rb
     - lib/idml/geometry.rb
     - lib/idml/composition/**/*.rb
+    - lib/idml/text_engine/**/*.rb
+
+Metrics/PerceivedComplexity:
+  Exclude:
+    - scripts/**/*.rb
+    - lib/idml/text_engine/**/*.rb
 
 Metrics/CyclomaticComplexity:
   Exclude:
     - scripts/**/*.rb
+    - lib/idml/text_engine/**/*.rb
 
 Lint/DuplicateBranch:
   Exclude:
