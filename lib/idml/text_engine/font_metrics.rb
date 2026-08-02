@@ -9,8 +9,14 @@ module Idml
     # parses the head, hhea, hmtx, and cmap tables directly from the
     # binary. No ttfunk.
     class FontMetrics
+      @cache = {}
+
       def self.open(path)
-        new(path)
+        @cache[path] ||= new(path)
+      end
+
+      def self.clear_cache
+        @cache.clear
       end
 
       def initialize(path)
