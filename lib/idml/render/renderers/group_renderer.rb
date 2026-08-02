@@ -3,27 +3,38 @@
 module Idml
   module Render
     module Renderers
-      # Renders an IDML Group by iterating its child page items and
-      # delegating each to the appropriate renderer via
-      # PageItemRenderer. Applies the Group's ItemTransform via `cm`.
+      # Renders an IDML Group by applying the Group's ItemTransform via
+      # the `cm` operator, then iterating child page items and delegating
+      # each to the appropriate renderer via PageItemRenderer.
       class GroupRenderer
         def self.render(context)
           group = context.item
           ops = []
-
           ops << Render::Path.save_state
-          group.rectangle.each do |rect|
-            ops << render_child(rect, context)
-          end
-          group.text_frame.each do |tf|
-            ops << render_child(tf, context)
-          end
-          group.polygon.each do |poly|
-            ops << render_child(poly, context)
-          end
+          ops << transform_op(group.item_transform)
+          ops << render_children(group, context)
           ops << Render::Path.restore_state
-
           ops.compact.join("\n")
+        end
+
+        def self.transform_op(item_transform)
+          return nil unless item_transform
+
+          t = Geometry.parse_transform(item_transform)
+          return nil unless t
+
+          Render::Path.transform(a: t.a, b: t.b, c: t.c,
+                                 d: t.d, e: t.e, f: t.f)
+        end
+
+        def self.render_children(group, context)
+          child_ops = []
+          group.each_page_item do |child|
+            next unless context.layer_filter&.visible?(child)
+
+            child_ops << render_child(child, context)
+          end
+          child_ops.compact.join("\n")
         end
 
         def self.render_child(child, context)

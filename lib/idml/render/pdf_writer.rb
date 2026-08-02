@@ -134,6 +134,13 @@ module Idml
         @info.merge!(hash)
       end
 
+      # Add a bookmark (outline entry) pointing to a page.
+      # title: display text; page_index: 0-based page index.
+      def add_bookmark(title, page_index)
+        @outlines ||= []
+        @outlines << { title: title, page_index: page_index }
+      end
+
       private
 
       def alloc_id
@@ -172,7 +179,11 @@ module Idml
       def build_pdf
         objects = {}
 
-        objects[@catalog_id] = "<< /Type /Catalog /Pages #{@pages_id} 0 R >>"
+        outlines_ref = build_outlines(objects)
+        catalog_dict = "<< /Type /Catalog /Pages #{@pages_id} 0 R"
+        catalog_dict << " /Outlines #{outlines_ref}" if outlines_ref
+        catalog_dict << " >>"
+        objects[@catalog_id] = catalog_dict
 
         page_refs = @pages.map { |p| "#{p[:id]} 0 R" }.join(" ")
         objects[@pages_id] =
@@ -187,6 +198,43 @@ module Idml
         objects[@info_id] = build_info_object
 
         assemble_pdf(objects)
+      end
+
+      def build_outlines(objects)
+        return nil unless @outlines&.any?
+
+        outlines_id = alloc_id
+        item_ids = @outlines.map { alloc_id }
+        @outlines.each_with_index do |entry, i|
+          objects[item_ids[i]] = outline_item(entry, i, item_ids, outlines_id)
+        end
+        objects[outlines_id] = outlines_root(outlines_id, item_ids)
+        "#{outlines_id} 0 R"
+      end
+
+      def outline_item(entry, index, item_ids, outlines_id)
+        prev_ref = index.positive? ? " /Prev #{item_ids[index - 1]} 0 R" : ""
+        next_ref = next_outline_ref(index, item_ids)
+        page_ref = outline_page_ref(entry[:page_index])
+        title = escape_pdf_string(entry[:title].to_s)
+        "<< /Title (#{title}) /Parent #{outlines_id} 0 R" \
+          "#{prev_ref}#{next_ref} /Dest [#{page_ref} 0 R /Fit] >>"
+      end
+
+      def next_outline_ref(index, item_ids)
+        return "" unless index < item_ids.length - 1
+
+        " /Next #{item_ids[index + 1]} 0 R"
+      end
+
+      def outline_page_ref(page_index)
+        page = @pages[page_index] || @pages.first
+        page ? page[:id] : @pages_id
+      end
+
+      def outlines_root(_outlines_id, item_ids)
+        "<< /Type /Outlines /First #{item_ids.first} 0 R " \
+          "/Last #{item_ids.last} 0 R /Count #{item_ids.length} >>"
       end
 
       def build_info_object

@@ -20,6 +20,8 @@ module Idml
       attribute :name, :string
       attribute :item_layer, :string
       attribute :properties, Idml::Elements::Properties, collection: true
+      attribute :text_frame_preference, Idml::Elements::TextFramePreference,
+                collection: true
 
       xml do
         root "TextFrame"
@@ -37,6 +39,7 @@ module Idml
         map_attribute "Name", to: :name
         map_attribute "ItemLayer", to: :item_layer
         map_element "Properties", to: :properties
+        map_element "TextFramePreference", to: :text_frame_preference
       end
 
       def text?

@@ -24,9 +24,21 @@ module Idml
         layer_filter = LayerFilter.from_designmap(@package.designmap)
 
         @package.spreads.each do |spread|
-          dims = spread.page_dimensions.first || { width: DEFAULT_WIDTH,
-                                                   height: DEFAULT_HEIGHT }
-          image_refs = collect_images(writer, spread, base_dir, layer_filter)
+          render_spread_pages(writer, spread, base_dir, font_ps_name,
+                              layer_filter)
+        end
+
+        writer.write(@output_path)
+        @output_path
+      end
+
+      def render_spread_pages(writer, spread, base_dir, font_ps_name,
+                              layer_filter)
+        pages = spread.spread.flat_map(&:page)
+        image_refs = collect_images(writer, spread, base_dir, layer_filter)
+
+        pages.each_with_index do |page, _page_index|
+          dims = page_dimensions_for(page)
           content = render_spread(spread, dims, image_refs, font_ps_name,
                                   layer_filter)
           writer.add_page(
@@ -37,15 +49,20 @@ module Idml
             xobjects: image_refs.map { |r| r[:name] },
           )
         end
+      end
 
-        writer.write(@output_path)
-        @output_path
+      def page_dimensions_for(page)
+        { width: page.width || DEFAULT_WIDTH,
+          height: page.height || DEFAULT_HEIGHT }
       end
 
       private
 
       def register_font(writer)
         return Render::DEFAULT_FONT unless @font_resolver
+
+        ps_name = resolve_document_font_ps_name
+        return register_ps_font(writer, ps_name) if ps_name
 
         font = @font_resolver.resolve(
           family_name: Render::DEFAULT_FONT, style_name: "Regular",
@@ -54,6 +71,39 @@ module Idml
 
         data = Render::FontEmbedder.raw_font_data(font)
         writer.register_embedded_font(metrics: font, data: data)
+      rescue StandardError
+        Render::DEFAULT_FONT
+      end
+
+      def resolve_document_font_ps_name
+        return nil unless @package&.fonts
+
+        @package.fonts.font_family.each do |family|
+          ps_name = find_resolvable_font(family)
+          return ps_name if ps_name
+        end
+        nil
+      rescue StandardError
+        nil
+      end
+
+      def find_resolvable_font(family)
+        family.font.each do |font|
+          next unless font.post_script_name
+          next if font.status == "Missing"
+
+          metrics = @font_resolver.resolve_by_ps_name(font.post_script_name)
+          return font.post_script_name if metrics
+        end
+        nil
+      end
+
+      def register_ps_font(writer, ps_name)
+        metrics = @font_resolver.resolve_by_ps_name(ps_name)
+        return Render::DEFAULT_FONT unless metrics
+
+        data = Render::FontEmbedder.raw_font_data(metrics)
+        writer.register_embedded_font(metrics: metrics, data: data)
       rescue StandardError
         Render::DEFAULT_FONT
       end

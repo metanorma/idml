@@ -33,6 +33,16 @@ module Idml
         "f"
       end
 
+      # Set clip path (nonzero winding). Must be followed by `n` (no-op).
+      def clip
+        "W n"
+      end
+
+      # Set clip path (even-odd).
+      def eo_clip
+        "W* n"
+      end
+
       # Stroke the current path.
       def stroke
         "S"
