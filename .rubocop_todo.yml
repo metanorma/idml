@@ -39,10 +39,16 @@ Layout/LineLength:
     - lib/idml/composition/**/*.rb
     - lib/idml/elements/**/*.rb
     - lib/idml/parts/**/*.rb
+    - lib/idml/text_engine/**/*.rb
+
+Metrics/ParameterLists:
+  Exclude:
+    - lib/idml/text_engine/**/*.rb
 
 RSpec/MultipleDescribes:
   Exclude:
     - spec/idml/composition/composition_spec.rb
+    - spec/idml/text_engine/text_engine_spec.rb
 
 # Integration-style specs naturally need more expectations and lines.
 # Round-trip and write tests bundle related assertions per scenario.
