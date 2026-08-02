@@ -3,29 +3,24 @@
 module Idml
   module Render
     module Renderers
-      # Renders an IDML GraphicLine as a stroked PDF path. Uses
-      # PathPointArray bounds for endpoint coordinates, applies
-      # ItemTransform, and resolves StrokeColor via ColorResolver.
       class GraphicLineRenderer
-        def self.render(context)
+        def self.render(canvas, context)
           line = context.item
-          return nil unless RectangleRenderer.strokeable?(line)
+          return unless RectangleRenderer.strokeable?(line)
 
           color = context.color_resolver&.resolve(line.stroke_color)
-          return nil unless color
+          return unless color
 
           box = RectangleRenderer.placement_box(line, context.page_height)
-          return nil unless box
+          return unless box
 
-          [
-            Render::Path.save_state,
-            Render::Color.stroke_op(color),
-            Render::Path.stroke_width(line.stroke_weight),
-            Render::Path.move_to(box[:x], box[:y] + box[:height]),
-            Render::Path.line_to(box[:x] + box[:width], box[:y]),
-            Render::Path.stroke,
-            Render::Path.restore_state,
-          ].join("\n")
+          canvas.save_graphics_state do
+            canvas.stroke_color(ColorHelper.to_canvas(color))
+            canvas.line_width = line.stroke_weight
+            canvas.move_to(box[:x], box[:y] + box[:height])
+            canvas.line_to(box[:x] + box[:width], box[:y])
+            canvas.stroke
+          end
         end
       end
     end
