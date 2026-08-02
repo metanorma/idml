@@ -82,4 +82,52 @@ RSpec.describe Idml::Geometry do
       expect(point.y).to eq(200)
     end
   end
+
+  describe ".parse_transform" do
+    it "parses six space-separated floats" do
+      t = described_class.parse_transform("1 0 0 1 100 200")
+      expect(t.a).to eq(1.0)
+      expect(t.e).to eq(100.0)
+    end
+
+    it "returns nil for nil input" do
+      expect(described_class.parse_transform(nil)).to be_nil
+    end
+  end
+
+  describe ".apply_transform" do
+    it "applies translation" do
+      t = described_class.parse_transform("1 0 0 1 50 60")
+      x, y = described_class.apply_transform(t, 10, 20)
+      expect(x).to eq(60.0)
+      expect(y).to eq(80.0)
+    end
+
+    it "returns original point when transform is nil" do
+      x, y = described_class.apply_transform(nil, 5, 10)
+      expect([x, y]).to eq([5, 10])
+    end
+  end
+
+  describe ".transform_bounds" do
+    it "applies translation to bounds" do
+      bounds = [0.0, 0.0, 100.0, 200.0]
+      t = described_class.parse_transform("1 0 0 1 50 60")
+      result = described_class.transform_bounds(bounds, t)
+      expect(result).to eq([60.0, 50.0, 160.0, 250.0])
+    end
+  end
+
+  describe ".bounds_to_pdf_rect" do
+    it "converts bounds to PDF rect with Y-flip" do
+      bounds = [0.0, 0.0, 100.0, 200.0]
+      rect = described_class.bounds_to_pdf_rect(bounds, 792)
+      expect(rect[:y]).to eq(692.0)
+      expect(rect[:width]).to eq(200.0)
+    end
+
+    it "returns nil for nil bounds" do
+      expect(described_class.bounds_to_pdf_rect(nil, 792)).to be_nil
+    end
+  end
 end
