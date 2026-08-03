@@ -95,14 +95,20 @@ module Idml
             glyphs: glyphs, frame_width: box[:width],
           )
 
+          line_texts = []
           lines.each do |line|
             break if baseline_y < box[:y]
 
-            line_text = line.glyphs.map { |g| [g.codepoint].pack("U") }.join
-            canvas.text(line_text, at: [box[:x], baseline_y],
-                                   font: context.font_ps_name,
-                                   size: size)
+            line_texts << line.glyphs.map { |g| [g.codepoint].pack("U") }.join
             baseline_y -= size * LEADING_FACTOR
+          end
+
+          if line_texts.any?
+            canvas.text_lines(line_texts,
+                              font: context.font_ps_name,
+                              size: size,
+                              at: [box[:x], box[:y] + box[:height] - size],
+                              leading: size * LEADING_FACTOR)
           end
           baseline_y
         end
