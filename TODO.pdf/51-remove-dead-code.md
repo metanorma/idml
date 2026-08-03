@@ -1,8 +1,15 @@
 # TODO PDF 51: Remove dead code from pdfrb migration
 
-## Goal
+## Status: DONE
 
-Remove the old hand-rolled PDF modules that are superseded by pdfrb.
+## What was removed (in v0.2.0)
+
+All old hand-rolled modules deleted in the pdfrb 0.15.0 migration:
+- `pdf_writer.rb`, `font_embedder.rb`, `color.rb`, `path.rb`, `text.rb`
+- `pdfrb_ext.rb`, `pdfrb_ext/clip.rb`, `pdfrb_ext/invoke_xobject.rb`
+- 3 old test files
+
+Net: -1358 lines of dead code.
 These modules are dead code — not referenced by any active code path.
 
 ## Status: READY FOR CLEANUP

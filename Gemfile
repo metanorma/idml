@@ -5,6 +5,7 @@ source "https://rubygems.org"
 gemspec
 
 gem "lutaml-model", "~> 0.8.0"
+gem "pdfrb", path: "/Users/mulgogi/src/claricle/pdfrb"
 gem "rake"
 gem "rspec"
 gem "rubocop"
@@ -14,4 +15,3 @@ gem "rubocop-rspec"
 gem "simplecov", require: false
 gem "thor"
 gem "yard"
-gem "pdfrb", path: "/Users/mulgogi/src/claricle/pdfrb"

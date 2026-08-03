@@ -22,8 +22,10 @@ module Idml
 
     DEFAULT_FONT = "Helvetica"
 
-    def self.render(package:, to:, font_search_paths: nil, compliance: nil)
-      Pipeline.new(package, to, font_search_paths, compliance: compliance).call
+    def self.render(package:, to:, font_search_paths: nil, compliance: nil,
+                   tagged: false)
+      Pipeline.new(package, to, font_search_paths, compliance: compliance,
+                                                   tagged: tagged).call
     end
   end
 end

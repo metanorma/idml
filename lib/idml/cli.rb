@@ -58,19 +58,19 @@ module Idml
       end
     end
 
-    desc "render PATH [-o OUTPUT] [--pdf-a] [--font-path DIR]",
+    desc "render PATH [-o OUTPUT] [--pdf-a] [--tagged] [--font-path DIR]",
          "Convert IDML to PDF"
     method_option :output, aliases: "-o", type: :string, required: true
     method_option :font_path, type: :array, default: [],
                               desc: "Additional font search directories"
     method_option :pdf_a, type: :boolean, default: false,
                           desc: "Produce PDF/A-2a compliant output"
+    method_option :tagged, type: :boolean, default: false,
+                           desc: "Produce tagged PDF for accessibility (PDF/UA)"
     def render(path)
       pkg = package(path)
-      compliance = options[:pdf_a] ? :pdfa2a : nil
       Idml::Render.render(package: pkg, to: options[:output],
-                          font_search_paths: font_search_paths,
-                          compliance: compliance)
+                          **render_options)
       puts "Wrote #{options[:output]}"
     rescue Idml::Errors::PackageNotFound => e
       warn "Error: #{e.message}"
@@ -87,6 +87,14 @@ module Idml
 
     def font_search_paths
       options[:font_path].empty? ? nil : options[:font_path]
+    end
+
+    def render_options
+      {
+        font_search_paths: font_search_paths,
+        compliance: options[:pdf_a] ? :pdfa2a : nil,
+        tagged: options[:tagged],
+      }
     end
 
     def print_validation_results(results)
