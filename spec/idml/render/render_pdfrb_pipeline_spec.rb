@@ -28,7 +28,7 @@ RSpec.describe Idml::Render do
 
     it "embeds JPEG images as XObjects" do
       skip "fixture image not available on CI" unless File.exist?(
-        File.expand_path("../../../../Documents/InDesign GenAI Assets", Dir.home)
+        File.expand_path("../../../../Documents/InDesign GenAI Assets", Dir.home),
       )
 
       Dir.mktmpdir do |dir|
@@ -102,7 +102,7 @@ RSpec.describe Idml::Render do
 
     it "registers fonts from Fonts.xml" do
       skip "system fonts not available on CI" unless Dir.exist?("/System/Library/Fonts") ||
-                                                      Dir.exist?("/usr/share/fonts")
+        Dir.exist?("/usr/share/fonts")
 
       Dir.mktmpdir do |dir|
         path = File.join(dir, "fonts.pdf")
