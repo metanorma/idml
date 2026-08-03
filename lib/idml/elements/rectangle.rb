@@ -19,6 +19,7 @@ module Idml
       attribute :name, :string
       attribute :item_layer, :string
       attribute :properties, Idml::Elements::Properties, collection: true
+      attribute :transparency_setting, Idml::Elements::TransparencySetting
       attribute :image, Idml::Elements::Image, collection: true
 
       xml do
@@ -36,6 +37,7 @@ module Idml
         map_attribute "Name", to: :name
         map_attribute "ItemLayer", to: :item_layer
         map_element "Properties", to: :properties
+        map_element "TransparencySetting", to: :transparency_setting
         map_element "Image", to: :image
       end
 

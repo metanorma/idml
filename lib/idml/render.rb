@@ -11,6 +11,7 @@ module Idml
     autoload :FontReferenceResolver,
              "#{__dir__}/render/font_reference_resolver"
     autoload :GradientResolver,    "#{__dir__}/render/gradient_resolver"
+    autoload :Blending,            "#{__dir__}/render/blending"
     autoload :LayerFilter,         "#{__dir__}/render/layer_filter"
     autoload :StoryThreader,       "#{__dir__}/render/story_threader"
     autoload :PdfrbWriter, "#{__dir__}/render/pdfrb_writer"
