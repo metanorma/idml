@@ -14,4 +14,4 @@ gem "rubocop-rspec"
 gem "simplecov", require: false
 gem "thor"
 gem "yard"
-gem "pdfrb"
+gem "pdfrb", path: "/Users/mulgogi/src/claricle/pdfrb"

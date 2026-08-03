@@ -286,16 +286,11 @@ module Idml
         base_dir ? File.join(base_dir, File.basename(path)) : path
       end
 
-      # Build PDF operators to draw a JPEG image at the given position
-      # with the given scale.
-      def draw_image(name:, x:, y:, scale_x:, scale_y:)
-        [
-          Render::Path.save_state,
-          format("%<sx>.4f 0 0 %<sy>.4f %<x>.2f %<y>.2f cm",
-                 sx: scale_x, sy: scale_y, x: x, y: y),
-          "/#{name} Do",
-          Render::Path.restore_state,
-        ].join("\n")
+      # DEPRECATED: draw_image is no longer used. pdfrb 0.15.0+ has
+      # Canvas#draw_image_matrix for drawing image XObjects with a full
+      # affine transform. SpreadRenderer uses it directly.
+      def draw_image(*)
+        "DEPRECATED"
       end
     end
   end

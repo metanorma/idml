@@ -40,27 +40,21 @@ RSpec.describe Idml::Render do
     end
   end
 
-  describe "PdfrbExt operators" do
-    it "InvokeXObject has name 'Do'" do
-      expect(Idml::Render::PdfrbExt::InvokeXObject.name).to eq("Do")
+  describe "pdfrb Canvas native operators" do
+    it "Canvas#draw_image_matrix is available" do
+      expect(Pdfrb::Content::Canvas.instance_method(:draw_image_matrix)).not_to be_nil
     end
 
-    it "Clip has name 'W'" do
-      expect(Idml::Render::PdfrbExt::Clip.name).to eq("W")
+    it "Canvas#clip is available" do
+      expect(Pdfrb::Content::Canvas.instance_method(:clip)).not_to be_nil
     end
 
-    it "EndPath has name 'n'" do
-      expect(Idml::Render::PdfrbExt::EndPath.name).to eq("n")
+    it "Canvas#clip_even_odd is available" do
+      expect(Pdfrb::Content::Canvas.instance_method(:clip_even_odd)).not_to be_nil
     end
 
-    it "operators are registered in pdfrb Operator registry" do
-      Idml::Render::PdfrbExt::InvokeXObject
-      Idml::Render::PdfrbExt::Clip
-      Idml::Render::PdfrbExt::EndPath
-
-      expect(Pdfrb::Content::Operator["Do"]).to be(Idml::Render::PdfrbExt::InvokeXObject)
-      expect(Pdfrb::Content::Operator["W"]).to be(Idml::Render::PdfrbExt::Clip)
-      expect(Pdfrb::Content::Operator["n"]).to be(Idml::Render::PdfrbExt::EndPath)
+    it "Do operator is registered in pdfrb Operator registry" do
+      expect(Pdfrb::Content::Operator["Do"]).not_to be_nil
     end
   end
 

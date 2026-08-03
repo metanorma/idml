@@ -48,14 +48,15 @@ module Idml
           color = interpolate(stops, offset)
           next unless color
 
-          ops << Render::Path.save_state
-          ops << Render::Color.fill_op(color)
-          ops << Render::Path.rectangle(x: x,
-                                        y: y + ((SEGMENTS - i) * segment_height),
-                                        width: width,
-                                        height: segment_height + 0.1)
-          ops << Render::Path.fill
-          ops << Render::Path.restore_state
+          ops << "q"
+          ops << Idml::Render::ColorHelper.to_canvas(color)
+          ops << format("%<x>.2f %<y>.2f %<w>.2f %<h>.2f re",
+                        x: x,
+                        y: y + ((SEGMENTS - i) * segment_height),
+                        w: width,
+                        h: segment_height + 0.1)
+          ops << "f"
+          ops << "Q"
         end
         ops.join("\n")
       end

@@ -9,6 +9,13 @@ PATH
       rubyzip
       thor
 
+PATH
+  remote: /Users/mulgogi/src/claricle/pdfrb
+  specs:
+    pdfrb (0.16.0)
+      lutaml-model (>= 0.7.0)
+      thor
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -90,8 +97,6 @@ GEM
     parser (3.3.12.0)
       ast (~> 2.4.1)
       racc
-    pdfrb (0.3.0)
-      thor
     prism (1.9.0)
     racc (1.8.1)
     rainbow (3.1.1)
@@ -168,7 +173,7 @@ PLATFORMS
 DEPENDENCIES
   idml!
   lutaml-model (~> 0.8.0)
-  pdfrb
+  pdfrb!
   rake
   rspec
   rubocop
@@ -221,7 +226,7 @@ CHECKSUMS
   paint (2.3.0) sha256=327d623e4038619d5bd99ae5db07973859cd78400c7f0329eea283cef8e83be5
   parallel (2.1.0) sha256=b35258865c2e31134c5ecb708beaaf6772adf9d5efae28e93e99260877b09356
   parser (3.3.12.0) sha256=21a6d7f755d5a24dfbdc6e6b772e4e879a52e7631a88bc5a3a134606052c9828
-  pdfrb (0.3.0) sha256=2a83db0730d5c36ea00c4114a635ae045bcc823bac6575332ed56a765d771bcc
+  pdfrb (0.16.0)
   prism (1.9.0) sha256=7b530c6a9f92c24300014919c9dcbc055bf4cdf51ec30aed099b06cd6674ef85
   racc (1.8.1) sha256=4a7f6929691dbec8b5209a0b373bc2614882b55fc5d2e447a21aaa691303d62f
   rainbow (3.1.1) sha256=039491aa3a89f42efa1d6dec2fc4e62ede96eb6acd95e52f1ad581182b79bc6a
