@@ -14,7 +14,7 @@ module Idml
           box = RectangleRenderer.placement_box(line, context.page_height)
           return unless box
 
-          canvas.save_graphics_state do
+          Blending.wrap(canvas, line.transparency_setting) do
             canvas.stroke_color(ColorHelper.to_canvas(color))
             canvas.line_width = line.stroke_weight
             canvas.move_to(box[:x], box[:y] + box[:height])

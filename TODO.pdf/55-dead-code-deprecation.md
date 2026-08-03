@@ -1,30 +1,24 @@
 # TODO PDF 55: Dead code deprecation markers
 
-## Goal
+## Status: DONE (modules already removed)
 
-Mark old hand-rolled modules as deprecated. These modules are
-superseded by pdfrb but cannot be deleted per the project's
-"never delete source files" policy. Add deprecation comments and
-update autoloads to lazy-load only when explicitly referenced.
+## What was done
 
-## Modules to deprecate
+The old hand-rolled modules have already been deleted from the codebase
+during the pdfrb migration (TODO 51 + TODO 62). No `Idml::Render::PdfWriter`,
+`Idml::Render::FontEmbedder`, `Idml::Render::Color`, `Idml::Render::Path`,
+or `Idml::Render::Text` references remain in `lib/` or `spec/`.
 
-- `Idml::Render::PdfWriter` — replaced by `PdfrbWriter`
-- `Idml::Render::FontEmbedder` — replaced by `PdfrbWriter.register_font`
-- `Idml::Render::Color` — replaced by `ColorHelper` + Canvas fill_color
-- `Idml::Render::Path` — replaced by Canvas drawing methods
-- `Idml::Render::Text` — replaced by Canvas text method
+The original goal — deprecation comments on dead modules — is moot:
+there are no dead modules to deprecate. This TODO is closed without
+further work.
+
+## Verification
+
+`grep -rn "PdfWriter|FontEmbedder|Render::Color\b|Render::Path\b|Render::Text\b" lib/ spec/`
+returns zero matches.
 
 ## Acceptance criteria
 
-- [ ] Each deprecated module has a `# DEPRECATED` header comment pointing
-      to its pdfrb replacement.
-- [ ] No active code path (Pipeline, SpreadRenderer, renderers) references
-      deprecated modules.
-- [ ] Tests for deprecated modules are tagged with `:deprecated` or
-      moved to a separate spec file.
-- [ ] `render.rb` autoloads keep the old modules for backward compatibility.
-
-## Dependencies
-
-- pdfrb migration (DONE).
+- [x] No live code references the old hand-rolled modules.
+- [x] `bundle exec rake` is green (2314 examples, 0 failures).

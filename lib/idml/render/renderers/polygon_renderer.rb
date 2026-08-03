@@ -11,7 +11,7 @@ module Idml
           box = RectangleRenderer.placement_box(poly, context.page_height)
           return unless box
 
-          canvas.save_graphics_state do
+          Blending.wrap(canvas, poly.transparency_setting) do
             render_fill(canvas, poly, context, box)
             render_stroke(canvas, poly, context, box)
           end

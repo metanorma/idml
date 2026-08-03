@@ -13,6 +13,7 @@ module Idml
       attribute :visible, :boolean
       attribute :item_layer, :string
       attribute :properties, Idml::Elements::Properties, collection: true
+      attribute :transparency_setting, Idml::Elements::TransparencySetting
 
       xml do
         root "GraphicLine"
@@ -24,6 +25,7 @@ module Idml
         map_attribute "Visible", to: :visible
         map_attribute "ItemLayer", to: :item_layer
         map_element "Properties", to: :properties
+        map_element "TransparencySetting", to: :transparency_setting
       end
 
       def geometric_bounds
