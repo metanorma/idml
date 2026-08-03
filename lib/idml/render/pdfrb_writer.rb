@@ -56,6 +56,19 @@ module Idml
         @image_cache[uri] = name
       end
 
+      def enable_tagged
+        @document.structure.enable!
+      end
+
+      def add_structure_element(type, page_index:, mcid:, text: nil, alt: nil)
+        @document.structure.add_element(type, text: text, alt: alt,
+                                              page: page_index, mcid: mcid)
+      end
+
+      def build_structure
+        @document.structure.build!
+      end
+
       def document
         @document
       end

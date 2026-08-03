@@ -10,16 +10,18 @@ module Idml
       DEFAULT_HEIGHT = 792
 
       def initialize(package, output_path, font_search_paths = nil,
-                     compliance: nil)
+                     compliance: nil, tagged: false)
         @package = package
         @output_path = output_path
         @font_resolver = build_font_resolver(font_search_paths)
         @compliance = compliance
+        @tagged = tagged
       end
 
       def call
         writer = PdfrbWriter.new
         writer.set_info(default_metadata)
+        writer.enable_tagged if @tagged
         layer_filter = LayerFilter.from_designmap(@package.designmap)
         font_ref_resolver = FontReferenceResolver.build(@package)
         base_dir = File.dirname(@package.path)
@@ -30,6 +32,7 @@ module Idml
                               font_ref_resolver, font_name)
         end
 
+        writer.build_structure if @tagged
         writer.write(@output_path)
         @output_path
       end
