@@ -22,9 +22,7 @@ module Idml
           bounds = rect.geometric_bounds
           return nil unless bounds
 
-          transform = Geometry.parse_transform(rect.item_transform)
-          transformed = Geometry.transform_bounds(bounds, transform)
-          Geometry.bounds_to_pdf_rect(transformed, page_height)
+          Geometry.placement_rect(bounds, rect.item_transform, page_height)
         end
 
         def self.render_fill(canvas, rect, context, box)
