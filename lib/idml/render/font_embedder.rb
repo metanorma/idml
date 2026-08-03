@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# DEPRECATED: This module is superseded by PdfrbWriter.register_font.
+# Font embedding is now handled by pdfrb (Pdfrb::Document#fonts.add).
+
 module Idml
   module Render
     # Generates PDF font structures for embedded TrueType fonts.

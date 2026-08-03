@@ -6,6 +6,8 @@ module Idml
     # pdfrb 0.3.0 (e.g., XObject invocation via `Do`).
     module PdfrbExt
       autoload :InvokeXObject, "#{__dir__}/pdfrb_ext/invoke_xobject"
+      autoload :Clip,          "#{__dir__}/pdfrb_ext/clip"
+      autoload :EndPath,       "#{__dir__}/pdfrb_ext/clip"
     end
   end
 end

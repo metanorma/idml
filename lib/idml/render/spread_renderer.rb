@@ -53,11 +53,22 @@ module Idml
         image_refs.each do |ref|
           placement = ref[:placement]
           canvas.save_graphics_state do
+            apply_image_clip(canvas, ref)
             canvas.concat(placement[:scale_x], 0, 0, placement[:scale_y],
                           placement[:x], placement[:y])
             canvas.emit_op(PdfrbExt::InvokeXObject, ref[:name])
           end
         end
+      end
+
+      def apply_image_clip(canvas, ref)
+        clip_box = ref[:clip_box]
+        return unless clip_box
+
+        canvas.rectangle(clip_box[:x], clip_box[:y],
+                         clip_box[:width], clip_box[:height])
+        canvas.emit_op(PdfrbExt::Clip)
+        canvas.emit_op(PdfrbExt::EndPath)
       end
 
       def render_master_items(canvas, spread, context_base)

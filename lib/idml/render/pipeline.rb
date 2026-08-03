@@ -90,7 +90,8 @@ module Idml
       end
 
       def reuse_image(_writer, name, image, parent)
-        { name: name, placement: compute_placement(image, parent) }
+        { name: name, placement: compute_placement(image, parent),
+          clip_box: parent_clip_box(parent) }
       end
 
       def load_new_image(writer, image, parent, base_dir, uri)
@@ -103,7 +104,17 @@ module Idml
 
         name = writer.add_image(data: data)
         writer.register_image_name(uri, name)
-        { name: name, placement: compute_placement(image, parent, dims[1]) }
+        { name: name, placement: compute_placement(image, parent, dims[1]),
+          clip_box: parent_clip_box(parent) }
+      end
+
+      def parent_clip_box(parent)
+        return nil unless parent.geometric_bounds
+
+        transform = Geometry.parse_transform(parent.item_transform)
+        transformed = Geometry.transform_bounds(parent.geometric_bounds,
+                                                transform)
+        Geometry.bounds_to_pdf_rect(transformed, DEFAULT_HEIGHT)
       end
 
       def image_dimensions(data)
