@@ -54,6 +54,10 @@ RSpec.describe Idml::Render do
     end
 
     it "operators are registered in pdfrb Operator registry" do
+      Idml::Render::PdfrbExt::InvokeXObject
+      Idml::Render::PdfrbExt::Clip
+      Idml::Render::PdfrbExt::EndPath
+
       expect(Pdfrb::Content::Operator["Do"]).to be(Idml::Render::PdfrbExt::InvokeXObject)
       expect(Pdfrb::Content::Operator["W"]).to be(Idml::Render::PdfrbExt::Clip)
       expect(Pdfrb::Content::Operator["n"]).to be(Idml::Render::PdfrbExt::EndPath)
