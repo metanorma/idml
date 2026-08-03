@@ -111,10 +111,8 @@ module Idml
       def parent_clip_box(parent)
         return nil unless parent.geometric_bounds
 
-        transform = Geometry.parse_transform(parent.item_transform)
-        transformed = Geometry.transform_bounds(parent.geometric_bounds,
-                                                transform)
-        Geometry.bounds_to_pdf_rect(transformed, DEFAULT_HEIGHT)
+        Geometry.placement_rect(parent.geometric_bounds,
+                                parent.item_transform, DEFAULT_HEIGHT)
       end
 
       def image_dimensions(data)

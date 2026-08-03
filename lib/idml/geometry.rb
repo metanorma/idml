@@ -62,6 +62,14 @@ module Idml
       [ys.min, xs.min, ys.max, xs.max]
     end
 
+    # Convert IDML bounds + ItemTransform string to a PDF rect
+    # with Y-axis flip. Single entry point for all renderers.
+    def placement_rect(bounds, item_transform_str, page_height)
+      transform = parse_transform(item_transform_str)
+      transformed = transform_bounds(bounds, transform)
+      bounds_to_pdf_rect(transformed, page_height)
+    end
+
     # Convert IDML bounds [y1, x1, y2, x2] to a PDF rectangle
     # { x:, y:, width:, height: } with Y-axis flipped.
     def bounds_to_pdf_rect(bounds, page_height)
