@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# DEPRECATED: This module is superseded by Canvas#text method.
+# Text rendering is now handled by pdfrb's Canvas API.
+
 module Idml
   module Render
     # Converts positioned glyphs to PDF text-showing operators.

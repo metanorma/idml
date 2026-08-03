@@ -1,0 +1,118 @@
+# frozen_string_literal: true
+
+require "spec_helper"
+
+# rubocop:disable RSpec/SpecFilePathFormat
+RSpec.describe Idml::Render do
+  let(:fixture_path) do
+    File.expand_path("../../fixtures/sample-with-image/sample-with-image.idml",
+                     __dir__)
+  end
+  let(:package) { Idml::Package.new(fixture_path) }
+
+  describe "renderer dispatch via Canvas" do
+    it "RectangleRenderer renders fills via Canvas" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "rect.pdf")
+        described_class.render(package: package, to: path)
+        raw = File.binread(path)
+        expect(raw).to include("re")
+      end
+    end
+
+    it "TextFrameRenderer emits text via Canvas" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "text.pdf")
+        described_class.render(package: package, to: path)
+        raw = File.binread(path)
+        expect(raw).to include("BT")
+        expect(raw).to include("ET")
+      end
+    end
+
+    it "SpreadRenderer renders background fill" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "bg.pdf")
+        described_class.render(package: package, to: path)
+        raw = File.binread(path)
+        expect(raw).to include(" f").or include(" f\n")
+      end
+    end
+  end
+
+  describe "PdfrbExt operators" do
+    it "InvokeXObject has name 'Do'" do
+      expect(Idml::Render::PdfrbExt::InvokeXObject.name).to eq("Do")
+    end
+
+    it "Clip has name 'W'" do
+      expect(Idml::Render::PdfrbExt::Clip.name).to eq("W")
+    end
+
+    it "EndPath has name 'n'" do
+      expect(Idml::Render::PdfrbExt::EndPath.name).to eq("n")
+    end
+
+    it "operators are registered in pdfrb Operator registry" do
+      expect(Pdfrb::Content::Operator["Do"]).to be(Idml::Render::PdfrbExt::InvokeXObject)
+      expect(Pdfrb::Content::Operator["W"]).to be(Idml::Render::PdfrbExt::Clip)
+      expect(Pdfrb::Content::Operator["n"]).to be(Idml::Render::PdfrbExt::EndPath)
+    end
+  end
+
+  describe "PdfrbWriter" do
+    it "creates valid PDF with add_page" do
+      writer = Idml::Render::PdfrbWriter.new
+      canvas = writer.add_page(width: 300, height: 400)
+      canvas.fill_color([:rgb, 1, 0, 0])
+      canvas.rectangle(10, 10, 100, 100)
+      canvas.fill
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "pw.pdf")
+        writer.write(path)
+        raw = File.binread(path)
+        expect(raw).to start_with("%PDF")
+        expect(raw.strip).to end_with("%%EOF")
+      end
+    end
+
+    it "sets MediaBox from page dimensions" do
+      writer = Idml::Render::PdfrbWriter.new
+      writer.add_page(width: 300, height: 400)
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "mb.pdf")
+        writer.write(path)
+        raw = File.binread(path)
+        expect(raw).to include("MediaBox")
+        expect(raw).to include("300")
+        expect(raw).to include("400")
+      end
+    end
+
+    it "sets metadata via set_info" do
+      writer = Idml::Render::PdfrbWriter.new
+      writer.add_page
+      writer.set_info(Title: "Test Doc", Producer: "idml")
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "info.pdf")
+        writer.write(path)
+        raw = File.binread(path)
+        expect(raw).to include("/Title")
+        expect(raw).to include("/Producer")
+      end
+    end
+
+    it "caches image names by URI" do
+      writer = Idml::Render::PdfrbWriter.new
+      writer.register_image_name("file:///test.jpeg", :Im1)
+      expect(writer.image_name_for("file:///test.jpeg")).to eq(:Im1)
+    end
+
+    it "returns nil for unknown image URI" do
+      writer = Idml::Render::PdfrbWriter.new
+      expect(writer.image_name_for("unknown")).to be_nil
+    end
+  end
+end
+# rubocop:disable RSpec/SpecFilePathFormat
+# rubocop:enable RSpec/SpecFilePathFormat

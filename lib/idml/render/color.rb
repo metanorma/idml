@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# DEPRECATED: This module is superseded by ColorHelper + Canvas
+# fill_color/stroke_color methods. Kept for backward compatibility.
+
 module Idml
   module Render
     # Converts IDML color values to PDF content-stream operators.

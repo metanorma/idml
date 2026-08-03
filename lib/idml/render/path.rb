@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# DEPRECATED: This module is superseded by Pdfrb::Content::Canvas
+# drawing methods (rectangle, stroke, fill, etc.).
+
 module Idml
   module Render
     # Converts IDML geometric page items to PDF path operators.
