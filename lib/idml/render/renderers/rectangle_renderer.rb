@@ -29,6 +29,11 @@ module Idml
           return unless rect.fill_color
           return if rect.fill_color == "Color/None"
 
+          if GradientResolver.gradient?(rect.fill_color)
+            render_gradient_fill(canvas, rect, context, box)
+            return
+          end
+
           color = context.color_resolver&.resolve(rect.fill_color)
           return unless color
 
@@ -37,6 +42,44 @@ module Idml
           canvas.fill
         end
         private_class_method :render_fill
+
+        def self.render_gradient_fill(canvas, rect, context, box)
+          stops = gradient_stops_for(rect, context)
+          return unless stops&.length&.>=(2)
+
+          shading = canvas.document.shadings.add_axial(
+            from: [box[:x], box[:y] + box[:height]],
+            to: [box[:x] + box[:width], box[:y]],
+            stops: stops,
+          )
+          canvas.rectangle(box[:x], box[:y], box[:width], box[:height])
+          canvas.fill_shading(shading)
+        end
+        private_class_method :render_gradient_fill
+
+        def self.gradient_stops_for(rect, context)
+          graphic = context.package&.graphic
+          return nil unless graphic
+
+          gradient = graphic.gradient.find do |g|
+            g.self_attr == rect.fill_color
+          end
+          return nil unless gradient
+          return nil unless gradient.gradient_stop.length >= 2
+
+          gradient_stops(gradient, context)
+        end
+        private_class_method :gradient_stops_for
+
+        def self.gradient_stops(gradient, context)
+          gradient.gradient_stop.filter_map do |stop|
+            color = context.color_resolver&.resolve(stop.stop_color)
+            next unless color
+
+            [stop.location || 0.0, ColorHelper.to_canvas(color)]
+          end
+        end
+        private_class_method :gradient_stops
 
         def self.render_stroke(canvas, rect, context, box)
           return unless strokeable?(rect)
