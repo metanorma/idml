@@ -43,21 +43,25 @@ module Idml
                               font_ref_resolver, font_name)
         pages = spread.spread.flat_map(&:page)
         image_refs = collect_images(writer, spread, base_dir, layer_filter)
+        renderer = build_renderer(layer_filter, font_ref_resolver, font_name)
 
         pages.each do |page|
           dims = page_dimensions_for(page)
           canvas = writer.add_page(width: dims[:width], height: dims[:height])
-          renderer = SpreadRenderer.new(
-            font_resolver: @font_resolver,
-            font_ps_name: font_name,
-            package: @package,
-            layer_filter: layer_filter,
-            font_ref_resolver: font_ref_resolver,
-          )
           renderer.render(canvas, spread, page_width: dims[:width],
                                           page_height: dims[:height],
                                           image_refs: image_refs)
         end
+      end
+
+      def build_renderer(layer_filter, font_ref_resolver, font_name)
+        SpreadRenderer.new(
+          font_resolver: @font_resolver,
+          font_ps_name: font_name,
+          package: @package,
+          layer_filter: layer_filter,
+          font_ref_resolver: font_ref_resolver,
+        )
       end
 
       def collect_images(writer, spread, base_dir, layer_filter)

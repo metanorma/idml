@@ -58,7 +58,7 @@ module Idml
       end
     end
 
-    desc "render PATH [-o OUTPUT] [--pdf-a] [--tagged] [--font-path DIR]",
+    desc "render PATH [-o OUTPUT] [--pdf-a] [--tagged] [-v]",
          "Convert IDML to PDF"
     method_option :output, aliases: "-o", type: :string, required: true
     method_option :font_path, type: :array, default: [],
@@ -66,9 +66,12 @@ module Idml
     method_option :pdf_a, type: :boolean, default: false,
                           desc: "Produce PDF/A-2a compliant output"
     method_option :tagged, type: :boolean, default: false,
-                           desc: "Produce tagged PDF for accessibility (PDF/UA)"
+                           desc: "Produce tagged PDF (PDF/UA)"
+    method_option :verbose, aliases: "-v", type: :boolean, default: false,
+                            desc: "Print progress"
     def render(path)
       pkg = package(path)
+      print_verbose(pkg) if options[:verbose]
       Idml::Render.render(package: pkg, to: options[:output],
                           **render_options)
       puts "Wrote #{options[:output]}"
@@ -95,6 +98,11 @@ module Idml
         compliance: options[:pdf_a] ? :pdfa2a : nil,
         tagged: options[:tagged],
       }
+    end
+
+    def print_verbose(pkg)
+      warn "Rendering to #{options[:output]}"
+      warn "  #{pkg.spreads.length} spread(s)"
     end
 
     def print_validation_results(results)
