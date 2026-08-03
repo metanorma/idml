@@ -85,6 +85,13 @@ module Idml
       def register_font(path)
         @document.fonts.add(path)
       end
+
+      # Add a bookmark (outline entry) pointing to a page.
+      # title: display text; page_index: 0-based page index.
+      def add_bookmark(title, page_index)
+        page = @document.pages[page_index]
+        @document.outline.add(title, dest: page)
+      end
     end
   end
 end

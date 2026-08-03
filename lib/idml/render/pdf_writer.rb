@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# DEPRECATED: This module is superseded by Idml::Render::PdfrbWriter.
+# The Pipeline now uses pdfrb (Pdfrb::Document) for all PDF assembly.
+# This module remains for backward compatibility but is not used by
+# any active code path. See TODO.pdf/51-remove-dead-code.md.
+
 module Idml
   module Render
     # Minimal PDF file writer. Assembles content-stream strings into
