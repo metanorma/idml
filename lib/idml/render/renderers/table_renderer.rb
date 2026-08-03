@@ -28,7 +28,7 @@ module Idml
           return unless cell_count.positive?
 
           cell_width = box[:width] / cell_count
-          row.table_cell.each_with_index do |cell, cell_index|
+          row.table_cell.each_with_index do |_cell, cell_index|
             cell_x = box[:x] + (cell_index * cell_width)
             canvas.rectangle(cell_x, row_y, cell_width, row_height)
             canvas.stroke
