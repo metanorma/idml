@@ -106,14 +106,9 @@ RSpec.describe Idml::Render::Image do
   end
 
   describe ".draw_image" do
-    it "emits save, transform, Do, restore operators" do
-      result = described_class.draw_image(
-        name: "Im1", x: 100, y: 200, scale_x: 0.5, scale_y: 0.5,
-      )
-      expect(result).to include("q")
-      expect(result).to include("0.5000 0 0 0.5000 100.00 200.00 cm")
-      expect(result).to include("/Im1 Do")
-      expect(result).to include("Q")
+    it "is deprecated (pdfrb 0.15.0 has Canvas#draw_image_matrix)" do
+      expect(described_class.draw_image(name: "x", x: 0, y: 0,
+                                        scale_x: 1, scale_y: 1)).to eq("DEPRECATED")
     end
   end
 
