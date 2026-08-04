@@ -15,6 +15,7 @@ module Idml
     autoload :BevelAndEmbossSetting, "idml/elements/bevel_and_emboss_setting"
     autoload :BlendingSetting, "idml/elements/blending_setting"
     autoload :ButtonPreference, "idml/elements/pref_button_preference"
+    autoload :Bookmark, "idml/elements/bookmark"
     autoload :CellStyle, "idml/elements/cell_style"
     autoload :CellStyleGroup, "idml/elements/cell_style_group"
     autoload :ChapterNumberPreference,
@@ -60,6 +61,11 @@ module Idml
     autoload :Group, "idml/elements/group"
     autoload :GuidePreference, "idml/elements/pref_guide_preference"
     autoload :HTMLExportPreference, "idml/elements/pref_html_export_preference"
+    autoload :Hyperlink, "idml/elements/hyperlink"
+    autoload :HyperlinkPageDestination,
+             "idml/elements/hyperlink_page_destination"
+    autoload :HyperlinkURLDestination,
+             "idml/elements/hyperlink_url_destination"
     autoload :Image, "idml/elements/image"
     autoload :IndexHeaderSetting, "idml/elements/pref_index_header_setting"
     autoload :IndexOptions, "idml/elements/pref_index_options"

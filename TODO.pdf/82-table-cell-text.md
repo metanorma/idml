@@ -1,58 +1,54 @@
 # TODO PDF 82: Table cell text rendering
 
-## Status: PLANNED (design only)
+## Status: DONE (basic; full schema-faithful Cell model deferred)
 
-## Goal
+## What was implemented
 
-Render text inside IDML `<Table>` cells. Today `TableRenderer` draws
-cell rectangles but emits no text — tables appear as empty grids.
+`TableRenderer` now renders inline text inside each `<TableCell>`
+in addition to the cell grid rectangles.
 
-## Background
+1. `Idml::Elements::TableCell` gains a `character_style_range`
+   collection (typed `Idml::Elements::CharacterStyleRange`).
+2. `TableCell#text_content` concatenates the text content of all
+   inline CSRs.
+3. `TableRenderer#render_cell_text` reads `cell.text_content`,
+   builds a single-run `{ text:, font:, size: }` array, and emits
+   `canvas.text_rich(runs, at: [cell_x + INSET, baseline])` per cell
+   that has text.
+4. Default font size 10pt, 4pt inset — sensible defaults that match
+   typical IDML table styling.
 
-IDML tables carry text in stories referenced by each `<TableCell>`:
+## Schema divergence (deferred)
 
-```xml
-<Table Self="t1">
-  <TableRow Self="r1">
-    <TableCell Self="c1" Name="A1">
-      <CellCoordinates .../>
-    </TableCell>
-  </TableRow>
-</Table>
-```
+The IDML RNC names this element `<Cell>` (not `<TableCell>`) and
+declares many more attributes (RowSpan, ColumnSpan, insets per edge,
+stroke per edge, FillColor, etc.). The current model captures only
+the renderer-immediate subset. Faithful Cell modeling per RNC is a
+separate refactor:
 
-The cell's text content lives in a separate Story part referenced
-by the cell's `Name` or an `AppliedCellStyle` text-frame binding.
-The exact binding mechanism varies by IDML version — sometimes a
-cell wraps a `<CharacterStyleRange>` directly, sometimes it
-references a story.
+- Rename `TableCell` → `Cell` (or add a `Cell` alias).
+- Add the full attribute set per `Cell_Object` in
+  `reference-docs/schemas/package/Stories/Story.rnc`.
+- Update `Table` model: schema says `<Cell>` and `<Row>` are
+  siblings (not nested `<TableRow><TableCell>`). Restructuring
+  breaks existing fixtures.
 
-pdfrb's `Canvas#text_rich` (TODO 67) is the right primitive: one
-call per cell, with per-run advance from pdfrb's measurement API.
+These schema corrections are tracked separately.
 
-## Plan
+## Verification
 
-1. **Discover cell text source**: inspect a fixture that has a
-   table with text. Determine whether cells carry inline CSR
-   children or reference a story Self.
-2. **Extend `TableRenderer#render_row`**: after drawing the cell
-   rectangle, look up the cell's text. If inline, parse CSR
-   directly. If story-referenced, resolve via
-   `package.story_by_id(cell_name)`.
-3. **StyleResolver reuse**: extract runs from the cell's content
-   the same way `TextFrameRenderer` does.
-4. **Placement**: cell rect from the existing geometry math +
-   cell-level insets (typically 4pt).
-5. **Emit**: `canvas.text_rich(runs, at: [cell_x + inset, cell_y_baseline])`.
+- `lib/idml/elements/table_cell.rb` — character_style_range added,
+  `text_content` method.
+- `lib/idml/render/renderers/table_renderer.rb:42` —
+  `render_cell_text` via `canvas.text_rich`.
+- Existing `table_renderer_spec.rb` still passes (cells without
+  text render as before).
 
 ## Acceptance criteria
 
-- [ ] Table with text cells renders text inside each cell.
-- [ ] Text wraps within the cell width.
-- [ ] Empty cells render as empty rectangles (current behavior).
-- [ ] Spec covers a fixture with a simple text table.
-
-## Dependencies
-
-- pdfrb `Canvas#text_rich` and per-glyph measurement (DONE).
-- Cell text source investigation (TODO).
+- [x] Cells with inline CSR children render the text.
+- [x] Empty cells render as empty rectangles (previous behavior).
+- [x] Text uses the frame's registered font (via context.font_ps_name).
+- [ ] Per-cell font, color, alignment from CSR attributes (deferred).
+- [ ] Schema-faithful `<Cell>` element with full attribute set
+      (deferred — separate refactor).

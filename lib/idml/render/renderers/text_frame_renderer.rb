@@ -58,8 +58,10 @@ module Idml
         end
         private_class_method :engine_render
 
-        # Emits one `canvas.text_lines` call per run, after shaping
-        # and line-breaking with real font metrics. Lines that fall
+        # Emits one `canvas.text` call per line, after shaping and
+        # line-breaking with real font metrics. Applies paragraph
+        # alignment via `Justifier` so each line is offset within
+        # the frame box per IDML `Justification`. Lines that fall
         # below the frame's bottom edge are clipped.
         def self.render_run_lines(canvas, run, context, box, font, baseline_y)
           size = run.point_size
@@ -69,25 +71,29 @@ module Idml
           lines = TextEngine::LineBreaker.break(
             glyphs: glyphs, frame_width: box[:width],
           )
+          alignment = run.alignment || :left
+          start_y = box[:y] + box[:height] - size
 
-          line_texts = []
-          lines.each do |line|
-            break if baseline_y < box[:y]
+          lines.each_with_index do |line, idx|
+            line_y = start_y - (idx * size * LEADING_FACTOR)
+            break if line_y < box[:y]
 
-            line_texts << line.glyphs.map { |g| [g.codepoint].pack("U") }.join
-            baseline_y -= size * LEADING_FACTOR
-          end
-
-          if line_texts.any?
-            canvas.text_lines(line_texts,
-                              font: context.font_ps_name,
-                              size: size,
-                              at: [box[:x], box[:y] + box[:height] - size],
-                              leading: size * LEADING_FACTOR)
+            TextEngine::Justifier.justify(line: line,
+                                          frame_width: box[:width],
+                                          alignment: alignment)
+            canvas.text(line_text(line),
+                        at: [box[:x] + line.x_offset, line_y],
+                        font: context.font_ps_name,
+                        size: size)
           end
           baseline_y
         end
         private_class_method :render_run_lines
+
+        def self.line_text(line)
+          line.glyphs.map { |g| [g.codepoint].pack("U") }.join
+        end
+        private_class_method :line_text
 
         # Fallback when no metrics are available: emit all runs as
         # one `text_rich` block, letting pdfrb measure advance widths.

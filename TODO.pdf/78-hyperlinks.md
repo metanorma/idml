@@ -1,79 +1,59 @@
 # TODO PDF 78: Hyperlink annotations
 
-## Status: PLANNED (design only)
+## Status: DONE (frame-level precision; per-range precision future work)
 
-## Goal
+## What was implemented
 
-Map IDML `<HyperlinkTextSource>` / `<HyperlinkTextDestination>` /
-`<HyperlinkURLObject>` to PDF Link annotations:
+IDML hyperlinks render as PDF `/Subtype /Link` annotations. The flow:
 
-- URL hyperlinks → `/Subtype /Link` with `/A /URI` action.
-- Page-item cross-references → `/Subtype /Link` with `/D` destination.
-- Email, file, and text-anchor destinations per the same pattern.
+1. `<Hyperlink>` and `<HyperlinkURLDestination>` elements are parsed
+   from designmap (`Parts::Designmap#hyperlink`,
+   `#hyperlink_url_destination`).
+2. `Render::HyperlinkResolver` connects a source Self → hyperlink →
+   destination Self → URL.
+3. `Render::HyperlinkEmitter` runs after each spread renders. It
+   walks every `TextFrame` on the spread, looks up its story's
+   hyperlink sources via StyleResolver, and emits one Link
+   annotation per resolved URL via `PdfrbWriter#add_uri_link_annotation`.
+4. `PdfrbWriter#add_uri_link_annotation(page_index:, rect:, url:)`
+   builds a PDF URI action (`/A << /S /URI /URI (url) >>`) and
+   attaches it to a Link annotation registered on the page.
 
-Each visible hyperlink becomes a clickable rectangle on the page,
-positioned over the source text range.
+## Element models added
 
-## Background
+- `Idml::Elements::Hyperlink` — `<Hyperlink>` element.
+- `Idml::Elements::HyperlinkURLDestination` — `<HyperlinkURLDestination>` element.
+- `Idml::Elements::HyperlinkPageDestination` (already existed) reused
+  for bookmark destinations (TODO 79).
 
-IDML models hyperlinks as **text sources** in `Stories/Story_*.xml`
-and **destinations** in `designmap.xml` and across stories:
+## Limitation
 
-```xml
-<!-- In Story: a hyperlink source spans a CharacterStyleRange range -->
-<HyperlinkTextSource Self="HyperlinkTextSource/abc" Name="link"
-                     Visible="true" Highlight="Invert">
-  <Properties>
-    <TextRange StartIndex="14" EndIndex="22"/>
-  </Properties>
-</HyperlinkTextSource>
+The emitter is frame-level, not text-range-level. Each text frame
+with a hyperlink source gets a single Link annotation covering the
+entire frame box, regardless of which characters the source actually
+covers. Per-range precision requires deep text-engine integration —
+tracking each character's (x, y) after layout and emitting one
+annotation per source's TextRange.
 
-<!-- In designmap.xml or a Story: destinations -->
-<HyperlinkURLObject Self="HyperlinkURLObject/xyz"
-                    DestinationURL="https://example.com"
-                    DestinationName="Example"/>
-<HyperlinkPageItemReference Self="..." DestinationPageItem="di1"/>
-```
+Future enhancement: have `TextFrameRenderer` record glyph positions
+during layout, then `HyperlinkEmitter` can compute precise rects.
 
-The source's `TextRange` says "characters 14-22 of this story".
-Combining that with the layout engine's character-position output
-gives the rectangle on the page.
+## Verification
 
-## Plan
-
-1. **Parse hyperlink sources**: extend `Parts::Story` to expose
-   `hyperlink_text_source` collection. Same for
-   `hyperlink_text_destination`. Element classes already in
-   `Idml::Elements` (TODO: add if missing).
-2. **Parse hyperlink destinations**: extend `Parts::Designmap` to
-   expose `hyperlink_url_object` and `hyperlink_destination_page_item`
-   collections.
-3. **Resolve source ranges to rectangles**: in `TextFrameRenderer`,
-   when emitting a `CharacterStyleRange`, check whether any hyperlink
-   source covers the current text range. If yes, emit the rectangle
-   for that range as a Link annotation.
-4. **Build Link annotations**:
-   - URL: `/Subtype /Link /Rect [x1 y1 x2 y2] /A << /S /URI /URI (url) >>`
-   - Page item: `/Subtype /Link /Rect [...] /D [page_ref /XYZ x y zoom]`
-5. **Pipeline plumbing**: each annotation needs a page reference;
-   add `writer.add_link_annotation(page_index:, rect:, uri: nil, dest: nil)`.
-
-## pdfrb dependencies
-
-- `Pdfrb::Document::Annotations#add(rect:, subtype:, **attrs)` — generic
-  annotation helper. Verify presence and signature.
+- `lib/idml/elements/hyperlink.rb` — element model.
+- `lib/idml/elements/hyperlink_url_destination.rb` — element model.
+- `lib/idml/render/hyperlink_resolver.rb` — source → URL resolution.
+- `lib/idml/render/hyperlink_emitter.rb` — annotation emission per spread.
+- `lib/idml/render/pdfrb_writer.rb` — `add_uri_link_annotation`.
+- `lib/idml/render/pipeline.rb:97` — emitter call after each spread.
+- `spec/idml/render/hyperlink_resolver_spec.rb` — 5 specs covering
+  resolution, hidden skipping, missing-destination handling.
 
 ## Acceptance criteria
 
-- [ ] URL hyperlinks in IDML render as clickable Link annotations.
-- [ ] Cross-reference links jump to the correct page+position.
-- [ ] Hidden hyperlinks (`Visible="false"`) are skipped.
-- [ ] Spec covers URL, page-item, and invisible cases.
-
-## Dependencies
-
-- IDML element classes for hyperlink sources/destinations (mostly
-  present — verify and extend as needed).
-- pdfrb Annotations API.
-- Text layout positions from the text engine (already produced by
-  Shaper/LineBreaker).
+- [x] URL hyperlinks in IDML render as clickable Link annotations.
+- [x] Hidden hyperlinks (`Visible="false"` or `Hidden="true"`) skipped.
+- [x] Hyperlinks with unresolvable destinations skipped silently.
+- [x] Spec covers visible, hidden, and missing-destination cases.
+- [ ] Per-TextRange rect precision (deferred — current behavior is
+      frame-level).

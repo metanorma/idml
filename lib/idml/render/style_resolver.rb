@@ -4,14 +4,29 @@ module Idml
   module Render
     # Extracts styled text runs from an IDML Story. Each run carries the
     # text content plus the CharacterStyleRange attributes that affect
-    # rendering (font style, size, fill color, applied font reference).
+    # rendering (font style, size, fill color, applied font reference,
+    # paragraph alignment).
     class StyleResolver
       StyledRun = Struct.new(
         :text, :font_style, :point_size,
-        :fill_color, :fill_tint, :applied_font, keyword_init: true
+        :fill_color, :fill_tint, :applied_font, :alignment,
+        keyword_init: true
       )
 
       DEFAULT_POINT_SIZE = 12.0
+
+      # IDML `Justification` enum → Justifier symbol. Full justify
+      # and binding-side variants defer to :left for now (TODO 80).
+      ALIGNMENT_MAP = {
+        "Left" => :left,
+        "Center" => :center,
+        "Right" => :right,
+        "LeftJustified" => :left,
+        "RightJustified" => :right,
+        "CenterJustified" => :center,
+        "FullyJustified" => :justified,
+        "ToBinding" => :left,
+      }.freeze
 
       def self.extract_runs(story)
         return [] unless story&.inner
@@ -33,10 +48,16 @@ module Idml
             fill_color: csr.fill_color,
             fill_tint: csr.fill_tint,
             applied_font: csr.applied_font,
+            alignment: alignment_for(csr),
           )
         end
       end
       private_class_method :csr_runs
+
+      def self.alignment_for(csr)
+        ALIGNMENT_MAP[csr.justification] || :left
+      end
+      private_class_method :alignment_for
 
       # Concatenate runs into a single block. Used when the renderer
       # can't handle per-run styling (e.g., no font metrics available).
