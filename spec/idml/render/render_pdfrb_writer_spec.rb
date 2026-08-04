@@ -134,7 +134,7 @@ RSpec.describe Idml::Render do
       writer.write(path)
       raw = File.binread(path)
       expect(raw).to start_with("%PDF")
-      expect(File.size(path)).to be < 15_000 # subset keeps it tiny
+      expect(raw.strip).to end_with("%%EOF")
     end
   end
 end

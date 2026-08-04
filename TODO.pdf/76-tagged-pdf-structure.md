@@ -1,92 +1,68 @@
 # TODO PDF 76: Tagged PDF structure tree
 
-## Status: PLANNED (design only)
+## Status: DONE
 
-## Goal
+## What was implemented
 
-Emit a tagged-PDF structure tree (PDF/UA-1, PDF 1.7 §14.8) so screen
-readers and assistive technology can navigate the document. Each
-rendered page item becomes a structure element (Figure for images,
-P for text paragraphs, Sect for sections, Document at the root).
+`idml render --tagged sample.idml -o out.pdf` now emits a real PDF
+structure tree. Each visible page item becomes a structure element,
+wrapped in a marked-content sequence (BDC/EMC) with an MCID that
+maps back to the element.
 
-The CLI already has a `--tagged` flag that calls
-`PdfrbWriter#enable_tagged` and `#build_structure`. Today these calls
-produce an empty `/StructTreeRoot`. This TODO populates the tree.
+Architecture:
 
-## Background
+- `Render::StructureTracker` — per-pipeline object that allocates
+  per-page MCIDs and buffers element registrations. `enabled?` is
+  false when `tagged:` was not requested; everything is a no-op then.
+- `Render::StructureMapper` — pure function from item class to PDF
+  structure type:
+  - `TextFrame` → `:P`
+  - `Group` → `:Sect`
+  - `Table` → `:Table`
+  - `Rectangle`/`Polygon` with image → `:Figure` (carries `Alt` from
+    the item's `Name`)
+  - `Rectangle`/`Polygon` without image → `:Path`
+  - `GraphicLine` → `:Path`
+- `PageItemRenderer` — when `context.structure.enabled?`, it computes
+  the type, allocates an MCID, registers the entry, and wraps the
+  renderer's draw in `canvas.tagged(type, mcid: mcid)`. Unknown item
+  classes (no mapping) bypass the wrap and render normally.
+- `RenderContext` carries `structure` and `page_index`.
+- `Pipeline` constructs one `StructureTracker` per run, threads it
+  through `SpreadRenderer` → `RenderContext`, and flushes entries to
+  the writer after every spread renders. Then calls
+  `writer.build_structure` to finalise the tree.
 
-PDF structure elements form a tree rooted at `/StructTreeRoot`:
+## Limitations
 
-```
-Document
-├── Part (per spread)
-│   ├── Sect (per page)
-│   │   ├── Figure (per Image)
-│   │   ├── P (per TextFrame paragraph)
-│   │   ├── Path (per shape)
-│   │   └── Sect (per Group, recursively)
-```
+- Structure is currently flat — every visible page item is a top-level
+  child of `/StructTreeRoot`. PDF/UA nesting (Group → Sect, Table →
+  TR/TD) is not yet emitted. pdfrb's `add_child(parent, type)` exists
+  for nesting; future work.
+- Master-spread items are tagged as content, not as artifacts. PDF/UA
+  prefers `canvas.artifact(:background)` for page furniture; future
+  work.
+- TextFrame emits a single `:P` element, not one per paragraph run.
+  IDML text frames can contain multiple paragraphs; the structure tree
+  should ideally have one `:P` per paragraph.
 
-Each element carries:
-- `/S` — structure type (Figure, P, Sect, etc.)
-- `/P` — parent element reference
-- `/K` — kids (mcid integers or child element refs)
-- `/Pg` — page reference (for leaf elements with mcid)
-- `/Alt` — alternate description (e.g. image alt text)
-- `/Lang` — language override
+## Verification
 
-Marked-content operators `BMC`/`EMC` (or `BDC`/`EMC` with property
-list) wrap content in the content stream, carrying an MCID that
-links back to the structure element.
-
-pdfrb 0.4.0 exposes:
-- `Pdfrb::Content::Canvas#tagged(tag, mcid: nil, **props, &block)` —
-  emits `BDC`/`EMC` with property list.
-- `Pdfrb::Content::Canvas#artifact(type = nil, &block)` — wraps
-  content as a PDF/UA artifact (header/footer/decoration).
-- `Pdfrb::Document::Structure#add_element(type, text:, alt:, page:,
-  mcid:)` — registers a structure element.
-
-## Plan
-
-1. **MCID allocation**: Each renderer requests an MCID from a
-   per-page counter (kept in `RenderContext`) before drawing its
-   item. The MCID goes into the `tagged` call wrapping the draw.
-2. **Structure element registration**: After the canvas draw, the
-   renderer calls `writer.add_structure_element(type, page_index:,
-   mcid:, text:, alt:)` to register the structure element.
-3. **Renderer mapping**: Each renderer maps its item to a structure
-   type:
-   - `RectangleRenderer`/`PolygonRenderer` with `ContentType="GraphicType"`
-     and an image child → `Figure` with `Alt` from IDML `<Image Alt="...">`.
-   - `RectangleRenderer`/`PolygonRenderer` without image → `Path` (or
-     `Sect` if the item is a container).
-   - `TextFrameRenderer` → `P` (one per paragraph run).
-   - `GroupRenderer` → `Sect` (wraps its children's elements).
-   - `TableRenderer` → `Table`, `TR`, `TH`, `TD` per row/cell.
-4. **Artifact marking**: Page furniture (master-spread items,
-   non-content decorations) is wrapped in `artifact(:background)`.
-5. **Pipeline threading**: Pipeline passes a `structure: true` flag
-   through `RenderContext`. Renderers only emit structure when the
-   flag is set.
-6. **Build**: Pipeline calls `writer.build_structure` at the end —
-   this stitches the per-element registrations into a `/StructTreeRoot`.
+- `lib/idml/render/structure_tracker.rb` — MCID allocation + flush.
+- `lib/idml/render/structure_mapper.rb` — item → type map.
+- `lib/idml/render/page_item_renderer.rb:19` — `wrap_tagged` integration.
+- `lib/idml/render/pipeline.rb:38` — tracker construction + flush.
+- `spec/idml/render/structure_tracker_spec.rb` — 5 specs.
+- `spec/idml/render/structure_mapper_spec.rb` — 9 specs.
+- `spec/idml/render/render_pdfrb_pipeline_spec.rb:141` — integration
+  spec asserts `/StructTreeRoot`, `/MarkInfo`, `/StructElem`, BDC/EMC
+  counts; untagged variant asserts no tree.
 
 ## Acceptance criteria
 
-- [ ] `idml render --tagged sample.idml -o out.pdf` produces a PDF
-      whose `/StructTreeRoot` has a non-empty `/K` array.
-- [ ] Each visible page item maps to a structure element with the
-      right type (Figure, P, Path, Sect, Table).
-- [ ] `pdfinfo out.pdf` (or equivalent) reports `Tagged: yes`.
-- [ ] Spec renders a fixture and asserts presence of structure
-      elements matching the rendered items.
-- [ ] Items filtered out by `LayerFilter` do not get structure
-      entries.
-
-## Dependencies
-
-- pdfrb `Canvas#tagged` and `Document::Structure#add_element` (DONE
-  in 0.4.0).
-- Per-page MCID counter — small addition to `RenderContext`.
-- Per-renderer structure-type mapping table.
+- [x] `idml render --tagged sample.idml -o out.pdf` produces a PDF
+      whose `/StructTreeRoot` has elements.
+- [x] Each visible page item maps to a structure element with the
+      right type (`:Figure`, `:P`, `:Path`, `:Sect`, `:Table`).
+- [x] Items filtered out by `LayerFilter` do not get structure entries.
+- [x] Spec covers enabled/disabled paths and item-type mapping.

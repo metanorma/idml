@@ -6,15 +6,17 @@ module Idml
     class SpreadRenderer
       def initialize(font_resolver: nil, font_ps_name: Render::DEFAULT_FONT,
                      package: nil, layer_filter: LayerFilter::EXCLUDE_NONE,
-                     font_ref_resolver: nil)
+                     font_ref_resolver: nil, structure: nil)
         @font_resolver = font_resolver
         @font_ps_name = font_ps_name
         @package = package
         @layer_filter = layer_filter
         @font_ref_resolver = font_ref_resolver
+        @structure = structure
       end
 
-      def render(canvas, spread, page_width:, page_height:, image_refs: [])
+      def render(canvas, spread, page_width:, page_height:, image_refs: [],
+                 page_index: 0)
         context_base = {
           package: @package,
           font_resolver: @font_resolver,
@@ -24,6 +26,8 @@ module Idml
           page_width: page_width,
           page_height: page_height,
           layer_filter: @layer_filter,
+          structure: @structure,
+          page_index: page_index,
         }
 
         canvas.save_graphics_state do

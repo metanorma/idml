@@ -78,8 +78,9 @@ module Idml
       end
 
       def add_structure_element(type, page_index:, mcid:, text: nil, alt: nil)
+        page = @document.pages[page_index]
         @document.structure.add_element(type, text: text, alt: alt,
-                                              page: page_index, mcid: mcid)
+                                              page: page, mcid: mcid)
       end
 
       def build_structure
