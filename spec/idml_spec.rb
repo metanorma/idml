@@ -9,37 +9,6 @@ RSpec.describe Idml do
   end
   let(:package) { Idml::Package.new(fixture_path) }
 
-  describe Idml::TextEngine::FontResolver do
-    describe "#resolve_by_ps_name" do
-      let(:ps_name) do
-        font_path = "/System/Library/Fonts/Supplemental/Arial.ttf"
-        skip "Arial.ttf not found" unless File.exist?(font_path)
-
-        metrics = Idml::TextEngine::FontMetrics.open(font_path)
-        metrics.postscript_name
-      end
-
-      it "finds a font by its PostScriptName" do
-        resolver = described_class.new(search_paths: ["/System/Library/Fonts"])
-        result = resolver.resolve_by_ps_name(ps_name)
-        expect(result).to be_a(Idml::TextEngine::FontMetrics)
-        expect(result.postscript_name).to eq(ps_name)
-      end
-
-      it "returns nil for unknown PostScriptName" do
-        resolver = described_class.new(search_paths: ["/System/Library/Fonts"])
-        expect(resolver.resolve_by_ps_name("NonExistentFont-12345")).to be_nil
-      end
-
-      it "caches results" do
-        resolver = described_class.new(search_paths: ["/System/Library/Fonts"])
-        first = resolver.resolve_by_ps_name(ps_name)
-        second = resolver.resolve_by_ps_name(ps_name)
-        expect(first.object_id).to eq(second.object_id)
-      end
-    end
-  end
-
   describe "Fonts.xml typed model" do
     it "parses FontFamily entries with Font children" do
       fonts = package.fonts

@@ -9,7 +9,7 @@ module Idml
     RenderContext = Struct.new(
       :item,
       :package,
-      :font_resolver,
+      :font_metrics,
       :font_ref_resolver,
       :color_resolver,
       :font_ps_name,

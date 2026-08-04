@@ -2,11 +2,17 @@
 
 require "spec_helper"
 
+def pdfrb_metrics(font_path)
+  skip "#{font_path} not available" unless File.exist?(font_path)
+
+  doc = Pdfrb::Document.new
+  resource = doc.fonts.add(font_path)
+  Idml::TextEngine::PdfrbFontMetrics.new(doc.fonts, resource)
+end
+
 RSpec.describe Idml::TextEngine::Shaper do
   let(:font_path) { "/System/Library/Fonts/Supplemental/Arial.ttf" }
-  let(:font) { Idml::TextEngine::FontMetrics.open(font_path) }
-
-  before { skip "Arial.ttf not available" unless File.exist?(font_path) }
+  let(:font) { pdfrb_metrics(font_path) }
 
   describe ".shape" do
     it "returns an array of ShapedGlyph objects" do
@@ -40,9 +46,7 @@ end
 
 RSpec.describe Idml::TextEngine::LineBreaker do
   let(:font_path) { "/System/Library/Fonts/Supplemental/Arial.ttf" }
-  let(:font) { Idml::TextEngine::FontMetrics.open(font_path) }
-
-  before { skip "Arial.ttf not available" unless File.exist?(font_path) }
+  let(:font) { pdfrb_metrics(font_path) }
 
   it "breaks text into multiple lines when exceeding frame width" do
     shaper = Idml::TextEngine::Shaper.new(font, 12)
@@ -67,9 +71,7 @@ end
 
 RSpec.describe Idml::TextEngine::Justifier do
   let(:font_path) { "/System/Library/Fonts/Supplemental/Arial.ttf" }
-  let(:font) { Idml::TextEngine::FontMetrics.open(font_path) }
-
-  before { skip "Arial.ttf not available" unless File.exist?(font_path) }
+  let(:font) { pdfrb_metrics(font_path) }
 
   it "left-aligns by default (x_offset = 0)" do
     shaper = Idml::TextEngine::Shaper.new(font, 12)

@@ -4,10 +4,10 @@ module Idml
   module Render
     module Renderers
       # Renders an IDML TextFrame on a Pdfrb::Content::Canvas. Extracts
-      # styled runs via StyleResolver. When a FontMetrics is available,
-      # runs the full text engine pipeline (Shaper → LineBreaker →
-      # VerticalLayout) for proper word-wrap; otherwise falls back to
-      # simple one-text-per-run positioning.
+      # styled runs via StyleResolver. When a FontMetrics is available
+      # (pdfrb-backed), runs the full text engine pipeline (Shaper →
+      # LineBreaker) for proper word-wrap; otherwise falls back to a
+      # single text_rich call per frame.
       class TextFrameRenderer
         DEFAULT_SIZE = 12.0
         LEADING_FACTOR = 1.2
@@ -28,7 +28,7 @@ module Idml
         end
 
         def self.render_text(canvas, runs, context, box)
-          font = resolve_font_metrics(context)
+          font = context.font_metrics
           if font
             engine_render(canvas, runs, context, box, font)
           else
@@ -47,26 +47,6 @@ module Idml
         end
         private_class_method :frame_box
 
-        def self.resolve_font_metrics(context)
-          return nil unless context.font_resolver
-
-          context.font_resolver.resolve(
-            family_name: Render::DEFAULT_FONT, style_name: "Regular",
-          )
-        end
-        private_class_method :resolve_font_metrics
-
-        def self.simple_render(canvas, runs, context, box)
-          runs.each_with_index do |run, index|
-            y = box[:y] + box[:height] -
-              ((index + 1) * run.point_size * LEADING_FACTOR)
-            canvas.text(run.text, at: [box[:x], y],
-                                  font: context.font_ps_name,
-                                  size: run.point_size)
-          end
-        end
-        private_class_method :simple_render
-
         def self.engine_render(canvas, runs, context, box, font)
           baseline_y = box[:y] + box[:height] - runs.first.point_size
 
@@ -78,6 +58,9 @@ module Idml
         end
         private_class_method :engine_render
 
+        # Emits one `canvas.text_lines` call per run, after shaping
+        # and line-breaking with real font metrics. Lines that fall
+        # below the frame's bottom edge are clipped.
         def self.render_run_lines(canvas, run, context, box, font, baseline_y)
           size = run.point_size
           glyphs = TextEngine::Shaper.shape(
@@ -105,6 +88,32 @@ module Idml
           baseline_y
         end
         private_class_method :render_run_lines
+
+        # Fallback when no metrics are available: emit all runs as
+        # one `text_rich` block, letting pdfrb measure advance widths.
+        # Uses pdfrb's measurement API directly (no Fontisan).
+        def self.simple_render(canvas, runs, context, box)
+          runs_for = build_rich_runs(runs, context)
+          return if runs_for.empty?
+
+          first_size = runs.first.point_size
+          canvas.text_rich(
+            runs_for,
+            at: [box[:x], box[:y] + box[:height] - first_size],
+          )
+        end
+        private_class_method :simple_render
+
+        def self.build_rich_runs(runs, context)
+          runs.map do |run|
+            {
+              text: run.text,
+              font: context.font_ps_name,
+              size: run.point_size,
+            }
+          end
+        end
+        private_class_method :build_rich_runs
       end
     end
   end

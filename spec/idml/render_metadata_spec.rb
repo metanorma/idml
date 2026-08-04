@@ -23,16 +23,4 @@ RSpec.describe Idml::Render do
       end
     end
   end
-
-  describe Idml::TextEngine::FontMetrics do
-    it "caches by file path" do
-      font_path = "/System/Library/Fonts/Supplemental/Arial.ttf"
-      skip "Arial.ttf not found" unless File.exist?(font_path)
-
-      described_class.clear_cache
-      m1 = described_class.open(font_path)
-      m2 = described_class.open(font_path)
-      expect(m1.object_id).to eq(m2.object_id)
-    end
-  end
 end

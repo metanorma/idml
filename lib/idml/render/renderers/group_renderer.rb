@@ -14,13 +14,15 @@ module Idml
               child_context = Render::RenderContext.new(
                 item: child,
                 package: context.package,
-                font_resolver: context.font_resolver,
+                font_metrics: context.font_metrics,
                 font_ref_resolver: context.font_ref_resolver,
                 color_resolver: context.color_resolver,
                 font_ps_name: context.font_ps_name,
                 page_width: context.page_width,
                 page_height: context.page_height,
                 layer_filter: context.layer_filter,
+                structure: context.structure,
+                page_index: context.page_index,
               )
               PageItemRenderer.render(canvas, child_context)
             end

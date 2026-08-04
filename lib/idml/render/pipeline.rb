@@ -13,7 +13,7 @@ module Idml
                      compliance: nil, tagged: false, subset_fonts: true)
         @package = package
         @output_path = output_path
-        @font_resolver = build_font_resolver(font_search_paths)
+        @font_search_paths = font_search_paths
         @compliance = compliance
         @tagged = tagged
         @subset_fonts = subset_fonts
@@ -29,13 +29,15 @@ module Idml
         layer_filter = LayerFilter.from_designmap(@package.designmap)
         font_ref_resolver = FontReferenceResolver.build(@package)
         base_dir = File.dirname(@package.path)
-        font_name = register_font(writer)
+        font_resource = register_font(writer)
+        font_metrics = build_font_metrics(writer, font_resource)
         page_index = -1
 
         @package.spreads.each do |spread|
           page_index = render_spread_pages(writer, spread, base_dir,
                                            layer_filter, font_ref_resolver,
-                                           font_name, structure, page_index)
+                                           font_resource, font_metrics,
+                                           structure, page_index)
         end
 
         structure.flush(writer)
@@ -52,13 +54,13 @@ module Idml
       end
 
       def render_spread_pages(writer, spread, base_dir, layer_filter,
-                              font_ref_resolver, font_name, structure,
-                              page_offset)
+                              font_ref_resolver, font_resource, font_metrics,
+                              structure, page_offset)
         pages = spread.spread.flat_map(&:page)
         image_refs = ImageCollector.new(writer: writer, base_dir: base_dir,
                                         page_height: DEFAULT_HEIGHT).collect(spread)
-        renderer = build_renderer(layer_filter, font_ref_resolver, font_name,
-                                  structure: structure)
+        renderer = build_renderer(layer_filter, font_ref_resolver,
+                                  font_resource, font_metrics, structure: structure)
         current = page_offset
 
         pages.each do |page|
@@ -73,10 +75,11 @@ module Idml
         current
       end
 
-      def build_renderer(layer_filter, font_ref_resolver, font_name, structure:)
+      def build_renderer(layer_filter, font_ref_resolver, font_resource,
+                         font_metrics, structure:)
         SpreadRenderer.new(
-          font_resolver: @font_resolver,
-          font_ps_name: font_name,
+          font_metrics: font_metrics,
+          font_ps_name: font_resource,
           package: @package,
           layer_filter: layer_filter,
           font_ref_resolver: font_ref_resolver,
@@ -89,20 +92,27 @@ module Idml
           height: page.height || DEFAULT_HEIGHT }
       end
 
-      def build_font_resolver(paths)
-        search = paths || TextEngine::FontResolver::DEFAULT_SEARCH_PATHS
-        TextEngine::FontResolver.new(search_paths: search)
+      def build_font_metrics(writer, font_resource)
+        return nil if font_resource == Render::DEFAULT_FONT
+
+        TextEngine::PdfrbFontMetrics.new(writer.document.fonts, font_resource)
+      rescue StandardError
+        nil
       end
 
       def register_font(writer)
-        return Render::DEFAULT_FONT unless @font_resolver
-
         path = resolve_document_font_path
         return Render::DEFAULT_FONT unless path
 
         writer.register_font(path)
       rescue StandardError
         Render::DEFAULT_FONT
+      end
+
+      def font_resolver
+        @font_resolver ||= Pdfrb::FontResolver.new(
+          search_paths: @font_search_paths || Pdfrb::FontResolver::DEFAULT_SEARCH_PATHS,
+        )
       end
 
       def resolve_document_font_path
@@ -120,8 +130,8 @@ module Idml
           next unless font.post_script_name
           next if font.status == "Missing"
 
-          metrics = @font_resolver.resolve_by_ps_name(font.post_script_name)
-          return metrics.path if metrics
+          path = font_resolver.find_by_ps_name(font.post_script_name)
+          return path if path
         end
         nil
       end
