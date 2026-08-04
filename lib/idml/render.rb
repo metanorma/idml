@@ -23,6 +23,7 @@ module Idml
     autoload :BookmarkResolver,    "#{__dir__}/render/bookmark_resolver"
     autoload :HyperlinkResolver,   "#{__dir__}/render/hyperlink_resolver"
     autoload :HyperlinkEmitter,    "#{__dir__}/render/hyperlink_emitter"
+    autoload :MetadataBuilder,     "#{__dir__}/render/metadata_builder"
     autoload :StoryThreader,       "#{__dir__}/render/story_threader"
     autoload :PdfrbWriter, "#{__dir__}/render/pdfrb_writer"
     autoload :SpreadRenderer,      "#{__dir__}/render/spread_renderer"
