@@ -48,11 +48,10 @@ module Idml
         private_class_method :frame_box
 
         def self.engine_render(canvas, runs, context, box, font)
-          baseline_y = box[:y] + box[:height] - runs.first.point_size
-
+          char_cursor = 0
           runs.each do |run|
-            baseline_y = render_run_lines(
-              canvas, run, context, box, font, baseline_y
+            char_cursor = render_run_lines(
+              canvas, run, context, box, font, char_cursor
             )
           end
         end
@@ -63,7 +62,10 @@ module Idml
         # alignment via `Justifier` so each line is offset within
         # the frame box per IDML `Justification`. Lines that fall
         # below the frame's bottom edge are clipped.
-        def self.render_run_lines(canvas, run, context, box, font, baseline_y)
+        #
+        # Tracks absolute character position so HyperlinkEmitter can
+        # compute precise link rects per source range.
+        def self.render_run_lines(canvas, run, context, box, font, char_cursor)
           size = run.point_size
           glyphs = TextEngine::Shaper.shape(
             text: run.text, font: font, size: size,
@@ -73,6 +75,7 @@ module Idml
           )
           alignment = run.alignment || :left
           start_y = box[:y] + box[:height] - size
+          cursor = char_cursor
 
           lines.each_with_index do |line, idx|
             line_y = start_y - (idx * size * LEADING_FACTOR)
@@ -81,14 +84,35 @@ module Idml
             TextEngine::Justifier.justify(line: line,
                                           frame_width: box[:width],
                                           alignment: alignment)
+            line_x = box[:x] + line.x_offset
+            line_width = line.width
             canvas.text(line_text(line),
-                        at: [box[:x] + line.x_offset, line_y],
+                        at: [line_x, line_y],
                         font: context.font_ps_name,
                         size: size)
+            record_position(context, line, line_x, line_y, line_width, size,
+                            cursor)
+            cursor += line.glyphs.length
           end
-          baseline_y
+          cursor
         end
         private_class_method :render_run_lines
+
+        def self.record_position(context, line, x, y, width, height, cursor)
+          tracker = context.position_tracker
+          return unless tracker
+          return unless context.item&.self_attr
+
+          glyph_count = line.glyphs.length
+          tracker.add(context.item.self_attr,
+                      start_char: cursor,
+                      end_char: cursor + glyph_count,
+                      x: x,
+                      y: y,
+                      width: width,
+                      height: height)
+        end
+        private_class_method :record_position
 
         def self.line_text(line)
           line.glyphs.map { |g| [g.codepoint].pack("U") }.join

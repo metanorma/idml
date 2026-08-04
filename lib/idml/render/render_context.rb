@@ -18,6 +18,7 @@ module Idml
       :layer_filter,
       :structure,
       :page_index,
+      :position_tracker,
       keyword_init: true,
     )
   end

@@ -1,93 +1,62 @@
 # TODO PDF 85: Per-TextRange hyperlink precision
 
-## Status: DEFERRED (requires text-engine position tracking)
+## Status: PARTIAL — PositionTracker wired; per-source ranges need fixture
 
-## Current state
+## What was implemented
 
-`HyperlinkEmitter` (TODO 78) emits one Link annotation per text
-frame whose story contains a hyperlink source. The annotation
-covers the entire frame's bounding box, not just the linked
-characters.
+`Render::PositionTracker` is wired through the render path:
 
-## What per-TextRange precision requires
+1. **`Render::PositionTracker`** — accumulates positioned line
+   ranges per frame (`PositionedRange` Struct with start_char,
+   end_char, x, y, width, height).
+2. **`Pipeline`** constructs one tracker per render, threads it
+   through `SpreadRenderer` → `RenderContext` → `GroupRenderer`'s
+   child contexts.
+3. **`TextFrameRenderer#render_run_lines`** tracks an absolute
+   char cursor through the story. After each line is laid out and
+   drawn, `record_position` pushes a `PositionedRange` to the
+   tracker keyed by `frame.self_attr`.
+4. **`HyperlinkEmitter`** consumes the tracker: when a tracker is
+   supplied, computes a per-source rect via
+   `tracker.rect_for_range(frame_self, from:, to:)`. Falls back to
+   the frame's bounding box when no tracker is supplied (e.g.,
+   when the renderer took the simple_render path).
 
-For each hyperlink source, compute the rect that covers exactly
-the source's characters on the page.
+## What remains
 
-### Position tracking
+The current `HyperlinkEmitter#emit_precise_rects` uses
+`from: 0, to: 1_000_000` — a heuristic that intersects every
+recorded range on the frame, giving the bounding rect of all
+rendered text. This is more precise than the full frame box (text
+only, excluding frame padding) but less precise than per-source
+range.
 
-The text engine (`Shaper`, `LineBreaker`, `Justifier`) already
-produces positioned lines via `VerticalLayout`, but
-`TextFrameRenderer` does not surface per-character positions
-outside its own scope. To compute per-source rects we need:
+The reason for the heuristic: `HyperlinkTextSource` doesn't carry
+an explicit `StartIndex`/`EndIndex` — it wraps its content as a
+sibling of `<Content>` inside `<CharacterStyleRange>`. Determining
+the exact character range requires walking the story markup and
+attributing each character to either `<Content>` or
+`<HyperlinkTextSource>` children.
 
-1. **Absolute character index per CSR** — track cumulative char
-   position as CSRs are processed within a story.
-2. **Per-glyph (x, y) after layout** — Shaper gives widths,
-   LineBreaker gives line assignments, Justifier gives x_offset,
-   but no structured "positioned glyph" output is exposed today.
-3. **Source range lookup** — map `HyperlinkTextSource#Self` to a
-   `[start_char, end_char]` range. Today HyperlinkTextSource is
-   modelled as a sibling element of `Content` inside CSR; the
-   range is implicit (the source wraps its own content).
+Once that attribution logic exists in `StyleResolver`, the emitter
+can call `tracker.rect_for_range(frame_self, from: source_start,
+to: source_end)` for per-source precision.
 
-### Emitter change
+## Verification
 
-`HyperlinkEmitter` currently does:
-```ruby
-box = Placement.box(frame, @page_height)
-@writer.add_uri_link_annotation(page_index:, rect: rect_for(box), url:)
-```
-
-Per-range version needs the positioned glyph data:
-```ruby
-positions = context.positioned_glyphs_for_frame(frame.self_attr)
-range = source_range_for(hyperlink_source)
-rect = bounding_rect_for_range(positions, range)
-@writer.add_uri_link_annotation(page_index:, rect:, url:)
-```
-
-### Threading
-
-Positioned glyph data must travel from `TextFrameRenderer` (which
-runs the layout engine) to `HyperlinkEmitter` (which runs after
-the page renders). Options:
-
-- **A. Side channel via RenderContext**: add `positioned_glyphs`
-  hash to RenderContext, keyed by frame Self. Renderers populate
-  it; emitter reads it.
-- **B. Two-pass render**: re-run layout in the emitter to compute
-  positions. Wasteful but keeps emitter self-contained.
-- **C. Position tracker object**: similar to StructureTracker —
-  Pipeline constructs it, threads through RenderContext, queries
-  after rendering.
-
-Option C is the cleanest (matches StructureTracker pattern from
-TODO 76).
-
-## Plan
-
-1. Add `Render::PositionTracker` — accumulates per-frame positioned
-   ranges: `[{ frame_self:, start_char:, end_char:, x:, y:, width:,
-   height: }, ...]`.
-2. Add `position_tracker` to `RenderContext`.
-3. In `TextFrameRenderer#render_run_lines`, after layout, push each
-   line's positioned range to the tracker.
-4. In `HyperlinkEmitter#emit_for_frame`, query the tracker for
-   ranges that overlap each hyperlink source's `[start_char,
-   end_char]`. Compute the bounding rect from those ranges.
-5. Emit one Link annotation per source.
-
-## Why deferred
-
-- No fixture has hyperlinks → can't validate per-range precision.
-- Position tracker adds another stateful object to the render path.
-- Frame-level precision is "good enough" for visible link presence;
-  per-range is a polish improvement.
+- `lib/idml/render/position_tracker.rb` — tracker.
+- `lib/idml/render/render_context.rb:12` — `position_tracker` field.
+- `lib/idml/render/renderers/text_frame_renderer.rb:101` —
+  `record_position` call.
+- `lib/idml/render/hyperlink_emitter.rb:54` — `emit_precise_rects`.
+- `spec/idml/render/position_tracker_spec.rb` — 8 specs covering
+  add, ranges_for, rect_for_range, clear.
 
 ## Acceptance criteria
 
-- [ ] PositionTracker accumulates per-frame positioned ranges.
-- [ ] HyperlinkEmitter queries tracker for source ranges.
-- [ ] Each hyperlink source gets its own Link annotation rect.
-- [ ] Spec covers multi-source story with overlapping ranges.
+- [x] PositionTracker accumulates per-frame positioned ranges.
+- [x] TextFrameRenderer records line positions during layout.
+- [x] HyperlinkEmitter queries tracker when supplied.
+- [x] Spec covers add/query/clear paths.
+- [ ] Per-source range attribution in StyleResolver (future work).
+- [ ] Spec with a multi-source story (requires IDML fixture).

@@ -1,6 +1,28 @@
 # TODO PDF 86: Caching and performance
 
-## Status: PARTIAL — most hot paths cached; one risk noted
+## Status: DONE — geometric_bounds memoised
+
+## What was done
+
+`geometric_bounds` is now memoised on every shape element class
+that defines it:
+
+- `Elements::Rectangle#geometric_bounds`
+- `Elements::Polygon#geometric_bounds`
+- `Elements::GraphicLine#geometric_bounds`
+- `Elements::TextFrame#geometric_bounds`
+- `Elements::Table#geometric_bounds`
+
+Each call previously walked `Properties → PathGeometry →
+bounding_box`. Each rendered item gets bounds called 2–3 times
+(Placement.box, ImageCollector#clip_box_for, HyperlinkEmitter).
+Memoising saves one walk per repeat caller.
+
+Uses the standard `@geometric_bounds ||= ...` pattern (per
+rubocop's `Naming/MemoizedInstanceVariableName` rule). Since
+`geometric_bounds` is a regular method on the element (not a
+declared Lutaml attribute), the ivar name doesn't conflict with
+Lutaml's framework state.
 
 ## What is cached today
 

@@ -6,13 +6,15 @@ module Idml
     class SpreadRenderer
       def initialize(font_metrics: nil, font_ps_name: Render::DEFAULT_FONT,
                      package: nil, layer_filter: LayerFilter::EXCLUDE_NONE,
-                     font_ref_resolver: nil, structure: nil)
+                     font_ref_resolver: nil, structure: nil,
+                     position_tracker: nil)
         @font_metrics = font_metrics
         @font_ps_name = font_ps_name
         @package = package
         @layer_filter = layer_filter
         @font_ref_resolver = font_ref_resolver
         @structure = structure
+        @position_tracker = position_tracker
       end
 
       def render(canvas, spread, page_width:, page_height:, image_refs: [],
@@ -28,6 +30,7 @@ module Idml
           layer_filter: @layer_filter,
           structure: @structure,
           page_index: page_index,
+          position_tracker: @position_tracker,
         }
 
         canvas.save_graphics_state do

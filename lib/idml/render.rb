@@ -25,6 +25,7 @@ module Idml
     autoload :HyperlinkEmitter,    "#{__dir__}/render/hyperlink_emitter"
     autoload :MetadataBuilder,     "#{__dir__}/render/metadata_builder"
     autoload :FontSetup,           "#{__dir__}/render/font_setup"
+    autoload :PositionTracker,     "#{__dir__}/render/position_tracker"
     autoload :StoryThreader,       "#{__dir__}/render/story_threader"
     autoload :PdfrbWriter, "#{__dir__}/render/pdfrb_writer"
     autoload :SpreadRenderer,      "#{__dir__}/render/spread_renderer"
