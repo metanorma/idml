@@ -4,35 +4,51 @@
 
 ## What was done
 
-Extracted metadata assembly from `Pipeline` into a dedicated
-`Render::MetadataBuilder` class. Pipeline now calls
-`MetadataBuilder.new(@package).build` instead of inlining the XMP
-parsing, date conversion, and defaults logic.
+Two extractions from `Pipeline` into dedicated classes:
+
+1. **`Render::MetadataBuilder`** — metadata assembly (combined
+   defaults + XMP-extracted fields, ISO 8601 → PDF date conversion).
+2. **`Render::FontSetup`** — document font resolution via
+   `Pdfrb::FontResolver`, registration with pdfrb, and
+   `PdfrbFontMetrics` adapter construction.
+
+Pipeline now does pure orchestration: build writer → set metadata →
+apply compliance → set up structure → resolve font → render spreads
+→ flush structure → emit bookmarks → subset → write. No parsing,
+no date math, no font-path lookup.
 
 ## Why
 
-Pipeline had five private methods dedicated to metadata
-(`combined_metadata`, `xmp_metadata`, `default_metadata`,
-`pdf_date_string`, `pdf_date`). Each was a single responsibility
-unrelated to the pipeline's core orchestration role. Moving them
-into a focused class:
+Pipeline had 9 private methods across metadata, font setup, and
+rendering concerns. Each concern is now its own class:
 
-- Shrinks Pipeline by ~55 lines.
-- Makes MetadataBuilder independently testable.
-- Makes Pipeline's intent clearer: orchestrate, not parse.
-- Lets future metadata sources (e.g., IDML document properties,
-custom user metadata) plug in without touching Pipeline.
+- `MetadataBuilder` — Info dict assembly.
+- `FontSetup` — font file lookup + registration + metrics adapter.
+- `PdfaPacket` — XMP packet + Catalog /Metadata attachment.
+- `IccProfile` — locate sRGB ICC bytes.
+- `BookmarkResolver` — destination chain + page index.
+- `HyperlinkResolver` — source → URL lookup.
+- `HyperlinkEmitter` — Link annotation emission.
+- `StructureTracker` — MCID allocation + element registration.
+- `StructureMapper` — item → PDF structure type.
+- `ImageCollector` — image registration + placement.
+
+Pipeline shrunk from ~225 lines (v0.3.0) to ~135 lines (v0.4.2).
 
 ## Verification
 
-- `lib/idml/render/metadata_builder.rb` — extracted class.
-- `lib/idml/render/pipeline.rb:25` — single-call usage.
-- `spec/idml/render/metadata_builder_spec.rb` — 5 specs covering
-  defaults, XMP extraction, and the no-XMP fallback.
+- `lib/idml/render/metadata_builder.rb` — extracted.
+- `lib/idml/render/font_setup.rb` — extracted.
+- `lib/idml/render/pipeline.rb` — orchestration only.
+- `spec/idml/render/metadata_builder_spec.rb` — 5 specs.
+- `spec/idml/render/font_setup_spec.rb` — 4 specs.
+- `spec/idml/render/placement_spec.rb` — added for completeness.
 
 ## Acceptance criteria
 
-- [x] MetadataBuilder extracted as a separate class.
-- [x] Pipeline no longer contains XMP/date helpers.
-- [x] Existing pipeline specs still pass.
-- [x] MetadataBuilder has dedicated specs.
+- [x] MetadataBuilder extracted.
+- [x] FontSetup extracted.
+- [x] Pipeline no longer contains metadata/font helpers.
+- [x] Each extracted class has dedicated specs.
+- [x] All existing pipeline specs still pass.
+
