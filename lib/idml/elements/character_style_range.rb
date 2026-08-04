@@ -296,6 +296,8 @@ module Idml
       attribute :character_style_range, Idml::Elements::CharacterStyleRange,
                 collection: true
       attribute :content, Idml::Elements::Content, collection: true
+      attribute :hyperlink_text_source, Idml::Elements::HyperlinkTextSource,
+                collection: true
       attribute :xml_element, Idml::Elements::XmlElement, collection: true
 
       xml do
@@ -649,6 +651,7 @@ module Idml
         map_attribute "UpperLevel", to: :upper_level
         map_element "CharacterStyleRange", to: :character_style_range
         map_element "Content", to: :content
+        map_element "HyperlinkTextSource", to: :hyperlink_text_source
         map_element "XMLElement", to: :xml_element
       end
 

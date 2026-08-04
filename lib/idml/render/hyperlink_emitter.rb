@@ -12,11 +12,12 @@ module Idml
     # the source's TextRange. Precise per-range rects require deeper
     # integration with the text engine — see TODO 78.
     class HyperlinkEmitter
-      def initialize(writer:, package:, page_height:)
+      def initialize(writer:, package:, page_height:, layer_filter: nil)
         @writer = writer
         @package = package
         @resolver = HyperlinkResolver.new(package)
         @page_height = page_height
+        @layer_filter = layer_filter
       end
 
       def emit_for(spread, page_index)
@@ -29,7 +30,10 @@ module Idml
 
       def each_text_frame_on(spread)
         spread.each_page_item do |item|
-          yield item if item.is_a?(Idml::Elements::TextFrame)
+          next unless item.is_a?(Idml::Elements::TextFrame)
+          next if @layer_filter && !@layer_filter.visible?(item)
+
+          yield item
         end
       end
 

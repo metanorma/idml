@@ -21,7 +21,7 @@ module Idml
 
       def call
         writer = PdfrbWriter.new
-        metadata = combined_metadata
+        metadata = MetadataBuilder.new(@package).build
         writer.set_info(metadata)
         writer.enable_tagged if @tagged
         if pdfa_requested?
@@ -95,14 +95,16 @@ module Idml
                                           page_height: dims[:height],
                                           image_refs: image_refs,
                                           page_index: current)
-          emit_hyperlinks(writer, spread, current)
+          emit_hyperlinks(writer, spread, current, layer_filter)
         end
         current
       end
 
-      def emit_hyperlinks(writer, spread, page_index)
+      def emit_hyperlinks(writer, spread, page_index, layer_filter)
         HyperlinkEmitter.new(writer: writer, package: @package,
-                             page_height: DEFAULT_HEIGHT).emit_for(spread, page_index)
+                             page_height: DEFAULT_HEIGHT,
+                             layer_filter: layer_filter)
+          .emit_for(spread, page_index)
       rescue StandardError
         nil
       end
@@ -167,60 +169,6 @@ module Idml
         end
         nil
       end
-
-      def combined_metadata
-        defaults = default_metadata
-        xmp_metadata.each do |key, value|
-          next if value.nil? || value.empty?
-
-          defaults[key] = value
-        end
-        defaults
-      end
-
-      def xmp_metadata
-        return {} unless @package.has_part?(XMP_PATH)
-
-        xml = @package.read_part(XMP_PATH)
-        meta = Parts::XmpMeta.from_xml(xml)
-        rdf = meta.rdf
-        return {} unless rdf
-
-        {
-          Title: rdf.title,
-          Author: rdf.author,
-          Subject: rdf.description,
-          Keywords: rdf.keywords,
-          Creator: rdf.creator_tool,
-          CreationDate: pdf_date_string(rdf.create_date),
-          ModDate: pdf_date_string(rdf.modify_date),
-        }
-      rescue StandardError
-        {}
-      end
-
-      def pdf_date_string(iso8601)
-        return nil unless iso8601
-
-        time = Time.iso8601(iso8601)
-        pdf_date(time)
-      rescue ArgumentError
-        nil
-      end
-
-      def default_metadata
-        {
-          Producer: "idml gem v#{Idml::VERSION}",
-          CreationDate: pdf_date(Time.now.utc),
-        }
-      end
-
-      def pdf_date(time)
-        time.strftime("D:%Y%m%d%H%M%S+00'00'")
-      end
-
-      XMP_PATH = "META-INF/metadata.xml"
-      private_constant :XMP_PATH
     end
   end
 end

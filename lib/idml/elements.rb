@@ -64,6 +64,8 @@ module Idml
     autoload :Hyperlink, "idml/elements/hyperlink"
     autoload :HyperlinkPageDestination,
              "idml/elements/hyperlink_page_destination"
+    autoload :HyperlinkTextSource,
+             "idml/elements/hyperlink_text_source"
     autoload :HyperlinkURLDestination,
              "idml/elements/hyperlink_url_destination"
     autoload :Image, "idml/elements/image"
