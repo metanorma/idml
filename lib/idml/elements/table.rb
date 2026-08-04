@@ -33,7 +33,7 @@ module Idml
       end
 
       def geometric_bounds
-        properties.first&.first_geometry&.bounding_box
+        @geometric_bounds ||= properties.first&.first_geometry&.bounding_box
       end
     end
   end

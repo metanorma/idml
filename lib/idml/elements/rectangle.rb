@@ -54,8 +54,11 @@ module Idml
       end
 
       # Derives [y1, x1, y2, x2] from the Properties/PathGeometry.
+      # Memoised — the PathGeometry walk is non-trivial and bounds
+      # are read multiple times per item (Placement.box,
+      # ImageCollector#clip_box_for, HyperlinkEmitter).
       def geometric_bounds
-        first_geometry&.bounding_box
+        @geometric_bounds ||= first_geometry&.bounding_box
       end
 
       def first_geometry

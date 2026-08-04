@@ -23,6 +23,7 @@ module Idml
                 layer_filter: context.layer_filter,
                 structure: context.structure,
                 page_index: context.page_index,
+                position_tracker: context.position_tracker,
               )
               PageItemRenderer.render(canvas, child_context)
             end

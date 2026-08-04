@@ -34,6 +34,7 @@ module Idml
         apply_compliance(writer, metadata) if pdfa_requested?
 
         structure = StructureTracker.new(enabled: @tagged)
+        position_tracker = PositionTracker.new
         layer_filter = LayerFilter.from_designmap(@package.designmap)
         font_ref_resolver = FontReferenceResolver.build(@package)
         font_setup = FontSetup.new(package: @package,
@@ -45,7 +46,8 @@ module Idml
         @package.spreads.each do |spread|
           page_index = render_spread(writer, spread, layer_filter,
                                      font_ref_resolver, font_resource,
-                                     font_metrics, structure, page_index)
+                                     font_metrics, structure,
+                                     position_tracker, page_index)
         end
 
         structure.flush(writer)
@@ -84,13 +86,15 @@ module Idml
       end
 
       def render_spread(writer, spread, layer_filter, font_ref_resolver,
-                        font_resource, font_metrics, structure, page_offset)
+                        font_resource, font_metrics, structure,
+                        position_tracker, page_offset)
         pages = spread.spread.flat_map(&:page)
         image_refs = ImageCollector.new(writer: writer,
                                         base_dir: File.dirname(@package.path),
                                         page_height: DEFAULT_HEIGHT).collect(spread)
         renderer = build_renderer(layer_filter, font_ref_resolver,
-                                  font_resource, font_metrics, structure)
+                                  font_resource, font_metrics, structure,
+                                  position_tracker)
         current = page_offset
 
         pages.each do |page|
@@ -101,22 +105,25 @@ module Idml
                                           page_height: dims[:height],
                                           image_refs: image_refs,
                                           page_index: current)
-          emit_hyperlinks(writer, spread, current, layer_filter)
+          emit_hyperlinks(writer, spread, current, layer_filter,
+                          position_tracker)
         end
         current
       end
 
-      def emit_hyperlinks(writer, spread, page_index, layer_filter)
+      def emit_hyperlinks(writer, spread, page_index, layer_filter,
+                          position_tracker)
         HyperlinkEmitter.new(writer: writer, package: @package,
                              page_height: DEFAULT_HEIGHT,
-                             layer_filter: layer_filter)
+                             layer_filter: layer_filter,
+                             position_tracker: position_tracker)
           .emit_for(spread, page_index)
       rescue StandardError
         nil
       end
 
       def build_renderer(layer_filter, font_ref_resolver, font_resource,
-                         font_metrics, structure)
+                         font_metrics, structure, position_tracker)
         SpreadRenderer.new(
           font_metrics: font_metrics,
           font_ps_name: font_resource,
@@ -124,6 +131,7 @@ module Idml
           layer_filter: layer_filter,
           font_ref_resolver: font_ref_resolver,
           structure: structure,
+          position_tracker: position_tracker,
         )
       end
 
