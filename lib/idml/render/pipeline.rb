@@ -21,7 +21,7 @@ module Idml
 
       def call
         writer = PdfrbWriter.new
-        writer.set_info(default_metadata)
+        writer.set_info(combined_metadata)
         writer.enable_tagged if @tagged
         layer_filter = LayerFilter.from_designmap(@package.designmap)
         font_ref_resolver = FontReferenceResolver.build(@package)
@@ -190,6 +190,46 @@ module Idml
         nil
       end
 
+      def combined_metadata
+        defaults = default_metadata
+        xmp_metadata.each do |key, value|
+          next if value.nil? || value.empty?
+
+          defaults[key] = value
+        end
+        defaults
+      end
+
+      def xmp_metadata
+        return {} unless @package.has_part?(XMP_PATH)
+
+        xml = @package.read_part(XMP_PATH)
+        meta = Parts::XmpMeta.from_xml(xml)
+        rdf = meta.rdf
+        return {} unless rdf
+
+        {
+          Title: rdf.title,
+          Author: rdf.author,
+          Subject: rdf.description,
+          Keywords: rdf.keywords,
+          Creator: rdf.creator_tool,
+          CreationDate: pdf_date_string(rdf.create_date),
+          ModDate: pdf_date_string(rdf.modify_date),
+        }
+      rescue StandardError
+        {}
+      end
+
+      def pdf_date_string(iso8601)
+        return nil unless iso8601
+
+        time = Time.iso8601(iso8601)
+        pdf_date(time)
+      rescue ArgumentError
+        nil
+      end
+
       def default_metadata
         {
           Producer: "idml gem v#{Idml::VERSION}",
@@ -200,6 +240,9 @@ module Idml
       def pdf_date(time)
         time.strftime("D:%Y%m%d%H%M%S+00'00'")
       end
+
+      XMP_PATH = "META-INF/metadata.xml"
+      private_constant :XMP_PATH
     end
   end
 end
