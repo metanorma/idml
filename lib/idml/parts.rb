@@ -15,6 +15,10 @@ module Idml
     autoload :Preferences,  "idml/parts/preferences"
     autoload :Tags,         "idml/parts/tags"
     autoload :Mapping,      "idml/parts/mapping"
+    autoload :Xmp,            "idml/parts/xmp"
+    autoload :XmpDescription, "idml/parts/xmp"
+    autoload :XmpRdf,         "idml/parts/xmp"
+    autoload :XmpMeta,        "idml/parts/xmp"
 
     @registry = {}
 

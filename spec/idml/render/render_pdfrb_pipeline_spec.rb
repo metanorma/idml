@@ -66,6 +66,17 @@ RSpec.describe Idml::Render do
       end
     end
 
+    it "propagates XMP CreatorTool to PDF /Creator" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "xmp.pdf")
+        described_class.render(package: package, to: path)
+        raw = File.binread(path)
+
+        expect(raw).to include("/Creator")
+        expect(raw).to include("Adobe InDesign")
+      end
+    end
+
     it "sets CreationDate in PDF format" do
       Dir.mktmpdir do |dir|
         path = File.join(dir, "date.pdf")

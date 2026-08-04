@@ -1,103 +1,65 @@
 # TODO PDF 75: PDF metadata enrichment from IDML XMP
 
-## Status: BLOCKED (Lutaml XMP namespace parsing)
+## Status: DONE
 
-## Goal
+## What was implemented
 
 Pull IDML document metadata from `META-INF/metadata.xml` (XMP packet)
 into the PDF Info dictionary via `PdfrbWriter#set_info`:
 
-- `dc:title` → PDF `/Title`
-- `dc:creator` → PDF `/Author`
-- `dc:description` → PDF `/Subject`
-- `dc:subject` → PDF `/Keywords`
+- `dc:title` (rdf:Alt x-default) → PDF `/Title`
+- `dc:creator` (rdf:Seq first li) → PDF `/Author`
+- `dc:description` (rdf:Alt x-default) → PDF `/Subject`
+- `dc:subject` (rdf:Bag joined) → PDF `/Keywords`
 - `xmp:CreatorTool` → PDF `/Creator`
 - `xmp:CreateDate` → PDF `/CreationDate`
 - `xmp:ModifyDate` → PDF `/ModDate`
 
-## Blocker
+## Architecture
 
-`META-INF/metadata.xml` is an XMP packet — RDF/XML with multiple XML
-namespaces (`dc:`, `xmp:`, `pdf:`, `xmpMM:`, `stFnt:`, etc.). Parsing
-it with `lutaml-model` requires namespace-aware element mapping.
+XMP has multiple XML namespaces (`dc:`, `xmp:`, `pdf:`) inside one
+`<rdf:Description>` element. Per Lutaml's namespace API, each
+namespaced child is its own `Lutaml::Model::Serializable` subclass
+carrying its own `namespace` declaration via a `Lutaml::Xml::Namespace`
+class. The parent composes the children via `map_element`.
 
-Lutaml 0.8.19's namespace API is in flux:
+Layered models in `lib/idml/parts/xmp.rb`:
 
-- `namespace "..."` with a URI string raises
-  `String namespace URIs are not supported. Define an XmlNamespace
-  class instead.`
-- `namespace: Lutaml::Xml::XmlNamespace.new(uri, prefix)` raises
-  a `NoMethodError` inside `process_mapping`.
-- `map_element "dc:format"` (prefix in name) is silently ignored —
-  local-name lookup strips the prefix.
-- `prefix: "dc"` is ignored when there is no `namespace:` on the
-  mapping.
+- `Xmp::RdfNamespace`, `DcNamespace`, `XmpNamespace`, `XmetaNamespace` —
+  `Lutaml::Xml::Namespace` subclasses with `uri` and `prefix_default`.
+- `Xmp::Leaf` base + `Format`/`CreatorTool`/`CreateDate`/`ModifyDate`/
+  `MetadataDate` — single direct-value leaves.
+- `Xmp::ListItem` (rdf:li), `Alt` (rdf:Alt with x-default lookup),
+  `Seq` (rdf:Seq), `Bag` (rdf:Bag) — RDF container types.
+- `Xmp::Title`/`DcDescription`/`Creator`/`Subject` — dc: elements that
+  wrap the RDF containers.
+- `XmpDescription` — single rdf:Description composing all the leaves
+  and containers above.
+- `XmpRdf` — rdf:RDF with a collection of Descriptions plus merged
+  accessors (`title`, `author`, `keywords`, etc.) that pick the first
+  non-nil across Descriptions.
+- `XmpMeta` — outer `<x:xmpmeta>` wrapper.
 
-The CLAUDE.md rule "no `Lutaml::Xml::Document.parse`" rules out
-falling back to a generic XmlDocument traversal. We must use a typed
-model.
+Pipeline threads this through `combined_metadata`, which starts from
+the default Producer+CreationDate and overrides each field that the
+XMP packet supplies.
 
-## Path forward
+## Verification
 
-Wait for Lutaml to stabilise its namespace API, then add a typed
-`Idml::Parts::XmpMetadata` model that maps each XMP field to a Ruby
-attribute. Pipeline reads `META-INF/metadata.xml`, calls
-`XmpMetadata.from_xml`, and threads the resulting attributes through
-`PdfrbWriter#set_info`.
+- `lib/idml/parts/xmp.rb` — typed XMP models.
+- `lib/idml/render/pipeline.rb:193` — `combined_metadata` merge.
+- `spec/idml/parts/xmp_meta_spec.rb` — 11 specs covering direct
+  elements, containers, missing fields, and the fixture.
+- `spec/idml/render/render_pdfrb_pipeline_spec.rb` — integration spec
+  asserts `/Creator` from XMP lands in the PDF.
 
-When the blocker clears, the implementation looks like:
+## Acceptance criteria
 
-```ruby
-module Idml
-  module Parts
-    class XmpMetadata < Lutaml::Model::Serializable
-      attribute :title, :string
-      attribute :author, :string
-      attribute :subject, :string
-      attribute :keywords, :string
-      attribute :creator_tool, :string
-      attribute :create_date, :string
-      attribute :modify_date, :string
-
-      xml do
-        root "Description"
-        # …namespace-aware mappings once Lutaml supports them…
-      end
-    end
-  end
-end
-
-# In Pipeline:
-if @package.has_part?("META-INF/metadata.xml")
-  xmp = Idml::Parts::XmpMetadata.from_xml(
-    @package.read_part("META-INF/metadata.xml"),
-  )
-  writer.set_info(
-    Title: xmp.title,
-    Author: xmp.author,
-    Subject: xmp.subject,
-    Keywords: xmp.keywords,
-    Creator: xmp.creator_tool,
-    CreationDate: pdf_date(xmp.create_date),
-    ModDate: pdf_date(xmp.modify_date),
-  )
-end
-```
-
-## Acceptance criteria (after blocker clears)
-
-- [ ] Pipeline reads `META-INF/metadata.xml` when present.
-- [ ] `XmpMetadata` typed model parses dc:title/creator/description/
-      subject plus xmp:CreatorTool/CreateDate/ModifyDate.
-- [ ] Pipeline passes the parsed fields to `PdfrbWriter#set_info`.
-- [ ] Existing Producer/CreationDate defaults still apply when XMP
+- [x] Pipeline reads `META-INF/metadata.xml` when present.
+- [x] `XmpMeta` typed model parses dc:title/creator/description/subject
+      plus xmp:CreatorTool/CreateDate/ModifyDate.
+- [x] Pipeline passes the parsed fields to `PdfrbWriter#set_info`.
+- [x] Existing Producer/CreationDate defaults still apply when XMP
       or individual fields are absent.
-- [ ] Spec covers a synthetic XMP packet with all fields populated,
+- [x] Spec covers a synthetic XMP packet with all fields populated,
       plus the no-metadata fallback.
-
-## Dependencies
-
-- Lutaml namespace API stable enough that
-  `map_element "format", namespace: <XmlNamespace>` works without
-  raising. Tracked at the Lutaml migration guide referenced in the
-  error message: `docs/_guides/xml-namespaces.adoc`.
