@@ -15,6 +15,10 @@ module Idml
       attribute :stroke_color, :string
       attribute :stroke_weight, :float
       attribute :stroke_tint, :float
+      attribute :end_cap, :string
+      attribute :end_join, :string
+      attribute :miter_limit, :float
+      attribute :stroke_dash_and_gap, :string
       attribute :visible, :boolean
       attribute :name, :string
       attribute :item_layer, :string
@@ -33,6 +37,10 @@ module Idml
         map_attribute "StrokeColor", to: :stroke_color
         map_attribute "StrokeWeight", to: :stroke_weight
         map_attribute "StrokeTint", to: :stroke_tint
+        map_attribute "EndCap", to: :end_cap
+        map_attribute "EndJoin", to: :end_join
+        map_attribute "MiterLimit", to: :miter_limit
+        map_attribute "StrokeDashAndGap", to: :stroke_dash_and_gap
         map_attribute "Visible", to: :visible
         map_attribute "Name", to: :name
         map_attribute "ItemLayer", to: :item_layer

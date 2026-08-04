@@ -9,20 +9,13 @@ module Idml
           rect = context.item
           return if rect.visible == false
 
-          box = placement_box(rect, context.page_height)
+          box = Placement.box(rect, context.page_height)
           return unless box
 
           Blending.wrap(canvas, rect.transparency_setting) do
             render_fill(canvas, rect, context, box)
             render_stroke(canvas, rect, context, box)
           end
-        end
-
-        def self.placement_box(rect, page_height)
-          bounds = rect.geometric_bounds
-          return nil unless bounds
-
-          Geometry.placement_rect(bounds, rect.item_transform, page_height)
         end
 
         def self.render_fill(canvas, rect, context, box)
@@ -101,23 +94,19 @@ module Idml
         private_class_method :gradient_stops
 
         def self.render_stroke(canvas, rect, context, box)
-          return unless strokeable?(rect)
+          return unless StrokeStyle.strokeable?(rect)
 
           color = context.color_resolver&.resolve(rect.stroke_color)
           return unless color
 
-          canvas.stroke_color(ColorHelper.to_canvas(color))
-          canvas.line_width = rect.stroke_weight
-          canvas.rectangle(box[:x], box[:y], box[:width], box[:height])
-          canvas.stroke
+          StrokeStyle.apply(canvas, rect) do
+            canvas.stroke_color(ColorHelper.to_canvas(color))
+            canvas.line_width = rect.stroke_weight
+            canvas.rectangle(box[:x], box[:y], box[:width], box[:height])
+            canvas.stroke
+          end
         end
         private_class_method :render_stroke
-
-        def self.strokeable?(rect)
-          rect.stroke_color &&
-            rect.stroke_color != "Color/None" &&
-            rect.stroke_weight&.positive?
-        end
       end
     end
   end

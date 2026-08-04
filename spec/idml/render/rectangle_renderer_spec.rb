@@ -74,7 +74,7 @@ RSpec.describe Idml::Render::Renderers::RectangleRenderer do
   end
 
   def shading_registry
-    canvas.document.shadings.instance_variable_get(:@registry)
+    canvas.document.shadings.registry
   end
 
   shared_examples "renders a shading" do

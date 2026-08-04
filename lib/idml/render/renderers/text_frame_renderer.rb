@@ -43,15 +43,7 @@ module Idml
         private_class_method :chain_head?
 
         def self.frame_box(frame, page_height)
-          bounds = frame.geometric_bounds
-          unless bounds
-            return { x: 72.0, y: page_height - 72.0, width: 400.0,
-                     height: 600.0 }
-          end
-
-          transform = Geometry.parse_transform(frame.item_transform)
-          transformed = Geometry.transform_bounds(bounds, transform)
-          Geometry.bounds_to_pdf_rect(transformed, page_height)
+          Placement.box(frame, page_height, fallback: true)
         end
         private_class_method :frame_box
 
