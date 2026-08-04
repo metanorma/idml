@@ -10,12 +10,13 @@ module Idml
       DEFAULT_HEIGHT = 792
 
       def initialize(package, output_path, font_search_paths = nil,
-                     compliance: nil, tagged: false)
+                     compliance: nil, tagged: false, subset_fonts: true)
         @package = package
         @output_path = output_path
         @font_resolver = build_font_resolver(font_search_paths)
         @compliance = compliance
         @tagged = tagged
+        @subset_fonts = subset_fonts
       end
 
       def call
@@ -33,6 +34,7 @@ module Idml
         end
 
         writer.build_structure if @tagged
+        writer.subset_fonts! if @subset_fonts
         writer.write(@output_path)
         @output_path
       end

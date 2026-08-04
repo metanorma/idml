@@ -67,6 +67,8 @@ module Idml
                           desc: "Produce PDF/A-2a compliant output"
     method_option :tagged, type: :boolean, default: false,
                            desc: "Produce tagged PDF (PDF/UA)"
+    method_option :no_subset, type: :boolean, default: false,
+                              desc: "Skip font subsetting (larger PDF)"
     method_option :verbose, aliases: "-v", type: :boolean, default: false,
                             desc: "Print progress"
     def render(path)
@@ -97,6 +99,7 @@ module Idml
         font_search_paths: font_search_paths,
         compliance: options[:pdf_a] ? :pdfa2a : nil,
         tagged: options[:tagged],
+        subset_fonts: !options[:no_subset],
       }
     end
 

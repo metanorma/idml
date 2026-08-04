@@ -1,6 +1,6 @@
 # TODO PDF 67: Multi-run text batching via Canvas#text_rich
 
-## Status: BLOCKED (pdfrb measure_text is a stub)
+## Status: BLOCKED (pdfrb measure_text is stub for TTF)
 
 ## Goal
 
@@ -12,32 +12,35 @@ all runs inside one BT/ET block, advancing the text matrix between runs.
 
 `text_rich` is the right primitive for multi-run text — one begin/end
 text block per frame instead of N. But its run-advance relies on
-`Pdfrb::Document::Fonts#measure_text`, which in pdfrb 0.4.0 returns a
-stub `length * 0.5 * size`. Without accurate advance, runs overwrite
-each other on the line.
+`Pdfrb::Document::Fonts#measure_text`, which in pdfrb 0.4.0 still
+returns the stub `length * 0.5 * size` for TTF/OTF fonts (only
+Standard 14 AFM fonts get real measurement). Without accurate advance,
+runs overwrite each other on the line.
 
 ## Blocker
 
-`/Users/mulgogi/src/claricle/pdfrb/lib/pdfrb/document/fonts.rb:65`:
+`/Users/mulgogi/src/claricle/pdfrb/lib/pdfrb/document/fonts.rb`:
 
 ```ruby
 def measure_text(text, font:, size:)
-  return 0 unless text
-  # TODO: use font metrics for per-glyph width lookup
-  text.to_s.length * (size || 0).to_f * 0.5
+  return 0 unless text && size
+  metrics = @afm_metrics[font]
+  return text.to_s.length * size.to_f * 0.5 unless metrics  # STUB
+  ...
 end
 ```
 
-`glyph_width` (line 79) is also a stub returning 500, and `metrics_for`
-(line 87) returns nil. These need real Fontisan-backed implementations
-before text_rich produces correct output.
+`@afm_metrics` is only populated for Standard 14 fonts. pdfrb has
+the TTF parsing infrastructure (`Pdfrb::Font::TrueType::File` with
+Cmap, Hmtx) but the integration with `Fonts#glyph_width` /
+`measure_text` is pending.
 
 ## Plan (after pdfrb unblocks)
 
 1. Build `runs` array of `{ text:, font:, size:, color: }` per line.
-2. Replace `simple_render` body with `canvas.text_lines(..., rich: true)`
-   or `canvas.text_rich(runs, at: [x, y])`.
+2. Replace `simple_render` body with `canvas.text_rich(runs, at: [x, y])`.
 3. Verify rendered PDF: runs no longer overwrite, multi-color lines work.
+4. Combine with TODO 63 to drop Fontisan for measurement.
 
 ## Acceptance criteria
 
@@ -47,5 +50,5 @@ before text_rich produces correct output.
 
 ## Dependencies
 
-- pdfrb 0.4.0 `Fonts#measure_text` returns real per-glyph widths.
-- pdfrb 0.4.0 `Fonts#glyph_width` not returning stub 500.
+- pdfrb `Fonts#measure_text` returns real per-glyph widths for TTF
+  fonts (currently stub — see TODO 63).
