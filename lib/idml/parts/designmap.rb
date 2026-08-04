@@ -47,6 +47,12 @@ module Idml
       attribute :active_process, :string
 
       attribute :layer, Idml::Elements::Layer, collection: true
+      attribute :bookmark, Idml::Elements::Bookmark, collection: true
+      attribute :hyperlink, Idml::Elements::Hyperlink, collection: true
+      attribute :hyperlink_page_destination,
+                Idml::Elements::HyperlinkPageDestination, collection: true
+      attribute :hyperlink_url_destination,
+                Idml::Elements::HyperlinkURLDestination, collection: true
 
       xml do
         root "Document"
@@ -85,6 +91,12 @@ module Idml
         map_attribute "PreferMathMLInEpubExport", to: :prefer_math_ml_in_epub_export
         map_attribute "ActiveProcess", to: :active_process
         map_element "Layer", to: :layer
+        map_element "Bookmark", to: :bookmark
+        map_element "Hyperlink", to: :hyperlink
+        map_element "HyperlinkPageDestination",
+                    to: :hyperlink_page_destination
+        map_element "HyperlinkURLDestination",
+                    to: :hyperlink_url_destination
       end
     end
   end

@@ -83,6 +83,16 @@ module Idml
                                               page: page, mcid: mcid)
       end
 
+      def add_uri_link_annotation(page_index:, rect:, url:)
+        page = @document.pages[page_index]
+        action = @document.add({ S: :URI, URI: url },
+                               type: Pdfrb::Model::Cos::Dictionary)
+        action_ref = Pdfrb::Model::Reference.new(action.oid, action.gen)
+        annot = @document.annotations.add(page, subtype: :Link, rect: rect)
+        annot.value[:A] = action_ref
+        annot
+      end
+
       def build_structure
         @document.structure.build!
       end

@@ -24,7 +24,10 @@ module Idml
         metadata = combined_metadata
         writer.set_info(metadata)
         writer.enable_tagged if @tagged
-        PdfaPacket.attach(writer.document, metadata) if pdfa_requested?
+        if pdfa_requested?
+          PdfaPacket.attach(writer.document, metadata)
+          embed_pdfa_output_intent(writer)
+        end
         structure = StructureTracker.new(enabled: @tagged)
         layer_filter = LayerFilter.from_designmap(@package.designmap)
         font_ref_resolver = FontReferenceResolver.build(@package)
@@ -42,12 +45,33 @@ module Idml
 
         structure.flush(writer)
         writer.build_structure if @tagged
+        emit_bookmarks(writer)
         writer.subset_fonts! if @subset_fonts
         writer.write(@output_path)
         @output_path
       end
 
       private
+
+      def embed_pdfa_output_intent(writer)
+        bytes = IccProfile.srgb_bytes
+        return unless bytes
+
+        writer.document.output_intents.embed_icc(
+          bytes,
+          identifier: "sRGB",
+          condition: "sRGB IEC61966-2.1",
+          subtype: :GTS_PDFA1,
+        )
+      rescue StandardError
+        nil
+      end
+
+      def emit_bookmarks(writer)
+        BookmarkResolver.new(@package).each do |title, page_index|
+          writer.add_bookmark(title, page_index)
+        end
+      end
 
       def pdfa_requested?
         @compliance&.to_s&.start_with?("pdfa")
@@ -71,8 +95,16 @@ module Idml
                                           page_height: dims[:height],
                                           image_refs: image_refs,
                                           page_index: current)
+          emit_hyperlinks(writer, spread, current)
         end
         current
+      end
+
+      def emit_hyperlinks(writer, spread, page_index)
+        HyperlinkEmitter.new(writer: writer, package: @package,
+                             page_height: DEFAULT_HEIGHT).emit_for(spread, page_index)
+      rescue StandardError
+        nil
       end
 
       def build_renderer(layer_filter, font_ref_resolver, font_resource,

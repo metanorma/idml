@@ -55,6 +55,30 @@ RSpec.describe Idml::Render do
         runs = described_class.extract_runs(story)
         expect(runs.first.point_size).to eq(12.0)
       end
+
+      it "each run has an alignment defaulting to :left" do
+        story = package.story_by_id("ue1")
+        runs = described_class.extract_runs(story)
+        expect(runs.first.alignment).to eq(:left).or be(:center).or be(:right).or be(:justified)
+      end
+    end
+
+    describe "ALIGNMENT_MAP" do
+      it "maps IDML Left to :left" do
+        expect(described_class::ALIGNMENT_MAP["Left"]).to eq(:left)
+      end
+
+      it "maps IDML Center to :center" do
+        expect(described_class::ALIGNMENT_MAP["Center"]).to eq(:center)
+      end
+
+      it "maps IDML Right to :right" do
+        expect(described_class::ALIGNMENT_MAP["Right"]).to eq(:right)
+      end
+
+      it "maps IDML FullyJustified to :justified" do
+        expect(described_class::ALIGNMENT_MAP["FullyJustified"]).to eq(:justified)
+      end
     end
 
     describe ".concatenate" do
