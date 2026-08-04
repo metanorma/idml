@@ -5,8 +5,7 @@ module Idml
   # geometry and produces positioned glyphs using font metrics from
   # .ttf/.otf files. IDML-agnostic — works on any styled text.
   module TextEngine
-    autoload :FontMetrics,     "#{__dir__}/text_engine/font_metrics"
-    autoload :FontResolver,    "#{__dir__}/text_engine/font_resolver"
+    autoload :PdfrbFontMetrics, "#{__dir__}/text_engine/pdfrb_font_metrics"
     autoload :Shaper,          "#{__dir__}/text_engine/shaper"
     autoload :ShapedGlyph,     "#{__dir__}/text_engine/shaper"
     autoload :LineBreaker,     "#{__dir__}/text_engine/line_breaker"

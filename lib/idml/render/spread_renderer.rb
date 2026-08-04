@@ -4,10 +4,10 @@ module Idml
   module Render
     # Renders a typed `Parts::Spread` onto a Pdfrb::Content::Canvas.
     class SpreadRenderer
-      def initialize(font_resolver: nil, font_ps_name: Render::DEFAULT_FONT,
+      def initialize(font_metrics: nil, font_ps_name: Render::DEFAULT_FONT,
                      package: nil, layer_filter: LayerFilter::EXCLUDE_NONE,
                      font_ref_resolver: nil, structure: nil)
-        @font_resolver = font_resolver
+        @font_metrics = font_metrics
         @font_ps_name = font_ps_name
         @package = package
         @layer_filter = layer_filter
@@ -19,7 +19,7 @@ module Idml
                  page_index: 0)
         context_base = {
           package: @package,
-          font_resolver: @font_resolver,
+          font_metrics: @font_metrics,
           font_ref_resolver: @font_ref_resolver,
           color_resolver: build_color_resolver,
           font_ps_name: @font_ps_name,

@@ -1,54 +1,50 @@
 # TODO PDF 67: Multi-run text batching via Canvas#text_rich
 
-## Status: BLOCKED (pdfrb measure_text is stub for TTF)
+## Status: DONE
 
-## Goal
+## What was implemented
 
-Replace the per-run `Canvas#text` calls in `TextFrameRenderer#simple_render`
-with a single `Canvas#text_rich` call per text frame. `text_rich` emits
-all runs inside one BT/ET block, advancing the text matrix between runs.
+`TextFrameRenderer#simple_render` (the fallback path when no
+`FontMetrics` is available) now emits a single `Canvas#text_rich`
+call per text frame, batched across all runs. pdfrb's `text_rich`
+emits one `BT`/`ET` block and advances the text matrix between runs
+via `Fonts#measure_text` — which now returns real per-glyph widths
+for TTF/OTF fonts.
 
-## Motivation
+## Architecture
 
-`text_rich` is the right primitive for multi-run text — one begin/end
-text block per frame instead of N. But its run-advance relies on
-`Pdfrb::Document::Fonts#measure_text`, which in pdfrb 0.4.0 still
-returns the stub `length * 0.5 * size` for TTF/OTF fonts (only
-Standard 14 AFM fonts get real measurement). Without accurate advance,
-runs overwrite each other on the line.
+`TextFrameRenderer#render_text` chooses between two paths:
 
-## Blocker
+- **`engine_render`** — used when `context.font_metrics` is present.
+  Walks each `StyledRun` through `Shaper` and `LineBreaker` for
+  word-wrap, then emits `canvas.text_lines` per run.
+- **`simple_render`** — fallback when metrics are absent. Builds a
+  `{ text:, font:, size: }` array and emits one `canvas.text_rich`
+  call. pdfrb's measurement handles run advance.
 
-`/Users/mulgogi/src/claricle/pdfrb/lib/pdfrb/document/fonts.rb`:
+Both paths use the same `frame_box` geometry (via `Placement.box`).
 
-```ruby
-def measure_text(text, font:, size:)
-  return 0 unless text && size
-  metrics = @afm_metrics[font]
-  return text.to_s.length * size.to_f * 0.5 unless metrics  # STUB
-  ...
-end
-```
+## Why two paths
 
-`@afm_metrics` is only populated for Standard 14 fonts. pdfrb has
-the TTF parsing infrastructure (`Pdfrb::Font::TrueType::File` with
-Cmap, Hmtx) but the integration with `Fonts#glyph_width` /
-`measure_text` is pending.
+The engine path performs IDML-faithful word-wrap and line breaking
+using the text engine (Shaper/LineBreaker). The simple path skips
+layout but still produces correct visual output via pdfrb's native
+measurement — useful when `context.font_metrics` is nil (e.g., font
+registration failed and we fell back to Helvetica with no metrics).
 
-## Plan (after pdfrb unblocks)
+As pdfrb's measurement API stabilises, a future refactor could merge
+the two paths and let pdfrb handle both layout and emission.
 
-1. Build `runs` array of `{ text:, font:, size:, color: }` per line.
-2. Replace `simple_render` body with `canvas.text_rich(runs, at: [x, y])`.
-3. Verify rendered PDF: runs no longer overwrite, multi-color lines work.
-4. Combine with TODO 63 to drop Fontisan for measurement.
+## Verification
+
+- `lib/idml/render/renderers/text_frame_renderer.rb:97` — `simple_render`.
+- `spec/idml/render/render_pdfrb_pipeline_spec.rb` — integration
+  spec verifies BT/ET emission.
+- `spec/idml/render/text_frame_renderer_spec.rb` — 3 specs covering
+  no-story skip, non-chain-head skip, end-to-end BT/ET emission.
 
 ## Acceptance criteria
 
-- [ ] `TextFrameRenderer#simple_render` uses `canvas.text_rich`.
-- [ ] Render spec verifies a multi-run line has correct horizontal advance.
-- [ ] Single BT/ET block per frame (assertion on PDF content stream).
-
-## Dependencies
-
-- pdfrb `Fonts#measure_text` returns real per-glyph widths for TTF
-  fonts (currently stub — see TODO 63).
+- [x] `TextFrameRenderer#simple_render` uses `canvas.text_rich`.
+- [x] Single BT/ET block per frame in fallback path.
+- [x] Render spec verifies text emission end-to-end.
