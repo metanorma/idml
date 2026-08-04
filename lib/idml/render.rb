@@ -25,11 +25,16 @@ module Idml
 
     DEFAULT_FONT = "Helvetica"
 
+    # Render an IDML package to a PDF file. All options except
+    # `package:` and `to:` are keyword-only and optional.
+    # rubocop:disable Metrics/ParameterLists
     def self.render(package:, to:, font_search_paths: nil, compliance: nil,
-                   tagged: false)
-      Pipeline.new(package, to, font_search_paths, compliance: compliance,
-                                                   tagged: tagged).call
+                   tagged: false, subset_fonts: true)
+      Pipeline.new(package, to, font_search_paths,
+                   compliance: compliance, tagged: tagged,
+                   subset_fonts: subset_fonts).call
     end
+    # rubocop:enable Metrics/ParameterLists
   end
 end
 

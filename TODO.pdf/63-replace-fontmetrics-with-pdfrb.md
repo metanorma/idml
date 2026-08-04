@@ -1,73 +1,60 @@
 # TODO PDF 63: Replace FontMetrics with pdfrb measurement API
 
-## Status: BLOCKED (pdfrb measurement APIs are stubs)
+## Status: PARTIALLY UNBLOCKED (subsetting works; measurement still AFM-only)
 
 ## Goal
 
 Replace `Idml::TextEngine::FontMetrics` (200+ lines of TTF binary parsing
 via Fontisan) with pdfrb's native `Fonts#measure_text`, `#glyph_width`,
-and `#metrics_for`. Eliminates the Fontisan dependency for text layout.
+and `#metrics_for`.
 
-## Blocker
+## What pdfrb 0.4.0 provides
 
-pdfrb 0.4.0 ships the API surface but the implementations are stubs
-that return constant values, not real per-glyph widths:
+- `Pdfrb::Font::TrueType::File` — real TTF parser with Head, Hhea,
+  Cmap, Hmtx, OS2 tables.
+- `Pdfrb::Font::TrueType::Subsetter` — real subsetting (TODO 52 uses
+  this — DONE).
+- `Fonts#glyph_width(char, resource)` — uses AFM metrics (Standard 14)
+  only; returns `DEFAULT_WIDTH = 500` for TTF.
+- `Fonts#measure_text(text, font:, size:)` — same: AFM or stub
+  (`length * 0.5 * size`).
+- `Fonts#metrics_for(resource)` — AFM metrics only.
 
-`/Users/mulgogi/src/claricle/pdfrb/lib/pdfrb/document/fonts.rb`:
+## What still needs pdfrb work
 
-```ruby
-def measure_text(text, font:, size:)
-  return 0 unless text
-  # TODO: use font metrics for per-glyph width lookup
-  text.to_s.length * (size || 0).to_f * 0.5
-end
+pdfrb's TTF parser exists but is not wired to the measurement API.
+`Fonts#glyph_width` reads `@afm_metrics[resource]`, which is only
+populated for Standard 14 AFM fonts (Helvetica, Times, Courier,
+Symbol, ZapfDingbats). For every other font (any TTF/OTF), it falls
+back to the stub.
 
-def glyph_width(_char, _resource)
-  500
-end
+The per-glyph-width proposal asked for "Look up glyph ID from cmap,
+then width from hmtx." The infrastructure is there (Cmap, Hmtx) but
+the integration with `Fonts#glyph_width` is pending.
 
-def metrics_for(_resource)
-  nil
-end
-```
+Until pdfrb's measurement API wires the TTF parser, the idml gem's
+Shaper and LineBreaker must keep using Fontisan-based FontMetrics
+for accurate per-glyph widths.
 
-The Shaper and LineBreaker depend on accurate per-glyph widths for
-correct word-wrap. With stub data, line breaks land at the wrong
-positions and run advance (needed for TODO 67's `text_rich`) is wrong.
+## Plan (after pdfrb unblocks)
 
-Fontisan correctly parses head/hhea/hmtx/cmap tables for any TTF/OTF
-and exposes per-glyph advance widths. Until pdfrb either grows real
-TTF parsing or accepts externally-provided metrics (see
-`/Users/mulgogi/src/claricle/pdfrb/PROPOSAL.external-font-metrics.md`),
-Fontisan stays.
-
-## Path forward
-
-Proposal at `~/src/claricle/pdfrb/PROPOSAL.external-font-metrics.md`
-suggests letting `Fonts#add` accept `widths:`/`metrics:`/`encoding:`
-hashes from the caller, so pdfrb does not need to parse TTF tables
-itself. The idml gem would then build those hashes from FontMetrics
-and pass them in — keeping Fontisan as the parser while pdfrb handles
-only PDF assembly. This is the Unix-philosophy split.
-
-Once that proposal lands:
-
-1. `PdfrbWriter#register_font_with_metrics(path, widths:, metrics:, ...)`.
-2. Pipeline resolves fonts via FontResolver (Fontisan) and passes the
-   resulting metrics to pdfrb.
-3. Internal `FontMetrics` may still exist as the Fontisan adapter, but
-   Shaper/LineBreaker no longer need to read it — they go through
-   `pdfrb.measure_text`.
+1. `PdfrbWriter#register_font(path)` records the TTF bytes for
+   later parsing.
+2. New `PdfrbFontMetrics` adapter implements FontMetrics' interface
+   by calling `pdfrb.fonts.glyph_width(font_resource, codepoint)`.
+3. `FontResolver` returns `PdfrbFontMetrics` for resolved fonts.
+4. Remove `text_engine/font_metrics.rb` (200+ lines).
 
 ## Acceptance criteria (after pdfrb unblocks)
 
-- [ ] Pipeline registers fonts with externally-provided metrics.
-- [ ] Shaper/LineBreaker call pdfrb's measurement API, not FontMetrics.
-- [ ] `fontisan` remains a dependency for parsing, but no longer feeds
-      Shaper/LineBreaker directly.
+- [ ] Pipeline registers fonts via `pdfrb.fonts.add(path)`.
+- [ ] Shaper/LineBreaker call pdfrb's measurement API, not
+      FontMetrics.
+- [ ] `fontisan` removed from gemspec dependencies.
+- [ ] Spec renders text and verifies line breaks land at correct
+      positions for TTF fonts.
 
 ## Dependencies
 
-- pdfrb 0.4.0's `Fonts#measure_text`/`#glyph_width`/`#metrics_for`
-  with real implementations OR
-- pdfrb accepts the external-metrics proposal linked above.
+- pdfrb `Fonts#glyph_width` uses parsed TTF tables, not AFM-only.
+- pdfrb `Fonts#measure_text` uses parsed TTF tables.

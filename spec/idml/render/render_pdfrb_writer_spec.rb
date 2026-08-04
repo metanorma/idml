@@ -110,6 +110,32 @@ RSpec.describe Idml::Render do
       writer = Idml::Render::PdfrbWriter.new
       expect(writer.image_name_for("unknown")).to be_nil
     end
+
+    it "exposes subset_fonts! delegated to pdfrb" do
+      writer = Idml::Render::PdfrbWriter.new
+      expect(writer.document.fonts.class.instance_method(:subset_fonts!)).not_to be_nil
+      expect { writer.subset_fonts! }.not_to raise_error
+    end
+
+    it "subsets embedded fonts after text is drawn" do
+      skip "no system Arial" unless File.exist?(
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+      )
+
+      writer = Idml::Render::PdfrbWriter.new
+      font = writer.register_font(
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+      )
+      canvas = writer.add_page(width: 400, height: 400)
+      canvas.text("Hello", at: [50, 350], font: font, size: 12)
+      writer.subset_fonts!
+
+      path = Tempfile.new("writer-subset").path
+      writer.write(path)
+      raw = File.binread(path)
+      expect(raw).to start_with("%PDF")
+      expect(File.size(path)).to be < 15_000 # subset keeps it tiny
+    end
   end
 end
 # rubocop:disable RSpec/SpecFilePathFormat

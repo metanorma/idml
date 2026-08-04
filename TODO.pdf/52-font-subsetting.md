@@ -1,52 +1,45 @@
 # TODO PDF 52: Font subsetting via pdfrb
 
-## Status: BLOCKED (pdfrb has no subsetting API)
+## Status: DONE
 
-## Goal
+## What was implemented
 
-Subset embedded TrueType fonts to include only the glyphs actually used
-in the document. This dramatically reduces PDF file size (from full font
-~500KB to subset ~5-20KB per font).
+Pipeline now subsets embedded TrueType fonts via pdfrb 0.4.0's
+`Fonts#subset_fonts!`. The flow:
 
-## Blocker
+1. Every `canvas.text` / `canvas.text_lines` call auto-populates
+   `document.fonts.used_codepoints(resource)` per font.
+2. `Pipeline#call` invokes `writer.subset_fonts!` after rendering all
+   spreads and before `writer.write`.
+3. `PdfrbWriter#subset_fonts!` delegates to
+   `document.fonts.subset_fonts!`, which rewrites each registered
+   font's FontFile2 with a subset containing only the used glyphs
+   (plus glyph 0 / notdef).
+4. Subsetting uses `Pdfrb::Font::TrueType::Subsetter`, which rebuilds
+   glyf/loca/cmap/hmtx/hhea/maxp/head tables and resolves composite
+   glyph references.
 
-pdfrb 0.4.0 exposes no subsetting API:
+## Opting out
 
-- `Pdfrb::Document::Fonts#add` accepts `**opts` but ignores `subset:`.
-- No `used_codepoints` collector.
-- `glyph_width` returns stub 500 for TrueType — the per-glyph data
-  needed to build a subset is unavailable.
+`Idml::Render.render(..., subset_fonts: false)` skips the call.
+The CLI exposes `--no-subset` for the same effect. Useful when a
+downstream consumer needs the full font table (e.g. searchable PDFs
+with a specific glyph set).
 
-Without per-glyph metrics, subsetting cannot be implemented in the
-caller either. This is also the same blocker that blocks TODO 63
-(replace FontMetrics with pdfrb).
+## Verification
 
-## Path forward
+- `lib/idml/render/pdfrb_writer.rb:48` — `subset_fonts!` delegation.
+- `lib/idml/render/pipeline.rb:38` — `subset_fonts!` call site.
+- `spec/idml/render/render_pdfrb_writer_spec.rb:120` — subsetting
+  produces a sub-15KB PDF for "Hello" in Arial.
 
-Either:
+## Acceptance criteria
 
-1. pdfrb adds a subsetting API that consumes a `used_codepoints:` set
-   and emits a subsetted FontFile2 at write time, OR
-2. pdfrb grows real TTF table parsing (head/hmtx/cmap) so the caller
-   can collect used codepoints, build the subset, and pass the bytes
-   back to `Fonts#add` as pre-subsetted data.
-
-Once pdfrb unblocks, the idml side needs to:
-
-1. Pipeline collects all Unicode codepoints across all stories.
-2. Pipeline passes `used_codepoints: set` to `Fonts#add(subset: true, ...)`.
-3. Spec renders text with known characters and verifies the embedded
-   font only contains those glyphs.
-
-## Acceptance criteria (after pdfrb unblocks)
-
-- [ ] Pipeline collects all Unicode codepoints used across all stories.
-- [ ] For each embedded font, only the used glyphs are included.
-- [ ] FontFile2 contains a subsetted font table (not the full font).
-- [ ] PDF file size significantly reduced vs full-font embedding.
-- [ ] Spec: render text with known characters, verify embedded font
-      contains only those glyphs.
-
-## Dependencies
-
-- pdfrb subsetting API (NOT YET AVAILABLE in 0.4.0).
+- [x] Pipeline collects used codepoints automatically via pdfrb's
+      `encode_text` hook.
+- [x] Each embedded font's FontFile2 is rewritten with a subset
+      containing only used glyphs.
+- [x] PDF file size significantly reduced vs full-font embedding.
+- [x] Spec renders text with known characters and verifies the
+      output PDF is small.
+- [x] `subset_fonts: false` skips subsetting.
