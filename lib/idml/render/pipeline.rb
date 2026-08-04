@@ -3,8 +3,15 @@
 module Idml
   module Render
     # Top-level pipeline: IDML Package → PDF file using pdfrb.
-    # All PDF assembly is delegated to Pdfrb::Document. Renderers
-    # receive a Pdfrb::Content::Canvas and call drawing methods.
+    # All PDF assembly is delegated to pdfrb; this class orchestrates
+    # the high-level flow:
+    #
+    #   1. Build writer + set metadata.
+    #   2. Apply compliance (PDF/A XMP + ICC) if requested.
+    #   3. Set up structure tracker for tagged PDF.
+    #   4. Resolve document font.
+    #   5. For each spread: collect images, render pages, emit hyperlinks.
+    #   6. Flush structure, emit bookmarks, subset fonts, write.
     class Pipeline
       DEFAULT_WIDTH = 612
       DEFAULT_HEIGHT = 792
@@ -24,23 +31,21 @@ module Idml
         metadata = MetadataBuilder.new(@package).build
         writer.set_info(metadata)
         writer.enable_tagged if @tagged
-        if pdfa_requested?
-          PdfaPacket.attach(writer.document, metadata)
-          embed_pdfa_output_intent(writer)
-        end
+        apply_compliance(writer, metadata) if pdfa_requested?
+
         structure = StructureTracker.new(enabled: @tagged)
         layer_filter = LayerFilter.from_designmap(@package.designmap)
         font_ref_resolver = FontReferenceResolver.build(@package)
-        base_dir = File.dirname(@package.path)
-        font_resource = register_font(writer)
-        font_metrics = build_font_metrics(writer, font_resource)
-        page_index = -1
+        font_setup = FontSetup.new(package: @package,
+                                   font_search_paths: @font_search_paths)
+        font_resource = font_setup.register(writer)
+        font_metrics = font_setup.metrics_for(writer, font_resource)
 
+        page_index = -1
         @package.spreads.each do |spread|
-          page_index = render_spread_pages(writer, spread, base_dir,
-                                           layer_filter, font_ref_resolver,
-                                           font_resource, font_metrics,
-                                           structure, page_index)
+          page_index = render_spread(writer, spread, layer_filter,
+                                     font_ref_resolver, font_resource,
+                                     font_metrics, structure, page_index)
         end
 
         structure.flush(writer)
@@ -53,7 +58,8 @@ module Idml
 
       private
 
-      def embed_pdfa_output_intent(writer)
+      def apply_compliance(writer, metadata)
+        PdfaPacket.attach(writer.document, metadata)
         bytes = IccProfile.srgb_bytes
         return unless bytes
 
@@ -67,24 +73,24 @@ module Idml
         nil
       end
 
+      def pdfa_requested?
+        @compliance&.to_s&.start_with?("pdfa")
+      end
+
       def emit_bookmarks(writer)
         BookmarkResolver.new(@package).each do |title, page_index|
           writer.add_bookmark(title, page_index)
         end
       end
 
-      def pdfa_requested?
-        @compliance&.to_s&.start_with?("pdfa")
-      end
-
-      def render_spread_pages(writer, spread, base_dir, layer_filter,
-                              font_ref_resolver, font_resource, font_metrics,
-                              structure, page_offset)
+      def render_spread(writer, spread, layer_filter, font_ref_resolver,
+                        font_resource, font_metrics, structure, page_offset)
         pages = spread.spread.flat_map(&:page)
-        image_refs = ImageCollector.new(writer: writer, base_dir: base_dir,
+        image_refs = ImageCollector.new(writer: writer,
+                                        base_dir: File.dirname(@package.path),
                                         page_height: DEFAULT_HEIGHT).collect(spread)
         renderer = build_renderer(layer_filter, font_ref_resolver,
-                                  font_resource, font_metrics, structure: structure)
+                                  font_resource, font_metrics, structure)
         current = page_offset
 
         pages.each do |page|
@@ -110,7 +116,7 @@ module Idml
       end
 
       def build_renderer(layer_filter, font_ref_resolver, font_resource,
-                         font_metrics, structure:)
+                         font_metrics, structure)
         SpreadRenderer.new(
           font_metrics: font_metrics,
           font_ps_name: font_resource,
@@ -124,50 +130,6 @@ module Idml
       def page_dimensions_for(page)
         { width: page.width || DEFAULT_WIDTH,
           height: page.height || DEFAULT_HEIGHT }
-      end
-
-      def build_font_metrics(writer, font_resource)
-        return nil if font_resource == Render::DEFAULT_FONT
-
-        TextEngine::PdfrbFontMetrics.new(writer.document.fonts, font_resource)
-      rescue StandardError
-        nil
-      end
-
-      def register_font(writer)
-        path = resolve_document_font_path
-        return Render::DEFAULT_FONT unless path
-
-        writer.register_font(path)
-      rescue StandardError
-        Render::DEFAULT_FONT
-      end
-
-      def font_resolver
-        @font_resolver ||= Pdfrb::FontResolver.new(
-          search_paths: @font_search_paths || Pdfrb::FontResolver::DEFAULT_SEARCH_PATHS,
-        )
-      end
-
-      def resolve_document_font_path
-        return nil unless @package&.fonts
-
-        @package.fonts.font_family.each do |family|
-          path = find_font_file(family)
-          return path if path
-        end
-        nil
-      end
-
-      def find_font_file(family)
-        family.font.each do |font|
-          next unless font.post_script_name
-          next if font.status == "Missing"
-
-          path = font_resolver.find_by_ps_name(font.post_script_name)
-          return path if path
-        end
-        nil
       end
     end
   end
