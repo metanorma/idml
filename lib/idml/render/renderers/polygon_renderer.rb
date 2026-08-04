@@ -8,7 +8,7 @@ module Idml
           poly = context.item
           return if poly.visible == false
 
-          box = RectangleRenderer.placement_box(poly, context.page_height)
+          box = Placement.box(poly, context.page_height)
           return unless box
 
           Blending.wrap(canvas, poly.transparency_setting) do
@@ -30,15 +30,17 @@ module Idml
         private_class_method :render_fill
 
         def self.render_stroke(canvas, poly, context, box)
-          return unless RectangleRenderer.strokeable?(poly)
+          return unless StrokeStyle.strokeable?(poly)
 
           color = context.color_resolver&.resolve(poly.stroke_color)
           return unless color
 
-          canvas.stroke_color(ColorHelper.to_canvas(color))
-          canvas.line_width = poly.stroke_weight
-          canvas.rectangle(box[:x], box[:y], box[:width], box[:height])
-          canvas.stroke
+          StrokeStyle.apply(canvas, poly) do
+            canvas.stroke_color(ColorHelper.to_canvas(color))
+            canvas.line_width = poly.stroke_weight
+            canvas.rectangle(box[:x], box[:y], box[:width], box[:height])
+            canvas.stroke
+          end
         end
         private_class_method :render_stroke
       end

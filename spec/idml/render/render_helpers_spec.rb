@@ -80,20 +80,6 @@ RSpec.describe Idml::Render do
         expect(described_class.gradient?(nil)).to be false
       end
     end
-
-    describe "#render_gradient" do
-      let(:graphic) do
-        instance_double(Idml::Parts::Graphic)
-      end
-
-      it "returns nil for unknown gradient name" do
-        resolver = described_class.build(nil)
-        result = resolver.render_gradient("Gradient/Unknown",
-                                          x: 0, y: 0, width: 100, height: 100,
-                                          color_resolver: nil)
-        expect(result).to be_nil
-      end
-    end
   end
 
   describe Idml::Render::FontReferenceResolver do

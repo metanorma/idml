@@ -74,19 +74,19 @@ RSpec.describe Idml::Parts::Designmap do
 
       expected_attrs = %w[DOMVersion Self Name ActiveLayer CMYKProfile]
       expected_attrs.each do |attr|
-        ruby_attr = parsed.send(actual_attr(attr))
+        ruby_attr = read_attr(parsed, attr)
         expect(reserialized).to include(%(#{attr}="#{ruby_attr}"))
       end
     end
   end
 
-  def actual_attr(xml_attr)
-    {
-      "DOMVersion" => :dom_version,
-      "Self" => :self_attr,
-      "Name" => :name,
-      "ActiveLayer" => :active_layer,
-      "CMYKProfile" => :cmyk_profile,
-    }.fetch(xml_attr)
+  def read_attr(designmap, xml_attr)
+    case xml_attr
+    when "DOMVersion" then designmap.dom_version
+    when "Self" then designmap.self_attr
+    when "Name" then designmap.name
+    when "ActiveLayer" then designmap.active_layer
+    when "CMYKProfile" then designmap.cmyk_profile
+    end
   end
 end

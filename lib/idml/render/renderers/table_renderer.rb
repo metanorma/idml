@@ -9,7 +9,7 @@ module Idml
           return if table.visible == false
           return if table.table_row.empty?
 
-          box = RectangleRenderer.placement_box(table, context.page_height)
+          box = Placement.box(table, context.page_height)
           return unless box
 
           row_count = table.table_row.length
