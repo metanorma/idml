@@ -16,6 +16,8 @@ module Idml
       :page_width,
       :page_height,
       :layer_filter,
+      :structure,
+      :page_index,
       keyword_init: true,
     )
   end

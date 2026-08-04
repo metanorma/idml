@@ -20,7 +20,11 @@ module Idml
         renderer = renderer_for(context.item)
         return nil unless renderer
 
-        renderer.render(canvas, context)
+        if context.structure&.enabled?
+          wrap_tagged(canvas, context) { renderer.render(canvas, context) }
+        else
+          renderer.render(canvas, context)
+        end
       end
 
       def self.renderer_for(item)
@@ -29,6 +33,19 @@ module Idml
 
         Render::Renderers.const_get(renderer_name)
       end
+
+      def self.wrap_tagged(canvas, context, &)
+        type = StructureMapper.type_for(context.item)
+        return yield unless type
+
+        tracker = context.structure
+        page_index = context.page_index || 0
+        mcid = tracker.next_mcid(page_index)
+        alt = StructureMapper.alt_for(context.item)
+        tracker.add(type, page_index: page_index, mcid: mcid, alt: alt)
+        canvas.tagged(type, mcid: mcid, &)
+      end
+      private_class_method :wrap_tagged
     end
   end
 end

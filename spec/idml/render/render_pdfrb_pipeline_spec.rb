@@ -137,6 +137,54 @@ RSpec.describe Idml::Render do
         expect(pdf_pages).to eq(spread_pages)
       end
     end
+
+    it "emits tagged PDF structure when tagged: true" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "tagged.pdf")
+        described_class.render(package: package, to: path, tagged: true)
+        raw = File.binread(path)
+
+        expect(raw).to include("/StructTreeRoot")
+        expect(raw).to include("/MarkInfo")
+        expect(raw).to include("/StructElem")
+        expect(raw.scan("BDC").length).to be_positive
+        expect(raw.scan("EMC").length).to be_positive
+      end
+    end
+
+    it "does not emit structure tree when tagged: false" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "untagged.pdf")
+        described_class.render(package: package, to: path, tagged: false)
+        raw = File.binread(path)
+
+        expect(raw).not_to include("/StructTreeRoot")
+      end
+    end
+
+    it "emits PDF/A XMP when compliance: :pdfa2a" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "pdfa.pdf")
+        described_class.render(package: package, to: path, compliance: :pdfa2a)
+        raw = File.binread(path)
+
+        expect(raw).to include("/Type /Metadata")
+        expect(raw).to include("/Subtype /XML")
+        expect(raw).to include("pdfaid:part")
+        expect(raw).to include("pdfaid:conformance")
+        expect(raw).to include("application/pdf")
+      end
+    end
+
+    it "does not emit PDF/A XMP without compliance flag" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "nonpdfa.pdf")
+        described_class.render(package: package, to: path)
+        raw = File.binread(path)
+
+        expect(raw).not_to include("pdfaid:part")
+      end
+    end
   end
 
   describe "pdfrb structural validation" do

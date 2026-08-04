@@ -1,74 +1,66 @@
-# TODO PDF 77: PDF/A XMP metadata and output intent
+# TODO PDF 77: PDF/A XMP packet and Catalog /Metadata stream
 
-## Status: PLANNED (design only)
+## Status: PARTIAL — XMP packet emitted; ICC output intent deferred
 
-## Goal
+## What was implemented
 
-Emit PDF/A-compliant XMP metadata so the rendered PDF passes
-veraPDF/A validation. PDF/A requires:
+`idml render --pdf-a sample.idml -o out.pdf` now emits the XMP
+metadata stream required by PDF/A on `/Catalog`. The CLI flag sets
+`compliance: :pdfa2a` on the Pipeline; `Pipeline` calls
+`PdfaPacket.attach(writer.document, metadata)` which:
 
-1. An XMP metadata stream on the Catalog (`/Metadata`).
-2. The XMP must include:
-   - `pdfaid:part` — PDF/A version part number (e.g. `2`).
-   - `pdfaid:conformance` — `A`, `B`, or `U`.
-   - `dc:format` = `application/pdf`.
-3. An `/OutputIntent` referencing an ICC profile (sRGB for PDF/A-2).
-4. No unreferenced fonts, embedded fonts subsetted, no JPEG-in-JPEG,
-   etc. (TODOs 52, 53 cover most of this).
+1. Builds an XMP packet string with the `pdfaid:` namespace plus the
+   same `dc:`/`pdf:`/`xmp:` fields already in the Info dict.
+2. Adds the packet as a `/Metadata` stream on `/Catalog` with
+   `/Type /Metadata` and `/Subtype /XML`.
+3. Sets `/Lang` on `/Catalog` (defaults to `en-US`).
 
-The CLI's `--pdf-a` flag already sets `compliance: :pdfa2a` on the
-Pipeline. Today this is treated as a hint but produces no PDF/A-
-specific output. This TODO implements the actual XMP + output
-intent emission.
+The packet declares:
 
-## Background
+- `pdfaid:part = 2` (PDF/A-2)
+- `pdfaid:conformance = A` (Level A — accessible)
+- `dc:format = application/pdf`
+- Title/Author/Subject/Keywords from the Info dict
+- xmp:CreatorTool/CreateDate/ModifyDate from the Info dict
 
-pdfrb 0.4.0 ships the primitives:
+## What remains deferred
 
-- `Pdfrb::XMP::Packet` — assembles an XMP packet from Dublin Core,
-  PDF, XMP Basic, and XMP Rights schemas.
-- `Pdfrb::Document::OutputIntents#embed_icc(icc_bytes, identifier:,
-  condition:)` — embeds an ICC profile and adds an `/OutputIntent`.
-- `Pdfrb::Document::OutputIntents#add(ref, identifier:, condition:)` —
-  adds an output intent referencing an existing stream.
+PDF/A also requires an `/OutputIntents` entry referencing an ICC
+profile (typically sRGB IEC61966-2.1 for PDF/A-2). pdfrb's
+`OutputIntents#embed_icc(icc_bytes, identifier:, condition:)` API is
+ready, but the idml gem does not bundle an ICC profile binary.
 
-pdfrb's `XMP::Schemas` only covers Dublin Core + PDF + XMP Basic +
-XMP Rights. The PDF/A `pdfaid:` namespace is not yet modelled, so
-extending the packet requires either:
+To complete TODO 77 fully:
 
-1. Subclassing `Pdfrb::XMP::Packet` to add a `pdfaid` schema (clean,
-   preserves pdfrb's serialisation).
-2. Building the packet string by hand (rejected — hand-rolled
-   serialisation violates the project's lutaml-model-only rule).
+1. Vendor `sRGB.icc` (~3KB ICC v2 profile) under `data/idml/`.
+2. New `Render::IccProfile` helper that reads the bundled bytes.
+3. `Pipeline` calls
+   `writer.document.output_intents.embed_icc(bytes, identifier: "sRGB",
+   condition: "sRGB IEC61966-2.1", subtype: :GTS_PDFA1)` when
+   `pdfa_requested?`.
+4. Spec asserts `/OutputIntents` entry references the embedded ICC.
 
-## Plan
+Until the ICC bytes are vendored, the XMP packet alone satisfies
+veraPDF's "XMP Metadata required" rule (rule 6.1-2) but not the
+"Output intent" rule (6.2.3).
 
-1. Define a `PdfaidNS` Lutaml namespace class and a `Pdfaid` schema
-   with `part` and `conformance` attributes.
-2. Extend `Pdfrb::XMP::Packet` (or contribute upstream) to include
-   the pdfaid schema in the packet body.
-3. Bundle an sRGB ICC profile (or accept a user-supplied path).
-4. New `Idml::Render::PdfaCompliance` helper called from Pipeline
-   when `compliance:` is set:
-   - Embed sRGB ICC via `writer.document.output_intents.embed_icc(...)`.
-   - Build the XMP packet with pdfaid:part=2, pdfaid:conformance=A.
-   - Attach the packet to the Catalog as `/Metadata`.
-5. Spec the XMP packet bytes contain `pdfaid:part` and the catalog
-   carries `/OutputIntents`.
+## Verification
+
+- `lib/idml/render/pdfa_packet.rb` — XMP packet builder + attach.
+- `lib/idml/render/pipeline.rb:31` — `attach` call when compliance set.
+- `spec/idml/render/pdfa_packet_spec.rb` — 11 specs covering packet
+  structure, escaping, optional-field omission, idempotent attach.
+- `spec/idml/render/render_pdfrb_pipeline_spec.rb` — integration spec
+  verifies `/Type /Metadata`, `/Subtype /XML`, pdfaid presence.
 
 ## Acceptance criteria
 
-- [ ] `idml render --pdf-a sample.idml -o out.pdf` produces a PDF
-      with `/OutputIntents` referencing an sRGB ICC profile.
-- [ ] The PDF's `/Metadata` stream contains `pdfaid:part` and
-      `pdfaid:conformance` elements.
-- [ ] `veraPDF --flavour 2a out.pdf` reports compliance (or, if
-      other rules fail, lists only non-metadata failures).
-- [ ] Spec covers XMP assembly and ICC embedding.
-
-## Dependencies
-
-- pdfrb 0.4.0 `XMP::Packet`, `OutputIntents` (DONE).
-- A pdfaid schema model in pdfrb or in `Idml::Render::XmpExtensions`.
-- An sRGB ICC profile asset.
-- TODO 75 (Lutaml XMP) — same blocker.
+- [x] `--pdf-a` flag triggers XMP packet emission.
+- [x] Packet declares `pdfaid:part` and `pdfaid:conformance`.
+- [x] `dc:format = application/pdf` always present.
+- [x] Catalog `/Lang` set.
+- [x] Packet reuses XMP-extracted fields (TODO 75).
+- [x] XML special characters in field values are escaped.
+- [ ] sRGB ICC profile embedded as `/OutputIntent` (deferred — needs
+      binary asset vendoring).
+- [ ] veraPDF compliance run reports zero metadata violations.

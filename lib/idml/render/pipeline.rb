@@ -21,18 +21,24 @@ module Idml
 
       def call
         writer = PdfrbWriter.new
-        writer.set_info(combined_metadata)
+        metadata = combined_metadata
+        writer.set_info(metadata)
         writer.enable_tagged if @tagged
+        PdfaPacket.attach(writer.document, metadata) if pdfa_requested?
+        structure = StructureTracker.new(enabled: @tagged)
         layer_filter = LayerFilter.from_designmap(@package.designmap)
         font_ref_resolver = FontReferenceResolver.build(@package)
         base_dir = File.dirname(@package.path)
         font_name = register_font(writer)
+        page_index = -1
 
         @package.spreads.each do |spread|
-          render_spread_pages(writer, spread, base_dir, layer_filter,
-                              font_ref_resolver, font_name)
+          page_index = render_spread_pages(writer, spread, base_dir,
+                                           layer_filter, font_ref_resolver,
+                                           font_name, structure, page_index)
         end
 
+        structure.flush(writer)
         writer.build_structure if @tagged
         writer.subset_fonts! if @subset_fonts
         writer.write(@output_path)
@@ -41,111 +47,41 @@ module Idml
 
       private
 
+      def pdfa_requested?
+        @compliance&.to_s&.start_with?("pdfa")
+      end
+
       def render_spread_pages(writer, spread, base_dir, layer_filter,
-                              font_ref_resolver, font_name)
+                              font_ref_resolver, font_name, structure,
+                              page_offset)
         pages = spread.spread.flat_map(&:page)
-        image_refs = collect_images(writer, spread, base_dir, layer_filter)
-        renderer = build_renderer(layer_filter, font_ref_resolver, font_name)
+        image_refs = ImageCollector.new(writer: writer, base_dir: base_dir,
+                                        page_height: DEFAULT_HEIGHT).collect(spread)
+        renderer = build_renderer(layer_filter, font_ref_resolver, font_name,
+                                  structure: structure)
+        current = page_offset
 
         pages.each do |page|
+          current += 1
           dims = page_dimensions_for(page)
           canvas = writer.add_page(width: dims[:width], height: dims[:height])
           renderer.render(canvas, spread, page_width: dims[:width],
                                           page_height: dims[:height],
-                                          image_refs: image_refs)
+                                          image_refs: image_refs,
+                                          page_index: current)
         end
+        current
       end
 
-      def build_renderer(layer_filter, font_ref_resolver, font_name)
+      def build_renderer(layer_filter, font_ref_resolver, font_name, structure:)
         SpreadRenderer.new(
           font_resolver: @font_resolver,
           font_ps_name: font_name,
           package: @package,
           layer_filter: layer_filter,
           font_ref_resolver: font_ref_resolver,
+          structure: structure,
         )
-      end
-
-      def collect_images(writer, spread, base_dir, layer_filter)
-        refs = []
-        spread.each_page_item do |item|
-          next unless layer_filter.visible?(item)
-
-          images_for_item(item).each do |img|
-            ref = register_image(writer, img, item, base_dir)
-            refs << ref if ref
-          end
-        end
-        refs
-      end
-
-      def images_for_item(item)
-        case item
-        when Idml::Elements::Rectangle, Idml::Elements::Polygon
-          item.image
-        else
-          []
-        end
-      end
-
-      def register_image(writer, image, parent, base_dir)
-        uri = image.resource_uri
-        return nil unless uri
-
-        existing = writer.image_name_for(uri)
-        return reuse_image(writer, existing, image, parent) if existing
-
-        load_new_image(writer, image, parent, base_dir, uri)
-      end
-
-      def reuse_image(_writer, name, image, parent)
-        { name: name, placement: compute_placement(image, parent),
-          clip_box: parent_clip_box(parent) }
-      end
-
-      def load_new_image(writer, image, parent, base_dir, uri)
-        path = Image.resolve_path(uri, base_dir: base_dir)
-        return nil unless File.exist?(path)
-
-        data = File.binread(path)
-        dims = image_dimensions(data)
-        return nil unless dims
-
-        name = writer.add_image(data: data)
-        writer.register_image_name(uri, name)
-        { name: name, placement: compute_placement(image, parent, dims[1]),
-          clip_box: parent_clip_box(parent) }
-      end
-
-      def parent_clip_box(parent)
-        return nil unless parent.geometric_bounds
-
-        Geometry.placement_rect(parent.geometric_bounds,
-                                parent.item_transform, DEFAULT_HEIGHT)
-      end
-
-      def image_dimensions(data)
-        format = Image.detect_format(data)
-        return nil unless format
-
-        if format == :png
-          Image.png_dimensions(data)
-        else
-          Image.jpeg_dimensions(data)
-        end
-      end
-
-      def compute_placement(image, parent, pixel_height = 100)
-        Image.compute_placement(
-          image_transform: parse_transform_safe(image.item_transform),
-          parent_transform: parse_transform_safe(parent.item_transform),
-          pixel_height: pixel_height,
-          page_height: DEFAULT_HEIGHT,
-        )
-      end
-
-      def parse_transform_safe(str)
-        Image.parse_transform(str) || Image.identity
       end
 
       def page_dimensions_for(page)
