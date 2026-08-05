@@ -16,6 +16,12 @@ module Idml
     class FontSetup
       DEFAULT_FONT = Render::DEFAULT_FONT
 
+      # Style names treated as the "Regular" default for body text,
+      # in priority order. Used to pick the right font from a family
+      # when no per-run `AppliedFont` is specified — matches
+      # InDesign's default-text-font behavior.
+      REGULAR_STYLE_NAMES = %w[Regular Normal Book Roman].freeze
+
       def initialize(package:, font_search_paths: nil)
         @package = package
         @font_search_paths = font_search_paths
@@ -57,6 +63,10 @@ module Idml
       end
 
       def find_font_file(family)
+        regular = find_regular_font(family)
+        return regular if regular
+
+        # Fall back to the first non-missing font.
         family.font.each do |font|
           next unless font.post_script_name
           next if font.status == "Missing"
@@ -65,6 +75,28 @@ module Idml
           return path if path
         end
         nil
+      end
+
+      # Pick the first "Regular" / "Normal" / "Book" / "Roman" font
+      # in the family. This matches InDesign's default body-text
+      # behavior, which prefers Regular weight over the first font
+      # listed in the family.
+      def find_regular_font(family)
+        family.font.each do |font|
+          next unless font.post_script_name
+          next if font.status == "Missing"
+          next unless regular_style?(font.font_style_name)
+
+          path = resolver.find_by_ps_name(font.post_script_name)
+          return path if path
+        end
+        nil
+      end
+
+      def regular_style?(style_name)
+        return false unless style_name
+
+        REGULAR_STYLE_NAMES.any?(style_name)
       end
 
       def resolver

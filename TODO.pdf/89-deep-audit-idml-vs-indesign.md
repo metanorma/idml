@@ -1,15 +1,22 @@
 # TODO PDF 89: Deep audit — idml-generated PDF vs InDesign PDF
 
-## Status: COMPLETE (audit); structural differences documented
+## Status: PARTIAL — font selection fixed; image bloat remains
 
 ## TL;DR
 
-**No** — the generated PDF is not byte-identical to the InDesign
-output. InDesign produces ~100KB, the idml render produces ~2.2MB
-(22x larger). The visual content is structurally similar but
-rendered through a different font pipeline, font subsetting
-strategy, image embedding path, and color management. Below is a
-side-by-side audit.
+**No** — the generated PDF is still not identical to InDesign's
+output, but the **font selection gap is closed** as of v0.5.0.
+
+After the font fix (FontSetup now prefers Regular weight over
+first-in-family):
+- Font: `MinionPro-Regular` (matches InDesign) — was
+  `MinionPro-BoldCn`.
+- File size: still ~2.2MB (the image bloat remains).
+
+The remaining 88% of the file size is the embedded GenAI JPEG
+(1,937,556 bytes embedded raw via DCTDecode). InDesign downsamples
+to ~12KB. Closing this gap requires pure-Ruby JPEG decode + resize
++ re-encode (TODO 91).
 
 ## File-level comparison (`sample-with-table-more`)
 
