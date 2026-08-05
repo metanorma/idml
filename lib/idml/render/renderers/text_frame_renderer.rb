@@ -20,12 +20,40 @@ module Idml
           story = context.package&.story_by_id(frame.parent_story)
           return unless story
 
+          box = frame_box(frame, context.page_height)
+          render_inline_tables(canvas, story, box, context)
+
           runs = StyleResolver.extract_runs(story)
           return if runs.empty?
 
-          box = frame_box(frame, context.page_height)
           render_text(canvas, runs, context, box)
         end
+
+        # Discovers Tables inlined in the story (Story > PSR > CSR >
+        # Table — the real IDML structure) and renders each within
+        # the frame's bounds. Real IDML Tables have no own geometry,
+        # so the containing TextFrame's box stands in. Synthetic
+        # spread-level Tables dispatch separately via
+        # PageItemRenderer.
+        def self.render_inline_tables(canvas, story, box, context)
+          tables = tables_in_story(story)
+          return if tables.empty?
+
+          tables.each do |table|
+            TableRenderer.render_in_box(canvas, table, box, context)
+          end
+        end
+        private_class_method :render_inline_tables
+
+        def self.tables_in_story(story)
+          inner = story&.inner
+          return [] unless inner
+
+          inner.paragraph_style_range.flat_map do |psr|
+            psr.character_style_range.flat_map(&:table)
+          end.compact
+        end
+        private_class_method :tables_in_story
 
         def self.render_text(canvas, runs, context, box)
           font = context.font_metrics

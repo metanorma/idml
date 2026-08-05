@@ -30,6 +30,17 @@ module Idml
           box = Placement.box(table, context.page_height)
           return unless box
 
+          render_in_box(canvas, table, box, context)
+        end
+
+        # Renders a Table using caller-supplied bounds (no
+        # Placement.box lookup). Used by TextFrameRenderer to
+        # render Tables inlined in a story — real IDML Tables
+        # have no own geometry, so the containing TextFrame's
+        # bounds stand in for the Table's bounds.
+        def self.render_in_box(canvas, table, box, context)
+          return if table.visible == false
+
           canvas.save_graphics_state do
             if schema_faithful?(table)
               render_schema_faithful(canvas, table, box, context)

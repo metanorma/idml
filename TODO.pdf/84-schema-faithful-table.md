@@ -48,15 +48,21 @@ The existing `Elements::Table`/`TableRow`/`TableCell` classes
 `table_renderer_spec.rb` test. They are not removed because no
 real IDML uses them and removing them would break the existing test.
 
-## Future work
+## What was completed in this round
 
-- Migrate `TableRenderer` to use the schema-faithful `cell`/`row`
-  collections instead of legacy `table_row`. The renderer is the
-  last consumer of the legacy structure.
-- Render Tables discovered in Stories (currently only Spread-level
-  tables are dispatched to TableRenderer; CSR-embedded Tables are
-  skipped — they need TextFrameRenderer integration to render in
-  place).
+- `TableRenderer` migrated to auto-detect schema-faithful
+  (`cell`/`row` siblings) vs legacy (`table_row`/`table_cell`
+  nested) layout. New `SchemaLayout` Struct computes per-cell rects
+  from `Row#single_row_height` and `Cell#col_row` max col + 1.
+- `TextFrameRenderer` discovers inline Tables via
+  `Story > PSR > CSR > Table` and renders each within the frame's
+  bounds via `TableRenderer.render_in_box`. This is the path that
+  real IDML fixtures use (Tables live in Stories, not Spreads).
+- New `TableRenderer.render_in_box(canvas, table, box, context)`
+  API accepts caller-supplied bounds (real Tables have no own
+  geometry).
+- The sample-with-table-more fixture's Table now renders 83 cell
+  rectangles end-to-end (verified by spec).
 
 ## Current state vs schema
 
