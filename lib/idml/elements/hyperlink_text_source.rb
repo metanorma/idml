@@ -8,16 +8,19 @@ module Idml
     # attribute is referenced by `<Hyperlink Source="...">` in the
     # document designmap.
     #
-    # Note on text range: IDML's HyperlinkTextSource wraps the
-    # character content it covers (it is a sibling of `<Content>`
-    # inside a `<CharacterStyleRange>`). The wrapper's position in
-    # the story flow determines the range — there is no explicit
-    # `StartIndex`/`EndIndex` on the element itself.
+    # The element wraps character content (CSR children + nested
+    # HyperlinkTextSource children + Content text). `text_content`
+    # walks all those children to produce the wrapped string.
     class HyperlinkTextSource < Lutaml::Model::Serializable
       attribute :self_attr, :string
       attribute :name, :string
       attribute :hidden, :boolean
       attribute :applied_character_style, :string
+      attribute :character_style_range, Idml::Elements::CharacterStyleRange,
+                collection: true
+      attribute :hyperlink_text_source, Idml::Elements::HyperlinkTextSource,
+                collection: true
+      attribute :content, Idml::Elements::Content, collection: true
 
       xml do
         root "HyperlinkTextSource"
@@ -25,6 +28,16 @@ module Idml
         map_attribute "Name", to: :name
         map_attribute "Hidden", to: :hidden
         map_attribute "AppliedCharacterStyle", to: :applied_character_style
+        map_element "CharacterStyleRange", to: :character_style_range
+        map_element "HyperlinkTextSource", to: :hyperlink_text_source
+        map_element "Content", to: :content
+      end
+
+      def text_content
+        parts = content.map(&:text)
+        character_style_range.each { |c| parts << c.text_content }
+        hyperlink_text_source.each { |nested| parts << nested.text_content }
+        parts.join
       end
     end
   end

@@ -657,9 +657,43 @@ module Idml
 
       def text_content
         parts = content.map(&:text)
+        hyperlink_text_source.each { |s| parts << s.text_content }
         character_style_range.each { |c| parts << c.text_content }
         parts.join
       end
+
+      # Returns an array of {char:, source_self:} tuples. Plain
+      # Content chars have source_self == nil; chars inside a
+      # HyperlinkTextSource carry the source's Self attribute. Used
+      # by HyperlinkEmitter to compute per-source link rects.
+      def attributed_text
+        result = []
+        append_plain_content(result)
+        append_hyperlink_content(result)
+        append_nested_csr(result)
+        result
+      end
+
+      def append_plain_content(result)
+        content.each do |c|
+          c.text.to_s.each_char { |ch| result << { char: ch } }
+        end
+      end
+      private :append_plain_content
+
+      def append_hyperlink_content(result)
+        hyperlink_text_source.each do |source|
+          source.text_content.each_char do |ch|
+            result << { char: ch, source_self: source.self_attr }
+          end
+        end
+      end
+      private :append_hyperlink_content
+
+      def append_nested_csr(result)
+        character_style_range.each { |c| result.concat(c.attributed_text) }
+      end
+      private :append_nested_csr
 
       def each_xml_element(&block)
         xml_element.each do |e|
