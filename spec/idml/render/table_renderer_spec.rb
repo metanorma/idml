@@ -79,5 +79,68 @@ RSpec.describe Idml::Render::Renderers::TableRenderer do
     raw = File.binread(path)
     expect(raw).to match(/\bS\b/)
   end
+
+  describe "schema-faithful path (real IDML Cell/Row siblings)" do
+    let(:real_table_xml) do
+      <<~XML
+        <Table Self="t1" ItemTransform="1 0 0 1 0 0">
+          <Properties>
+            <PathGeometry>
+              <GeometryPathType PathOpen="false">
+                <PathPointArray>
+                  <PathPointType Anchor="-10 -10" LeftDirection="-10 -10" RightDirection="-10 -10"/>
+                  <PathPointType Anchor="110 -10" LeftDirection="110 -10" RightDirection="110 -10"/>
+                  <PathPointType Anchor="110 110" LeftDirection="110 110" RightDirection="110 110"/>
+                  <PathPointType Anchor="-10 110" LeftDirection="-10 110" RightDirection="-10 110"/>
+                </PathPointArray>
+              </GeometryPathType>
+            </PathGeometry>
+          </Properties>
+          <Row Self="t1Row0" Name="0" SingleRowHeight="60" MinimumHeight="60"/>
+          <Row Self="t1Row1" Name="1" SingleRowHeight="60" MinimumHeight="60"/>
+          <Cell Self="t1c0" Name="0:0">
+            <ParagraphStyleRange><CharacterStyleRange><Content>A</Content></CharacterStyleRange></ParagraphStyleRange>
+          </Cell>
+          <Cell Self="t1c1" Name="1:0">
+            <ParagraphStyleRange><CharacterStyleRange><Content>B</Content></CharacterStyleRange></ParagraphStyleRange>
+          </Cell>
+          <Cell Self="t1c2" Name="0:1">
+            <ParagraphStyleRange><CharacterStyleRange><Content>C</Content></CharacterStyleRange></ParagraphStyleRange>
+          </Cell>
+          <Cell Self="t1c3" Name="1:1">
+            <ParagraphStyleRange><CharacterStyleRange><Content>D</Content></CharacterStyleRange></ParagraphStyleRange>
+          </Cell>
+        </Table>
+      XML
+    end
+
+    it "renders a rectangle per cell" do
+      table = table_from_xml(real_table_xml)
+      described_class.render(canvas, build_context(table))
+      path = Tempfile.new("schema-table").path
+      writer.write(path)
+      raw = File.binread(path)
+      # 2x2 grid = 4 cells = 4 rectangle ops
+      expect(raw.scan(/ re\b/).length).to eq(4)
+    end
+
+    it "emits each cell's text via text_rich" do
+      table = table_from_xml(real_table_xml)
+      described_class.render(canvas, build_context(table))
+      path = Tempfile.new("schema-table-text").path
+      writer.write(path)
+      raw = File.binread(path)
+      expect(raw).to include("BT")
+      expect(raw).to include("ET")
+    end
+
+    it "returns nothing when visible is false" do
+      table = table_from_xml('<Table Self="t1" Visible="false"/>')
+      described_class.render(canvas, build_context(table))
+      path = Tempfile.new("schema-hidden").path
+      writer.write(path)
+      expect(File.binread(path)).not_to include(" re")
+    end
+  end
 end
 # rubocop:enable RSpec/SpecFilePathFormat
