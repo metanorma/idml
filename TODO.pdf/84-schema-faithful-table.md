@@ -1,6 +1,35 @@
 # TODO PDF 84: Schema-faithful Table/Cell/Row structure
 
-## Status: DEFERRED (architectural correction; no fixtures to validate)
+## Status: PARTIAL — Cell and Row elements added; full restructure deferred
+
+## What was added
+
+Schema-faithful element classes alongside the legacy non-standard
+ones, so existing fixtures continue to work:
+
+- **`Elements::Cell`** — matches `Cell_Object` RNC. Captures Self,
+  Name, RowSpan, ColumnSpan, insets, FillColor, FillTint,
+  VerticalJustification, and inline `CharacterStyleRange` children.
+  `text_content` walks inline CSRs. `col_row` decodes the
+  `"col_row"` Name format.
+- **`Elements::Row`** — matches `Row_Object` RNC. Captures Self,
+  Name, insets, FillColor, height constraints.
+- **`Elements::Table`** now declares `cell` and `row` collections
+  alongside the legacy `table_row`. Both parse correctly from XML.
+
+## What remains deferred
+
+The full schema-faithful refactor — moving Table out of SpreadObject
+(per RNC, Tables live in Stories, not Spreads) and removing the
+legacy `Elements::TableRow`/`TableCell` classes — requires a real
+IDML fixture with tables to validate.
+
+Until then:
+- The legacy `Table > TableRow > TableCell` path handles the
+  existing synthetic test fixture.
+- The schema-faithful `Table > {Cell, Row}` path is available for
+  future fixtures.
+- `TableRenderer` still uses the legacy path.
 
 ## Current state vs schema
 

@@ -16,6 +16,7 @@ module Idml
     autoload :BlendingSetting, "idml/elements/blending_setting"
     autoload :ButtonPreference, "idml/elements/pref_button_preference"
     autoload :Bookmark, "idml/elements/bookmark"
+    autoload :Cell, "idml/elements/cell"
     autoload :CellStyle, "idml/elements/cell_style"
     autoload :CellStyleGroup, "idml/elements/cell_style_group"
     autoload :ChapterNumberPreference,
@@ -118,6 +119,7 @@ module Idml
     autoload :Properties, "idml/elements/properties"
     autoload :GeometryPathType, "idml/elements/geometry_path_type"
     autoload :Rectangle, "idml/elements/rectangle"
+    autoload :Row, "idml/elements/row"
     autoload :RootCellStyleGroup, "idml/elements/root_cell_style_group"
     autoload :RootCharacterStyleGroup,
              "idml/elements/root_character_style_group"

@@ -16,6 +16,8 @@ module Idml
       attribute :stroke_color, :string
       attribute :stroke_weight, :float
       attribute :table_row, Idml::Elements::TableRow, collection: true
+      attribute :cell, Idml::Elements::Cell, collection: true
+      attribute :row, Idml::Elements::Row, collection: true
       attribute :properties, Idml::Elements::Properties, collection: true
 
       xml do
@@ -29,6 +31,8 @@ module Idml
         map_attribute "StrokeColor", to: :stroke_color
         map_attribute "StrokeWeight", to: :stroke_weight
         map_element "TableRow", to: :table_row
+        map_element "Cell", to: :cell
+        map_element "Row", to: :row
         map_element "Properties", to: :properties
       end
 
