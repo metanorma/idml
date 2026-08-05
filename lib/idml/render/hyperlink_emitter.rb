@@ -53,15 +53,57 @@ module Idml
 
       def emit_precise_rects(frame, sources, page_index)
         frame_self = frame.self_attr
-        sources.each_value do |url|
-          rect = @position_tracker.rect_for_range(
-            frame_self, from: 0, to: 1_000_000
-          ) || frame_level_rect(frame)
+        source_ranges = source_char_ranges_for_frame(frame)
+
+        sources.each do |source_self, url|
+          range = source_ranges[source_self]
+          rect = if range
+                   @position_tracker.rect_for_range(
+                     frame_self, from: range[0], to: range[1]
+                   )
+                 else
+                   @position_tracker.rect_for_range(
+                     frame_self, from: 0, to: 1_000_000
+                   )
+                 end || frame_level_rect(frame)
           next unless rect
 
           @writer.add_uri_link_annotation(page_index: page_index, rect: rect,
                                           url: url)
         end
+      end
+
+      # Returns a map of source_self -> [start_char, end_char] across
+      # all CSRs in the frame's story. Character positions are
+      # absolute within the story text, matching the cursor used by
+      # `TextFrameRenderer#record_position`.
+      def source_char_ranges_for_frame(frame)
+        story = frame.parent_story ? @package.story_by_id(frame.parent_story) : nil
+        return {} unless story&.inner
+
+        cursor = [0]
+        ranges = {}
+        walk_attribution(story.inner, cursor, ranges)
+        ranges
+      end
+
+      def walk_attribution(story_inner, cursor, ranges)
+        story_inner.paragraph_style_range.each do |psr|
+          psr.character_style_range.each do |csr|
+            csr.attributed_text.each do |tuple|
+              record_tuple(tuple, cursor, ranges)
+            end
+          end
+        end
+      end
+
+      def record_tuple(tuple, cursor, ranges)
+        source = tuple[:source_self]
+        if source
+          ranges[source] ||= [cursor[0], cursor[0]]
+          ranges[source][1] = cursor[0] + 1
+        end
+        cursor[0] += 1
       end
 
       def emit_frame_level_rect(frame, sources, page_index)
