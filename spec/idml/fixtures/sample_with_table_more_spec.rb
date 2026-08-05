@@ -114,6 +114,64 @@ RSpec.describe "sample-with-table-more fixture" do
         expect(raw.strip).to end_with("%%EOF")
       end
     end
+
+    it "produces one PDF page per IDML page" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "pages.pdf")
+        Idml::Render.render(package: package, to: path)
+        raw = File.binread(path)
+
+        spread_pages = package.spreads.sum do |s|
+          s.spread.flat_map(&:page).length
+        end
+        pdf_pages = raw.scan(%r{/Type\s*/Page[^s]}).length
+        expect(pdf_pages).to eq(spread_pages)
+      end
+    end
+
+    it "emits text content (BT/ET) from stories" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "text.pdf")
+        Idml::Render.render(package: package, to: path)
+        raw = File.binread(path)
+
+        expect(raw).to include("BT")
+        expect(raw).to include("ET")
+      end
+    end
+
+    it "emits XMP metadata from the IDML packet" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "meta.pdf")
+        Idml::Render.render(package: package, to: path)
+        raw = File.binread(path)
+
+        expect(raw).to include("/Producer")
+        expect(raw).to include("/Creator")
+      end
+    end
+
+    it "emits tagged PDF structure when tagged: true" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "tagged.pdf")
+        Idml::Render.render(package: package, to: path, tagged: true)
+        raw = File.binread(path)
+
+        expect(raw).to include("/StructTreeRoot")
+        expect(raw).to include("/StructElem")
+      end
+    end
+
+    it "embeds PDF/A XMP when compliance: :pdfa2a" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "pdfa.pdf")
+        Idml::Render.render(package: package, to: path, compliance: :pdfa2a)
+        raw = File.binread(path)
+
+        expect(raw).to include("pdfaid:part")
+        expect(raw).to include("pdfaid:conformance")
+      end
+    end
   end
 end
 # rubocop:enable RSpec/DescribeClass
