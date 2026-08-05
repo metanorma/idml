@@ -23,6 +23,7 @@ module Idml
       attribute :fill_color, :string
       attribute :fill_tint, :float
       attribute :overprint_fill, :boolean
+      attribute :clip_content_to_cell, :boolean
       attribute :single_row_height, :float
       attribute :minimum_height, :float
       attribute :maximum_height, :float
@@ -31,13 +32,14 @@ module Idml
         root "Row"
         map_attribute "Self", to: :self_attr
         map_attribute "Name", to: :name
-        map_attribute "TopInset", to: :top_inset
-        map_attribute "LeftInset", to: :left_inset
-        map_attribute "BottomInset", to: :bottom_inset
-        map_attribute "RightInset", to: :right_inset
+        map_attribute "TextTopInset", to: :top_inset
+        map_attribute "TextLeftInset", to: :left_inset
+        map_attribute "TextBottomInset", to: :bottom_inset
+        map_attribute "TextRightInset", to: :right_inset
         map_attribute "FillColor", to: :fill_color
         map_attribute "FillTint", to: :fill_tint
         map_attribute "OverprintFill", to: :overprint_fill
+        map_attribute "ClipContentToTextCell", to: :clip_content_to_cell
         map_attribute "SingleRowHeight", to: :single_row_height
         map_attribute "MinimumHeight", to: :minimum_height
         map_attribute "MaximumHeight", to: :maximum_height
