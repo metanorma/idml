@@ -172,6 +172,18 @@ RSpec.describe "sample-with-table-more fixture" do
         expect(raw).to include("pdfaid:conformance")
       end
     end
+
+    it "renders inline Table discovered via TextFrame > Story > CSR > Table" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "inline-table.pdf")
+        Idml::Render.render(package: package, to: path)
+        raw = File.binread(path)
+
+        # The fixture has one Table with 83 cells. Each cell produces
+        # one rectangle op. Total re ops should be at least 83.
+        expect(raw.scan(/ re\b/).length).to be >= 83
+      end
+    end
   end
 end
 # rubocop:enable RSpec/DescribeClass
