@@ -40,10 +40,10 @@ module Idml
     # `package:` and `to:` are keyword-only and optional.
     # rubocop:disable Metrics/ParameterLists
     def self.render(package:, to:, font_search_paths: nil, compliance: nil,
-                   tagged: false, subset_fonts: true)
+                   tagged: false, subset_fonts: true, compress: false)
       Pipeline.new(package, to, font_search_paths,
                    compliance: compliance, tagged: tagged,
-                   subset_fonts: subset_fonts).call
+                   subset_fonts: subset_fonts, compress: compress).call
     end
     # rubocop:enable Metrics/ParameterLists
   end

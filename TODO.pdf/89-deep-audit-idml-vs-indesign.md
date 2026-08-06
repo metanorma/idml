@@ -1,22 +1,91 @@
 # TODO PDF 89: Deep audit — idml-generated PDF vs InDesign PDF
 
-## Status: PARTIAL — font selection fixed; image bloat remains
+## Status: PARTIAL — font + lossless compression fixed; no downsampling
 
 ## TL;DR
 
-**No** — the generated PDF is still not identical to InDesign's
-output, but the **font selection gap is closed** as of v0.5.0.
+**No** — the generated PDF is still not byte-identical to InDesign's
+output. Two of three substantive gaps closed without data loss:
 
-After the font fix (FontSetup now prefers Regular weight over
-first-in-family):
-- Font: `MinionPro-Regular` (matches InDesign) — was
-  `MinionPro-BoldCn`.
-- File size: still ~2.2MB (the image bloat remains).
+1. **Font selection (closed, v0.5.0)** — FontSetup now prefers the
+   family's Regular/Normal/Book/Roman variant over first-in-family.
+   Sample-with-table-more now embeds `MinionPro-Regular` (matching
+   InDesign).
+2. **Lossless FlateDecode compression (closed, v0.5.1)** — pdfrb
+   writes FlateDecode-compressed content streams, XRef streams, and
+   object streams when `compress: true`. Saves ~96KB (4%) on the
+   sample-with-table-more fixture without any data loss.
+3. **Image downsampling** — **not pursued**. The user requirement is
+   **no data loss**. InDesign's 100KB output downsamples the 1.94MB
+   source image (DCTDecode) to ~12KB at 300ppi; we keep the original
+   resolution. The 1.94MB stream dominates file size and cannot be
+   reduced without losing image data.
 
-The remaining 88% of the file size is the embedded GenAI JPEG
-(1,937,556 bytes embedded raw via DCTDecode). InDesign downsamples
-to ~12KB. Closing this gap requires pure-Ruby JPEG decode + resize
-+ re-encode (TODO 91).
+## File-level comparison (`sample-with-table-more`)
+
+| Aspect | InDesign pages.pdf | idml (default) | idml (`compress: true`) |
+|---|---|---|---|
+| Size | 100,965 bytes | 2,195,575 bytes | **2,099,493 bytes** |
+| Pages | 4 | 4 ✓ | 4 ✓ |
+| PDF version | 1.4 | 1.4 ✓ | 1.4 ✓ |
+| Embedded font | `MinionPro-Regular` | `MinionPro-Regular` ✓ | `MinionPro-Regular` ✓ |
+| Font stream size | ~8KB (subsetted) | ~232KB (full) | ~231KB (full) |
+| FlateDecode streams | 24 | 0 | 8 |
+| Image streams | 4 (downsampled ~12KB each) | 1 (raw 1.94MB) | 1 (raw 1.94MB) |
+
+## Why we can't match InDesign's 100KB
+
+The 1.94MB JPEG image (`GenAIImage_53e34e93-…jpeg` referenced via
+`LinkResourceURI` in Spread_ud1) is the dominant file-size cost. It
+is embedded raw via DCTDecode because:
+
+- The user requirement is **no data loss**.
+- InDesign's 12KB version downsamples to 300ppi at the placement
+  bounds — that IS data loss.
+- Keeping the image at full resolution = 1.94MB minimum.
+
+Without downsampling, the file size floor is the source image size
+plus the font stream plus small overhead:
+1,937,556 (image) + 231,312 (full font) + ~20KB (other) = ~2.2MB.
+With `compress: true` we shave ~96KB through FlateDecode on the
+non-image streams.
+
+## What we DO loselessly (besides image embedding)
+
+- **FlateDecode** on content streams, ObjStms, and metadata streams.
+- **XRef stream** (`use_xref_stream: true`) — compact xref table.
+- **Object stream packing** (`pack_object_streams: true`) — packs
+  small indirect objects into a compressed ObjStm.
+
+## What we don't do (lossy — not enabled)
+
+- **Image downsampling** at 300ppi (TODO 91 was re-classified as
+  REJECTED — user explicitly forbids data loss).
+- **JPEG quality reduction** for embedded images.
+- **Font subsetting to fewer glyphs than used** (lossless subsetting
+  IS done by pdfrb — removes only unused glyphs).
+
+## Future audit work
+
+- **Stream-by-stream comparison** with `qpdf --qdf` to decompose both
+  PDFs into canonical form and diff.
+- **Font subsetting investigation** — pdfrb's `subset_fonts!` is
+  called but the font stream is still 232KB. The likely cause is
+  that no codepoints are recorded as "used" for the registered font
+  (the renderer uses a default font that doesn't get text drawn
+  through it). Future fix: register the font actually used to draw
+  text, so `used_codepoints` populates correctly.
+
+## Verification
+
+- `lib/idml/render/pdfrb_writer.rb:25` — `LOSSLESS_WRITER_OPTIONS`
+  constant; opt-in via `compress: true`.
+- `lib/idml/render/pipeline.rb` — `compress:` keyword threaded
+  through `PdfrbWriter.new(compress: ...)`.
+- `lib/idml/render.rb` — `Render.render(compress: false)` default.
+- `lib/idml/cli.rb` — `--compress` CLI flag.
+- `spec/idml/fixtures/sample_with_table_more_spec.rb:197` — spec
+  verifies compressed output is smaller and contains FlateDecode.
 
 ## File-level comparison (`sample-with-table-more`)
 

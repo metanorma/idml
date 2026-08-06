@@ -77,27 +77,17 @@ RSpec.describe Idml::Render do
     it "sets MediaBox from page dimensions" do
       writer = Idml::Render::PdfrbWriter.new
       writer.add_page(width: 300, height: 400)
-      Dir.mktmpdir do |dir|
-        path = File.join(dir, "mb.pdf")
-        writer.write(path)
-        raw = File.binread(path)
-        expect(raw).to include("MediaBox")
-        expect(raw).to include("300")
-        expect(raw).to include("400")
-      end
+      page = writer.document.pages.first
+      media_box = page.value[:MediaBox]
+      expect(media_box).to eq([0, 0, 300, 400])
     end
 
     it "sets metadata via set_info" do
       writer = Idml::Render::PdfrbWriter.new
       writer.add_page
       writer.set_info(Title: "Test Doc", Producer: "idml")
-      Dir.mktmpdir do |dir|
-        path = File.join(dir, "info.pdf")
-        writer.write(path)
-        raw = File.binread(path)
-        expect(raw).to include("/Title")
-        expect(raw).to include("/Producer")
-      end
+      expect(writer.document.metadata.title).to eq("Test Doc")
+      expect(writer.document.metadata.producer).to eq("idml")
     end
 
     it "caches image names by URI" do
