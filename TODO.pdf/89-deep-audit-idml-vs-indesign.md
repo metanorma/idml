@@ -65,16 +65,82 @@ non-image streams.
 - **Font subsetting to fewer glyphs than used** (lossless subsetting
   IS done by pdfrb — removes only unused glyphs).
 
-## Future audit work
+## Additional findings (stream-level audit via `mutool`)
 
-- **Stream-by-stream comparison** with `qpdf --qdf` to decompose both
-  PDFs into canonical form and diff.
-- **Font subsetting investigation** — pdfrb's `subset_fonts!` is
-  called but the font stream is still 232KB. The likely cause is
-  that no codepoints are recorded as "used" for the registered font
-  (the renderer uses a default font that doesn't get text drawn
-  through it). Future fix: register the font actually used to draw
-  text, so `used_codepoints` populates correctly.
+### xref byte-count bug (TODO 92)
+
+pdfrb emits 21-byte xref entries (extra space before `\r\n`). PDF
+spec §7.5.4 requires exactly 20. `mutool` reports:
+```
+format error: expected trailer marker
+warning: trying to repair broken xref
+```
+**Workaround**: use `compress: true` — switches to XRef stream,
+bypassing the traditional xref table entirely.
+
+### Font naming
+
+- InDesign: `OZNMOQ+MinionPro-Regular` (5-char subset prefix per
+  PDF spec convention for subsetted fonts).
+- Ours: `FileFont-MinionPro-Regular` (non-standard prefix).
+
+pdfrb should use the `[A-Z]{6}+` prefix convention for subsetted
+fonts.
+
+### Font type
+
+- InDesign: `/Subtype /Type1` with `/FontFile3` (CFF/Type1C).
+  InDesign converts OTF → CFF subset.
+- Ours: `/Subtype /TrueType` with `/FontFile2`. We embed the raw
+  TTF/OTF bytes as-is.
+
+Both are valid PDF but Type1/CFF is typically more compact.
+
+### Page Resources
+
+- InDesign page 1 Resources: `/ColorSpace` (ICCBased),
+  `/ExtGState` (graphics states for transparency),
+  `/Font` (T1_0), `/ProcSet`, `/XObject` (Form XObjects for master
+  items + Images).
+- Our page 1 Resources: `/Font` only. No ColorSpace, no ExtGState,
+  no XObject/Form.
+
+Missing: ICC color space, extended graphics states, Form XObjects
+for master-spread content.
+
+### Image count
+
+- InDesign: 3 images per page (downsampled to 300ppi, with ICC
+  profiles).
+- Ours: 1 image total (full-resolution GenAI JPEG, no ICC).
+
+The difference is because InDesign renders the same source asset
+on multiple pages via Form XObject reference, while we embed it
+once globally.
+
+### Info dictionary
+
+- InDesign Info: clean key/value pairs.
+- Ours: includes `/Type/Metadata` — incorrect. Info dictionaries
+  should not have a `/Type` key. This is a pdfrb issue.
+
+## Summary of all differences
+
+| Category | InDesign | Ours | Status |
+|---|---|---|---|
+| File size | 100KB | 2.1MB | Cannot close without data loss (image) |
+| PDF version | 1.7 | 1.4 | Minor |
+| Font selection | MinionPro-Regular | MinionPro-Regular | **Closed** (v0.5.0) |
+| Font subtype | Type1/CFF | TrueType | pdfrb upstream |
+| Font subset prefix | `OZNMOQ+` | `FileFont-` | pdfrb upstream |
+| FlateDecode | 24 streams | 8 streams | **Closed** (v0.5.1, opt-in) |
+| xref compliance | valid | 21-byte entries | **Workaround**: `compress: true` |
+| ICC color space | embedded | absent | TODO |
+| ExtGState | per-page | absent | TODO |
+| Form XObjects | master items | absent | TODO |
+| Image count | 3/page (downsampled) | 1 total (full-res) | Cannot close without data loss |
+| Info dict | clean | has spurious /Type/Metadata | pdfrb upstream |
+| Object count | 215 | 17 | InDesign richer structure |
 
 ## Verification
 
