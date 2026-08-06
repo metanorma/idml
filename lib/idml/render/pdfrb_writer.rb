@@ -23,8 +23,27 @@ module Idml
         ModDate: :moddate=,
       }.freeze
 
-      def initialize
-        @document = Pdfrb::Document.new
+      # Lossless writer options applied to the underlying pdfrb
+      # Document. Each entry maps a pdfrb config key to its value.
+      # Compression (`FlateDecode`), XRef streams, and object-stream
+      # packing are all lossless and produce smaller PDFs without
+      # throwing away any data — no image downsampling, no font
+      # information loss.
+      #
+      # Compression is **opt-in** because enabling it makes
+      # stream-level assertions in specs harder (strings move into
+      # compressed ObjStms). Set `compress: true` on the writer or
+      # pipeline to enable.
+      COMPRESSED_OPTIONS = {
+        "writer.compress_streams" => true,
+        "writer.compress_min_size" => 64,
+        "writer.use_xref_stream" => true,
+        "writer.pack_object_streams" => true,
+      }.freeze
+
+      def initialize(compress: false)
+        config = compress ? COMPRESSED_OPTIONS : {}
+        @document = Pdfrb::Document.new(config: config)
         @image_cache = {}
       end
 

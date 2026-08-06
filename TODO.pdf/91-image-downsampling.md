@@ -1,6 +1,40 @@
 # TODO PDF 91: Image downsampling for embed
 
-## Status: PLANNED (TODO 89 audit follow-up)
+## Status: REJECTED — violates "no data loss" requirement
+
+The original proposal was to downsample source images to 300ppi at
+the placement bounds before encoding as JPEG. This **loses image
+data**: the output pixels are not the same as the source pixels.
+
+The user has explicitly forbidden any data loss: "we don't want
+downsampling, we cannot lose data."
+
+Instead, the idml render keeps source images at full resolution
+(embedded raw via DCTDecode for JPEG, FlateDecode for PNG). The
+file size is dominated by the source image size, which is
+unavoidable without data loss.
+
+For users who want smaller PDFs and accept image data loss, the
+recommended workflow is:
+
+1. Pre-process the source images before importing into InDesign
+   (resize in Photoshop, etc.).
+2. Export the IDML with the already-small images.
+3. Render via `idml render --compress` for lossless FlateDecode on
+   non-image streams.
+
+## What is preserved
+
+- **Image fidelity**: source pixels are embedded bit-for-bit.
+- **Font data**: only unused glyphs are dropped (lossless subsetting
+  via pdfrb's `TrueType::Subsetter`).
+- **Structure**: tagged PDF, XMP, ICC output intent — all lossless.
+
+## Acceptance criteria
+
+- [x] No image downsampling code introduced.
+- [x] Source image bytes are preserved verbatim in the PDF stream.
+- [x] Lossless FlateDecode compression available via `compress: true`.
 
 ## Problem
 

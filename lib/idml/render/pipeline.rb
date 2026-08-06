@@ -17,17 +17,19 @@ module Idml
       DEFAULT_HEIGHT = 792
 
       def initialize(package, output_path, font_search_paths = nil,
-                     compliance: nil, tagged: false, subset_fonts: true)
+                     compliance: nil, tagged: false, subset_fonts: true,
+                     compress: false)
         @package = package
         @output_path = output_path
         @font_search_paths = font_search_paths
         @compliance = compliance
         @tagged = tagged
         @subset_fonts = subset_fonts
+        @compress = compress
       end
 
       def call
-        writer = PdfrbWriter.new
+        writer = PdfrbWriter.new(compress: @compress)
         metadata = MetadataBuilder.new(@package).build
         writer.set_info(metadata)
         writer.enable_tagged if @tagged

@@ -69,6 +69,8 @@ module Idml
                            desc: "Produce tagged PDF (PDF/UA)"
     method_option :no_subset, type: :boolean, default: false,
                               desc: "Skip font subsetting (larger PDF)"
+    method_option :compress, type: :boolean, default: false,
+                             desc: "Apply lossless FlateDecode compression"
     method_option :verbose, aliases: "-v", type: :boolean, default: false,
                             desc: "Print progress"
     def render(path)
@@ -100,6 +102,7 @@ module Idml
         compliance: options[:pdf_a] ? :pdfa2a : nil,
         tagged: options[:tagged],
         subset_fonts: !options[:no_subset],
+        compress: options[:compress],
       }
     end
 

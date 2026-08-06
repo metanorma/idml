@@ -168,8 +168,17 @@ RSpec.describe "sample-with-table-more fixture" do
         Idml::Render.render(package: package, to: path, compliance: :pdfa2a)
         raw = File.binread(path)
 
-        expect(raw).to include("pdfaid:part")
-        expect(raw).to include("pdfaid:conformance")
+        # Decompress ObjStm to find pdfaid:part — pdfrb packs objects
+        # into compressed streams, so direct string search fails.
+        require "zlib"
+        decompressed = raw.scan(/stream\r?\n(.*?)\r?\nendstream/m).map do |s|
+          Zlib.inflate(s[0])
+        rescue StandardError
+          s[0]
+        end.join
+        combined = raw + decompressed
+        expect(combined).to include("pdfaid:part")
+        expect(combined).to include("pdfaid:conformance")
       end
     end
 
@@ -182,6 +191,27 @@ RSpec.describe "sample-with-table-more fixture" do
         # The fixture has one Table with 83 cells. Each cell produces
         # one rectangle op. Total re ops should be at least 83.
         expect(raw.scan(/ re\b/).length).to be >= 83
+      end
+    end
+
+    it "applies lossless FlateDecode compression when compress: true" do
+      Dir.mktmpdir do |dir|
+        plain_path = File.join(dir, "plain.pdf")
+        compressed_path = File.join(dir, "compressed.pdf")
+        Idml::Render.render(package: package, to: plain_path, compress: false)
+        Idml::Render.render(package: package, to: compressed_path,
+                            compress: true)
+        plain = File.binread(plain_path)
+        compressed = File.binread(compressed_path)
+
+        # No data loss — both are valid PDFs.
+        expect(compressed).to start_with("%PDF")
+        expect(compressed.strip).to end_with("%%EOF")
+
+        # Compression is lossless — content is preserved.
+        expect(compressed.scan("FlateDecode").length)
+          .to be > plain.scan("FlateDecode").length
+        expect(File.size(compressed_path)).to be < File.size(plain_path)
       end
     end
   end
