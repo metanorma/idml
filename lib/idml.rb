@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "lutaml/model"
+require "pdfrb"
 require "zip"
 require "fileutils"
 require "tempfile"

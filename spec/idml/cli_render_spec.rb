@@ -2,6 +2,7 @@
 
 require "spec_helper"
 require "tmpdir"
+require "pdfrb"
 
 RSpec.describe Idml::CLI do
   let(:fixture_path) do
