@@ -58,7 +58,7 @@ module Idml
       end
 
       def register_font(path)
-        @document.fonts.add(path)
+        @document.fonts.add(File.open(path, "rb"))
       end
 
       def add_bookmark(title, page_index)
