@@ -5,6 +5,7 @@ SimpleCov.start do
   skip "/spec/"
 end
 
+require "pdfrb"
 require "idml"
 
 RSpec.configure do |config|

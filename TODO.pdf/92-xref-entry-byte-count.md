@@ -1,6 +1,6 @@
 # TODO PDF 92: XRef entry byte-count compliance (21 vs 20 bytes)
 
-## Status: IDENTIFIED — pdfrb upstream bug
+## Status: FIXED (pdfrb 0.6.0, issue claricle/pdfrb#59)
 
 ## Problem
 

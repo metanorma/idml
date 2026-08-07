@@ -214,6 +214,33 @@ RSpec.describe "sample-with-table-more fixture" do
         expect(File.size(compressed_path)).to be < File.size(plain_path)
       end
     end
+
+    it "embeds fonts as Type1/CFF with subset prefix (not TrueType)" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "fonts.pdf")
+        Idml::Render.render(package: package, to: path, compress: false)
+        raw = File.binread(path)
+
+        # pdfrb 0.6.0 fixes: fonts use 6-char subset prefix
+        expect(raw).to match(/[A-Z]{6}\+/)
+        # Font type is Type1 (CFF-based OTF), not TrueType
+        expect(raw).to include("/Subtype /Type1")
+        # FontFile3 (CFF), not FontFile2 (TrueType)
+        expect(raw).to include("FontFile3")
+        expect(raw).not_to include("FontFile2")
+      end
+    end
+
+    it "emits clean Info dict without spurious /Type/Metadata" do
+      Dir.mktmpdir do |dir|
+        path = File.join(dir, "info.pdf")
+        Idml::Render.render(package: package, to: path, compress: false)
+        raw = File.binread(path)
+
+        # pdfrb 0.6.0 fix: no /Type key on Info dict
+        expect(raw).not_to include("/Type/Metadata")
+      end
+    end
   end
 end
 # rubocop:enable RSpec/DescribeClass
