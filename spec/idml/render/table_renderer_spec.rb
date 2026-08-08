@@ -232,6 +232,61 @@ RSpec.describe Idml::Render::Renderers::TableRenderer do
         end
       end
     end
+
+    describe "merged cells (RowSpan / ColumnSpan)" do
+      # 2x2 grid where cell 0:0 spans 2 columns.
+      # Total grid has 3 logical cells (one spanning + two singles).
+      let(:merged_table_xml) do
+        <<~XML
+          <Table Self="t1" ItemTransform="1 0 0 1 0 0" ColumnCount="2" SingleColumnWidth="60">
+            <Properties>
+              <PathGeometry>
+                <GeometryPathType PathOpen="false">
+                  <PathPointArray>
+                    <PathPointType Anchor="-10 -10" LeftDirection="-10 -10" RightDirection="-10 -10"/>
+                    <PathPointType Anchor="110 -10" LeftDirection="110 -10" RightDirection="110 -10"/>
+                    <PathPointType Anchor="110 110" LeftDirection="110 110" RightDirection="110 110"/>
+                    <PathPointType Anchor="-10 110" LeftDirection="-10 110" RightDirection="-10 110"/>
+                  </PathPointArray>
+                </GeometryPathType>
+              </PathGeometry>
+            </Properties>
+            <Row Self="t1Row0" Name="0" SingleRowHeight="60"/>
+            <Row Self="t1Row1" Name="1" SingleRowHeight="60"/>
+            <Cell Self="t1c0" Name="0:0" ColumnSpan="2">
+              <ParagraphStyleRange><CharacterStyleRange><Content>merged</Content></CharacterStyleRange></ParagraphStyleRange>
+            </Cell>
+            <Cell Self="t1c1" Name="0:1">
+              <ParagraphStyleRange><CharacterStyleRange><Content>B</Content></CharacterStyleRange></ParagraphStyleRange>
+            </Cell>
+            <Cell Self="t1c2" Name="1:1">
+              <ParagraphStyleRange><CharacterStyleRange><Content>D</Content></CharacterStyleRange></ParagraphStyleRange>
+            </Cell>
+          </Table>
+        XML
+      end
+
+      it "renders 3 cells (merged cell + 2 singles, covered cell skipped)" do
+        table = table_from_xml(merged_table_xml)
+        described_class.render(canvas, build_context(table))
+        write_to_temp_pdf(writer, "schema-spans") do |path|
+          raw = File.binread(path)
+          # 1 merged (spanning 2 cols) + 2 singles = 3 cell rectangles.
+          expect(raw.scan(/ re\b/).length).to eq(3)
+        end
+      end
+
+      it "merged cell width spans two columns" do
+        table = table_from_xml(merged_table_xml)
+        described_class.render(canvas, build_context(table))
+        write_to_temp_pdf(writer, "schema-span-width") do |path|
+          raw = File.binread(path)
+          # SingleColumnWidth=60, ColumnSpan=2 → width=120 for the
+          # merged cell. Look for a rectangle emit with width 120.
+          expect(raw).to match(/120\s+60\s+re\b/)
+        end
+      end
+    end
   end
 end
 # rubocop:enable RSpec/SpecFilePathFormat

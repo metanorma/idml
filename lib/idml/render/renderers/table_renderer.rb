@@ -222,15 +222,28 @@ module Idml
         # (uniform columns only — per-column widths would require
         # ColumnAttributes, which IDML doesn't model separately),
         # else divide evenly.
+        #
+        # Honors `Cell#column_span` and `Cell#row_span`: a spanning
+        # cell covers multiple grid positions and is rendered once
+        # at its top-left corner with the merged rect. Cells covered
+        # by another cell's span are skipped.
         SchemaLayout = Struct.new(:table, :box, keyword_init: true) do
           def each_cell
+            covered = Set.new
+
             row_count.times do |row_idx|
               col_count.times do |col_idx|
+                next if covered.include?([col_idx, row_idx])
+
                 cell = cell_at(col_idx, row_idx)
                 next unless cell
 
-                yield cell_x(col_idx), cell_y(row_idx), cell_w, cell_h(row_idx),
-                      cell
+                col_span = cell.column_span || 1
+                row_span = cell.row_span || 1
+                mark_covered(covered, col_idx, row_idx, col_span, row_span)
+
+                yield cell_x(col_idx), cell_y(row_idx, col_span, row_span),
+                      cell_w(col_span), cell_h(row_idx, row_span), cell
               end
             end
           end
@@ -263,28 +276,52 @@ module Idml
             cells.find { |c| c.col_row == [col, row] }
           end
 
+          def mark_covered(covered, col, row, col_span, row_span)
+            col_span.times do |dc|
+              row_span.times do |dr|
+                covered << [col + dc, row + dr]
+              end
+            end
+          end
+          private :mark_covered
+
           def cell_x(col)
-            box[:x] + (col * cell_w)
+            box[:x] + (col * per_col_width)
           end
 
-          def cell_y(row)
-            box[:y] + total_height - cumulative_height(row) - cell_h(row)
+          # PDF-coordinate bottom y of the cell's rectangle. For a
+          # row_spanning cell, this is the bottom edge of the last
+          # spanned row. PDF rectangle takes (x, y_bottom, w, h).
+          def cell_y(row, _col_span, row_span)
+            last_row = row + row_span - 1
+            box[:y] + total_height - cumulative_height(last_row + 1)
           end
 
-          def cell_w
-            return @cell_w if @cell_w
+          # Width covered by `span` columns starting at the cell's col.
+          def cell_w(span)
+            per_col_width * (span || 1)
+          end
+
+          # Total height covered by `span` rows starting at `row_idx`.
+          def cell_h(row_idx, span)
+            (span || 1).times.sum { |i| row_height(row_idx + i) }
+          end
+
+          def per_col_width
+            return @per_col_width if @per_col_width
 
             declared = table.single_column_width
-            per_col = if declared&.positive?
-                        declared
-                      else
-                        box[:width] / [col_count, 1].max
-                      end
-            @cell_w = per_col
+            @per_col_width = if declared&.positive?
+                               declared
+                             else
+                               box[:width] / [col_count, 1].max
+                             end
           end
 
-          def cell_h(row_idx)
-            row_heights[row_idx] || (box[:height] / [row_count, 1].max)
+          def row_height(idx)
+            return 0.0 unless idx.between?(0, row_count - 1)
+
+            row_heights[idx] || (box[:height] / [row_count, 1].max)
           end
 
           def row_heights
@@ -295,11 +332,11 @@ module Idml
           end
 
           def total_height
-            @total_height ||= row_count.times.sum { |i| cell_h(i) }
+            @total_height ||= row_count.times.sum { |i| row_height(i) }
           end
 
           def cumulative_height(up_to_row)
-            up_to_row.times.sum { |i| cell_h(i) }
+            up_to_row.times.sum { |i| row_height(i) }
           end
         end
         private_constant :SchemaLayout
