@@ -43,12 +43,13 @@ module Idml
                                    font_search_paths: @font_search_paths)
         font_resource = font_setup.register(writer)
         font_metrics = font_setup.metrics_for(writer, font_resource)
+        font_map = font_setup.font_map(writer)
 
         page_index = -1
         @package.spreads.each do |spread|
           page_index = render_spread(writer, spread, layer_filter,
                                      font_ref_resolver, font_resource,
-                                     font_metrics, structure,
+                                     font_metrics, font_map, structure,
                                      position_tracker, page_index)
         end
 
@@ -88,15 +89,15 @@ module Idml
       end
 
       def render_spread(writer, spread, layer_filter, font_ref_resolver,
-                        font_resource, font_metrics, structure,
+                        font_resource, font_metrics, font_map, structure,
                         position_tracker, page_offset)
         pages = spread.spread.flat_map(&:page)
         image_refs = ImageCollector.new(writer: writer,
                                         base_dir: File.dirname(@package.path),
                                         page_height: DEFAULT_HEIGHT).collect(spread)
         renderer = build_renderer(layer_filter, font_ref_resolver,
-                                  font_resource, font_metrics, structure,
-                                  position_tracker)
+                                  font_resource, font_metrics, font_map,
+                                  structure, position_tracker)
         current = page_offset
 
         pages.each do |page|
@@ -125,10 +126,11 @@ module Idml
       end
 
       def build_renderer(layer_filter, font_ref_resolver, font_resource,
-                         font_metrics, structure, position_tracker)
+                         font_metrics, font_map, structure, position_tracker)
         SpreadRenderer.new(
           font_metrics: font_metrics,
           font_ps_name: font_resource,
+          font_map: font_map,
           package: @package,
           layer_filter: layer_filter,
           font_ref_resolver: font_ref_resolver,

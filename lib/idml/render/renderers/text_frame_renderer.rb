@@ -116,7 +116,7 @@ module Idml
             line_width = line.width
             canvas.text(line_text(line),
                         at: [line_x, line_y],
-                        font: context.font_ps_name,
+                        font: font_for_run(run, context),
                         size: size)
             record_position(context, line, line_x, line_y, line_width, size,
                             cursor)
@@ -142,6 +142,20 @@ module Idml
         end
         private_class_method :record_position
 
+        # Resolves the font resource for a styled run. Checks the
+        # run's `applied_font` (family name from CSR's AppliedFont)
+        # against the document's font_map. Falls back to the document
+        # default when no per-run font is specified or the family
+        # isn registered.
+        def self.font_for_run(run, context)
+          family = run.applied_font
+          return context.font_ps_name unless family
+          return context.font_ps_name unless context.font_map
+
+          context.font_map[family] || context.font_ps_name
+        end
+        private_class_method :font_for_run
+
         def self.line_text(line)
           line.glyphs.map { |g| [g.codepoint].pack("U") }.join
         end
@@ -166,7 +180,7 @@ module Idml
           runs.map do |run|
             {
               text: run.text,
-              font: context.font_ps_name,
+              font: font_for_run(run, context),
               size: run.point_size,
             }
           end

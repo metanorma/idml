@@ -13,6 +13,7 @@ module Idml
       :font_ref_resolver,
       :color_resolver,
       :font_ps_name,
+      :font_map,
       :page_width,
       :page_height,
       :layer_filter,
