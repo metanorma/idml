@@ -31,7 +31,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "bigdecimal"
   spec.add_dependency "logger"
   spec.add_dependency "lutaml-model", "~> 0.8.18"
-  spec.add_dependency "pdfrb", "~> 0.6"
+  spec.add_dependency "pdfrb", "~> 0.7"
   spec.add_dependency "rubyzip"
   spec.add_dependency "thor"
 
