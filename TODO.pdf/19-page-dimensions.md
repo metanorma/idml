@@ -1,5 +1,9 @@
 # TODO PDF 19: Page dimensions from IDML
 
+## Status: DONE — `Pipeline#page_dimensions_for` reads `Page#width` /
+`Page#height` (falling back to US Letter) and passes them to
+`writer.add_page`. See `lib/idml/render/pipeline.rb`.
+
 ## Goal
 
 Derive PDF page width and height from the IDML document's Page element

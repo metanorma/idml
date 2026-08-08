@@ -1,5 +1,11 @@
 # TODO PDF 44: Layer support
 
+## Status: DONE — `Render::LayerFilter.from_designmap(designmap)`
+constructs the layer visibility map from the designmap `<Layer>`
+entries. `SpreadRenderer` consults `LayerFilter#visible?(item)` for
+both master and spread items. See `lib/idml/render/layer_filter.rb`,
+`lib/idml/elements/layer.rb`.
+
 ## Goal
 
 Parse Layer definitions from designmap.xml. Each page item's

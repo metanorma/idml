@@ -1,5 +1,11 @@
 # TODO PDF 47: PDF bookmarks/outlines
 
+## Status: DONE — `Render::BookmarkResolver` walks the designmap
+bookmark entries and yields `(title, page_index)` tuples;
+`PdfrbWriter#add_bookmark` builds the Outlines tree. See
+`lib/idml/bookmark_resolver.rb`, `lib/idml/render/pdfrb_writer.rb`,
+and TODO 79.
+
 ## Goal
 
 Generate PDF outline (bookmark) entries from the document's XML

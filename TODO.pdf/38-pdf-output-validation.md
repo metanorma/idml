@@ -1,5 +1,10 @@
 # TODO PDF 38: PDF output validation
 
+## Status: DONE — pdfrb 0.6.0 emits spec-compliant xref (20-byte
+entries), valid object streams, and matching `endobj`s. Pipeline specs
+under `spec/idml/render/render_pdfrb_pipeline_spec.rb` round-trip
+the PDF through pdfrb's parser to confirm validity. See TODOs 54, 92.
+
 ## Goal
 
 Validate that the PDF files produced by the Pipeline are structurally

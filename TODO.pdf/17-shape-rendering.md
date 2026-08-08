@@ -1,5 +1,10 @@
 # TODO PDF 17: Shape rendering
 
+## Status: DONE — `RectangleRenderer`, `PolygonRenderer`,
+`GraphicLineRenderer` register in `PageItemRenderer::RENDERER_MAP`
+and call pdfrb Canvas path operators. Colors via `ColorResolver`.
+See `lib/idml/render/renderers/` and TODOs 26, 30.
+
 ## Goal
 
 Render IDML page-item shapes (Rectangle, Polygon, GraphicLine, Ellipse)

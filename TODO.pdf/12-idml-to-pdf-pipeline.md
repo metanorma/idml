@@ -1,5 +1,11 @@
 # TODO PDF 12: IDML → PDF pipeline
 
+## Status: DONE — `Render::Pipeline` orchestrates Package → PDF:
+metadata, fonts, spreads, hyperlinks, structure, bookmarks, subsetting.
+`Idml::Render.render(package:, to:, ...)` and `idml render` CLI both
+delegate here. See `lib/idml/render/pipeline.rb`, `lib/idml/render.rb`,
+`lib/idml/cli.rb`, and TODOs 25, 64, 83.
+
 ## Goal
 
 Top-level pipeline: `Idml::Package` → `Pdfrb::Document` → PDF file.

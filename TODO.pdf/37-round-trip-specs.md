@@ -1,5 +1,10 @@
 # TODO PDF 37: Round-trip specs for element models
 
+## Status: DONE — Every typed element class has round-trip specs under
+`spec/idml/elements/` and `spec/idml/parts/` (parse → serialize →
+xml-equivalent). The `sample-with-image` fixture's 14 parts are
+validated against the RNC schemas; see also TODO 20 in TODO.complete.
+
 ## Goal
 
 Add round-trip specs for every page-item element model: `from_xml(xml)`

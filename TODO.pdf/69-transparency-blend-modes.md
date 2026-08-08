@@ -1,5 +1,11 @@
 # TODO PDF 69: Transparency and blend modes via pdfrb 0.4.0
 
+## Status: DONE — `Render::Blending.wrap(canvas, setting, &block)`
+maps IDML `BlendingSetting` (BlendMode + Opacity) to pdfrb's
+`canvas.with_transparency(opacity:, blend_mode:)`. Used by every
+shape renderer. See `lib/idml/render/blending.rb`,
+`lib/idml/elements/blending_setting.rb`.
+
 ## Goal
 
 Honor IDML `<BlendingSetting BlendMode="..." Opacity="..."/>` on page

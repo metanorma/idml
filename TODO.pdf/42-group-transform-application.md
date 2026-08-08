@@ -1,5 +1,10 @@
 # TODO PDF 42: Group transform application
 
+## Status: DONE — `Render::GroupRenderer` saves graphics state,
+applies the Group's ItemTransform via `canvas.concat_matrix`, renders
+children, and restores. Nested groups recurse correctly. See
+`lib/idml/render/renderers/group_renderer.rb`.
+
 ## Goal
 
 Apply a Group's ItemTransform to all child page items during rendering.

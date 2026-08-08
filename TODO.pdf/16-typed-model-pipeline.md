@@ -1,5 +1,10 @@
 # TODO PDF 16: Typed-model rendering pipeline
 
+## Status: DONE — Pipeline iterates `package.spreads` (typed
+`Parts::Spread`) and dispatches via `PageItemRenderer::RENDERER_MAP`.
+No raw XML / regex in the render path. See TODOs 26, 83 and
+`lib/idml/render/pipeline.rb`.
+
 ## Goal
 
 Replace the regex-based image extraction and hardcoded page dimensions

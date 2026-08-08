@@ -1,5 +1,10 @@
 # TODO PDF 29: Character style extraction
 
+## Status: DONE — `Render::StyleResolver` walks PSR → CSR and emits
+`StyledRun` structs (text + font + size + color + style attributes).
+Per-run font resolution is wired in `TextFrameRenderer#font_for_run`
+via `font_map`. See `lib/idml/render/style_resolver.rb` and TODO 93.
+
 ## Goal
 
 Extract font family, size, color, and style attributes from

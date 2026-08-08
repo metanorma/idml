@@ -1,5 +1,10 @@
 # TODO PDF 23: FontMetrics PostScript name fix
 
+## Status: OBSOLETE — The original `FontMetrics` class (ttfunk-backed)
+was replaced by `TextEngine::PdfrbFontMetrics`, which delegates to
+pdfrb's typed Fonts API. PS name extraction is now pdfrb's
+responsibility. See TODOs 63, 65.
+
 ## Goal
 
 Fix the `FontMetrics#postscript_name` method to prefer platform 3

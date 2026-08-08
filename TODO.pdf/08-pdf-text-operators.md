@@ -1,5 +1,10 @@
 # TODO PDF 08: PDF text operators
 
+## Status: DONE — `Render::TextFrameRenderer` emits text via
+`canvas.text_rich` / `canvas.text` (pdfrb wraps BT/Tf/Td/Tj/TJ).
+Per-run font selection through `font_for_run`. See
+`lib/idml/render/renderers/text_frame_renderer.rb`.
+
 ## Goal
 
 Map positioned glyphs from the text engine to PDF text-showing

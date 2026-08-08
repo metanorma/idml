@@ -1,5 +1,9 @@
 # TODO PDF 25: CLI render subcommand
 
+## Status: DONE — `idml render input.idml output.pdf` exists with
+`--font-path`, `--pdfa`, `--tagged`, `--no-subset`, `--compress`, and
+`--verbose` flags. See `lib/idml/cli.rb` and TODO 60.
+
 ## Goal
 
 Add a `render` subcommand to the `idml` CLI that converts an IDML

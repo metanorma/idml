@@ -1,5 +1,9 @@
 # TODO PDF 04: Line breaker + justifier
 
+## Status: DONE — `Idml::TextEngine::LineBreaker` (greedy wrap) and
+`Idml::TextEngine::Justifier` (left/center/right/justified) live in
+`lib/idml/text_engine/{line_breaker,justifier}.rb`.
+
 ## Goal
 
 Break shaped text into lines that fit within a frame width, then

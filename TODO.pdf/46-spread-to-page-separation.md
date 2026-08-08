@@ -1,5 +1,10 @@
 # TODO PDF 46: Spread-to-page separation
 
+## Status: DONE — `Pipeline#render_spread` iterates each Page in the
+Spread separately, calls `writer.add_page` with per-page dimensions,
+and tracks the global `page_index` for hyperlink/destination wiring.
+See `lib/idml/render/pipeline.rb` and TODO 19.
+
 ## Goal
 
 Render each IDML Page as a separate PDF page (currently one PDF page

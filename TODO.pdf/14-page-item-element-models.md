@@ -1,5 +1,10 @@
 # TODO PDF 14: Page-item element models
 
+## Status: DONE — `Idml::Elements::{Page,Rectangle,TextFrame,Image,Link,
+Polygon,Group,GraphicLine}` all carry attributes from the RNC and are
+registered under `Idml::Elements`. Round-trip and attribute-set specs
+live under `spec/idml/elements/`.
+
 ## Goal
 
 Create typed `Lutaml::Model::Serializable` subclasses for every page-item

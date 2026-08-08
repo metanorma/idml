@@ -1,5 +1,11 @@
 # TODO PDF 27: Text engine integration
 
+## Status: DONE — `TextFrameRenderer` runs each story through the
+text engine: `StyleResolver` extracts runs → `Shaper` shapes glyphs →
+`LineBreaker` wraps → `Justifier` aligns → `VerticalLayout` positions.
+Falls back to pdfrb's `text_rich` when metrics are missing. See
+`lib/idml/render/renderers/text_frame_renderer.rb` and TODO 67.
+
 ## Goal
 
 Wire the text engine (Shaper → LineBreaker → Justifier → VerticalLayout)

@@ -1,5 +1,10 @@
 # TODO PDF 26: Page-item renderer registry (OCP)
 
+## Status: DONE — `PageItemRenderer::RENDERER_MAP` is a class-level
+Hash mapping element class → renderer class. Adding a new page-item
+type = appending to RENDERER_MAP, not editing a switch statement.
+See `lib/idml/render/page_item_renderer.rb`, `lib/idml/render/renderers/`.
+
 ## Goal
 
 Replace the `case/when` dispatch in `SpreadRenderer` with a registration-

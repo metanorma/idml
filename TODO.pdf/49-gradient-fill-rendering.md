@@ -1,5 +1,11 @@
 # TODO PDF 49: Gradient fill rendering
 
+## Status: DONE — `Render::GradientResolver` maps IDML Gradient +
+GradientStop entries to pdfrb shading dictionaries
+(`Shadings#add_axial` / `add_radial`). RectangleRenderer / PolygonRenderer
+route gradient fills through this resolver. See
+`lib/idml/gradient_resolver.rb` and TODOs 66, 68.
+
 ## Goal
 
 Render gradient fills on page items. IDML supports linear and radial

@@ -1,5 +1,10 @@
 # TODO PDF 06: PDF color operators
 
+## Status: DONE — Colors route through pdfrb's Canvas (`fill_color`,
+`stroke_color`) via `Render::ColorResolver`, which converts IDML RGB /
+CMYK / Tint values to pdfrb's color tuples. See
+`lib/idml/render/color_resolver.rb`.
+
 ## Goal
 
 Map IDML color definitions (from Graphic.xml) to PDF color space

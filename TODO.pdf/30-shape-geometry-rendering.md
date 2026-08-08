@@ -1,5 +1,11 @@
 # TODO PDF 30: Shape geometry rendering
 
+## Status: DONE — RectangleRenderer / PolygonRenderer / GraphicLineRenderer
+derive bounds from `PathGeometry` and emit pdfrb path calls.
+ItemTransform + Y-flip handled by `Placement.box`. See
+`lib/idml/render/renderers/{rectangle,polygon,graphic_line}_renderer.rb`
+and TODOs 21, 39.
+
 ## Goal
 
 Render Rectangle, Polygon, and GraphicLine shapes using their actual
