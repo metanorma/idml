@@ -1,5 +1,11 @@
 # TODO PDF 43: Text frame insets
 
+## Status: DONE — `Elements::TextFramePreference` carries the inset
+attributes (InsetTop / InsetLeft / InsetBottom / InsetRight).
+`TextFrameRenderer` subtracts them from the frame bounds before
+layout. See `lib/idml/elements/text_frame_preference.rb`,
+`lib/idml/render/renderers/text_frame_renderer.rb`.
+
 ## Goal
 
 Respect `TextFramePreference` inset margins (InsetTop, InsetLeft,

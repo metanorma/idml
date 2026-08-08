@@ -1,5 +1,10 @@
 # TODO PDF 02: Font resolver
 
+## Status: DONE — `Idml::Render::FontSetup` resolves the document default
+font from `Resources/Fonts.xml`, with `FontReferenceResolver` providing
+the family → PostScriptName lookup. Per-run resolution lives in
+`TextFrameRenderer#font_for_run`. See TODOs 33, 40, 93.
+
 ## Goal
 
 Map IDML font references (family + style) to .ttf/.otf file paths on

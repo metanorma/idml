@@ -1,5 +1,10 @@
 # TODO PDF 15: Wire SpreadObject child elements
 
+## Status: DONE — `Idml::Elements::SpreadObject` declares typed child
+collections and uses `ordered` mapping. `Idml::Parts::Spread#each_page_item`
+yields every page item in document order. See
+`lib/idml/elements/spread_object.rb`, `lib/idml/parts/spread.rb`.
+
 ## Goal
 
 Extend `Idml::Elements::SpreadObject` to expose its child page items as

@@ -1,5 +1,10 @@
 # TODO PDF 13: CJK text layout
 
+## Status: PARTIAL — `Idml::TextEngine::CjkLayout` handles CJK glyph
+measurement and basic horizontal layout. Vertical writing mode,
+kinsoku shori, tate-chu-yoko, and ruby remain stretch goals as
+flagged in the original TODO. See `lib/idml/text_engine/cjk_layout.rb`.
+
 ## Goal
 
 Extend the text engine to handle CJK (Chinese, Japanese, Korean)

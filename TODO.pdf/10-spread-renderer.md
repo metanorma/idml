@@ -1,5 +1,10 @@
 # TODO PDF 10: Spread renderer
 
+## Status: DONE — `Render::SpreadRenderer` walks each Page's items in
+z-order, dispatching via `PageItemRenderer::RENDERER_MAP`. Master items
+rendered first as background. See `lib/idml/render/spread_renderer.rb`
+and TODO 32.
+
 ## Goal
 
 Render an IDML Spread (all its page items) into a single PDF page's

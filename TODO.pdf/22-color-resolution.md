@@ -1,5 +1,10 @@
 # TODO PDF 22: Color resolution from Resources
 
+## Status: DONE — `Render::ColorResolver` resolves `Color/...` and
+`Swatch/...` references from `Parts::Graphic` into RGB/CMYK tuples.
+`[None]` and `[Registration]` handled specially. See
+`lib/idml/render/color_resolver.rb`.
+
 ## Goal
 
 Resolve IDML color references (e.g., "Color/Red", "Color/c0m100y100k0")

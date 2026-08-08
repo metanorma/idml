@@ -1,5 +1,9 @@
 # TODO PDF 68: Radial gradient shadings via pdfrb 0.4.0
 
+## Status: DONE — RectangleRenderer dispatches on `Gradient#type`:
+`"Radial"` → `Shadings#add_radial`, otherwise → `Shadings#add_axial`.
+Spec covers both branches.
+
 ## Goal
 
 RectangleRenderer routes gradient fills to either `Shadings#add_axial`

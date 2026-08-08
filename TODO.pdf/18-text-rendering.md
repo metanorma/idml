@@ -1,5 +1,10 @@
 # TODO PDF 18: Text rendering from stories
 
+## Status: DONE — `TextFrameRenderer` resolves `ParentStory` via
+`Package#story_by_id`, walks PSR → CSR → Content, and renders styled
+runs through the text engine. See
+`lib/idml/render/renderers/text_frame_renderer.rb` and TODOs 27, 67.
+
 ## Goal
 
 Wire the text engine to actual IDML story content. Extract text from

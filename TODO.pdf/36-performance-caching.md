@@ -1,5 +1,10 @@
 # TODO PDF 36: Performance caching
 
+## Status: DONE — `PdfrbFontMetrics` is reused across the whole render
+(a single pdfrb `Fonts` collection is shared). `Placement.box` memoizes
+`geometric_bounds` per page item. `ColorResolver` and `Package#part`
+memoize per instance. See TODO 86 for benchmarks.
+
 ## Goal
 
 Cache expensive operations: FontMetrics file parsing, FontResolver

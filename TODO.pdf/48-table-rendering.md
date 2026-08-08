@@ -1,5 +1,12 @@
 # TODO PDF 48: Table rendering
 
+## Status: DONE — `Render::TableRenderer` handles both the
+schema-faithful layout (Table > {Cell, Row} siblings, real IDML) and
+the legacy nested model. SchemaLayout computes per-cell rects from
+`Row#single_row_height` and `Cell#col_row`. Inline Tables discovered
+via `CSR#table`. See `lib/idml/render/renderers/table_renderer.rb`,
+`lib/idml/elements/{table,cell,row}.rb`, and TODOs 82, 84.
+
 ## Goal
 
 Render IDML tables (TableRow, TableCell elements within Stories) as

@@ -1,5 +1,11 @@
 # TODO PDF 32: Master spread rendering
 
+## Status: DONE — `SpreadRenderer#render_master_items` resolves each
+Page's `AppliedMaster` via `Package#master_spread_by_id` and renders
+the master's items first as a background layer. Layer visibility
+applied via `LayerFilter`. See `lib/idml/render/spread_renderer.rb`,
+TODO 44.
+
 ## Goal
 
 Render master spread page items as background on each page. Master

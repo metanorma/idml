@@ -1,5 +1,10 @@
 # TODO PDF 24: Anti-pattern coverage for render modules
 
+## Status: DONE — `spec/anti_patterns_spec.rb` auto-discovers every
+`.rb` file under `lib/` and asserts no `nokogiri`, `rexml`,
+`require_relative`, `instance_variable_set`, `.send(`, `respond_to?`,
+`double()`, hand-rolled serializers, etc. Currently 279 files, 0 offenses.
+
 ## Goal
 
 Ensure all new render and text-engine modules pass the anti-pattern

@@ -1,5 +1,10 @@
 # TODO PDF 41: GraphicLine rendering
 
+## Status: DONE — `Render::GraphicLineRenderer` (registered in
+`PageItemRenderer::RENDERER_MAP`) emits move-to / line-to via pdfrb
+Canvas. StrokeColor and StrokeWeight via `StrokeStyle.apply`. See
+`lib/idml/render/renderers/graphic_line_renderer.rb`.
+
 ## Goal
 
 Implement `GraphicLineRenderer` to render IDML `<GraphicLine>` elements as

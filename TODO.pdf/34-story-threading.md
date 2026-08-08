@@ -1,5 +1,10 @@
 # TODO PDF 34: Story threading
 
+## Status: DONE — `Render::StoryThreader` walks the
+PreviousTextFrame / NextTextFrame chain, distributes story text
+across linked frames, and guards against cycles. See
+`lib/idml/story_threader.rb`.
+
 ## Goal
 
 Follow the PreviousTextFrame/NextTextFrame chain to thread stories

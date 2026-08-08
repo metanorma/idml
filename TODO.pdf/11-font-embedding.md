@@ -1,5 +1,11 @@
 # TODO PDF 11: Font embedding
 
+## Status: DONE — `FontSetup#register` loads the document font via
+`PdfrbWriter#register_font` (passes `File.open(path, "rb")` as IO).
+Subsetting happens via `PdfrbWriter#subset_fonts!`. See
+`lib/idml/render/font_setup.rb`, `lib/idml/render/pdfrb_writer.rb`,
+and TODOs 52, 62, 65.
+
 ## Goal
 
 Embed font subsets in the output PDF so the rendered text is

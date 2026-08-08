@@ -1,5 +1,11 @@
 # TODO PDF 28: Path geometry models
 
+## Status: DONE — `Idml::Elements::{PathPointType, PathPointArray,
+GeometryPathType, PathGeometry, Properties}` all carry the RNC
+attributes. Page items expose `geometric_bounds` via memoized helpers.
+See `lib/idml/elements/{path_point_type,path_point_array,
+geometry_path_type,path_geometry,properties}.rb`.
+
 ## Goal
 
 Create typed element models for IDML's path geometry hierarchy:

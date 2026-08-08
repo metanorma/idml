@@ -1,5 +1,11 @@
 # TODO PDF 01: Font metrics reader
 
+## Status: DONE — Superseded by `Idml::TextEngine::PdfrbFontMetrics`, which
+delegates glyph metrics to pdfrb's `Fonts` collection. See
+`lib/idml/text_engine/pdfrb_font_metrics.rb`. (Original plan to use
+`ttfunk` directly was dropped when pdfrb 0.4.0+ exposed a typed
+Font/Fonts API.)
+
 ## Goal
 
 Read OpenType/TrueType font files and expose per-glyph advance widths

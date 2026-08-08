@@ -1,5 +1,9 @@
 # TODO PDF 20: PNG image support
 
+## Status: DONE — pdfrb's `Canvas#draw_image_matrix` handles JPEG, PNG,
+and other formats natively (image-type detection is internal to pdfrb).
+No format-specific code needed in idml.
+
 ## Goal
 
 Extend image embedding to support PNG files in addition to JPEG.

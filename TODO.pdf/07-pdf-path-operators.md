@@ -1,5 +1,10 @@
 # TODO PDF 07: PDF path operators
 
+## Status: DONE — Path operators are emitted by pdfrb's Canvas
+(`rectangle`, `move_to`, `line_to`, `close_path`, `fill`, `stroke`).
+Renderer classes under `lib/idml/render/renderers/` build the calls
+from typed `PathGeometry` models.
+
 ## Goal
 
 Map IDML geometric page items (Rectangle, Polygon, GraphicLine, etc.)

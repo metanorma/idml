@@ -5,17 +5,14 @@ without InDesign Server. The pipeline has three layers:
 
 1. **Text engine** (TODOs 01–05): a pure-Ruby text layout engine
    that takes styled text runs + frame geometry and produces
-   positioned glyphs. Uses font metrics from .ttf/.otf files.
-
+   positioned glyphs. Uses font metrics via pdfrb's typed Fonts API.
 2. **PDF content stream** (TODOs 06–10): maps IDML page items
-   (shapes, text, colors, images) to PDF content-stream operators
-   using pdfrb's Document/Canvas API.
-
+   (shapes, text, colors, images) to pdfrb's Canvas API.
 3. **Pipeline** (TODOs 11–13): ties the text engine and PDF
    output together. IDML Package → typed model → render plan →
    pdfrb Document → PDF file.
 
-The text engine is intentionally IDML-agnostic: it works on
-styled text runs and frame geometry, not IDML-specific types.
-This makes it reusable (e.g., for generating PDFs from scratch
-or from other layout formats).
+All entries below are functionally DONE (basic CJK in TODO 13 is
+the only PARTIAL — vertical writing mode, kinsoku, ruby, and
+tate-chu-yoko remain stretch goals). Each file carries a
+`## Status:` header with a brief implementation summary.

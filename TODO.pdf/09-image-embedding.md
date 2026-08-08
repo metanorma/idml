@@ -1,5 +1,10 @@
 # TODO PDF 09: Image embedding
 
+## Status: DONE — `Render::ImageCollector` resolves Link `href`s and
+delegates to `PdfrbWriter#draw_image_matrix` (handles JPEG/PNG/etc.
+via pdfrb's image embedding). Missing files are silently skipped.
+See `lib/idml/render/image_collector.rb`.
+
 ## Goal
 
 Resolve IDML image links and embed them as PDF XObject images.

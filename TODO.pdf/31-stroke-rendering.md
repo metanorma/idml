@@ -1,5 +1,11 @@
 # TODO PDF 31: Stroke rendering
 
+## Status: DONE — `Render::StrokeStyle.apply(canvas, item)` saves
+graphics state, applies line_cap / line_join / miter_limit / dash
+patterns from DashedStrokeStyle / DottedStrokeStyle / StripedStrokeStyle,
+and yields. Used by every shape renderer. See
+`lib/idml/render/stroke_style.rb` and TODO 70.
+
 ## Goal
 
 Render stroke attributes on page items: stroke color, weight, end cap,

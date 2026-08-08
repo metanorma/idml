@@ -1,5 +1,9 @@
 # TODO PDF 03: Text shaper
 
+## Status: DONE — `Idml::TextEngine::Shaper` produces `ShapedGlyph`
+structs (codepoint, width, x/y offsets) consumed by LineBreaker.
+See `lib/idml/text_engine/shaper.rb`.
+
 ## Goal
 
 Convert a text string + font + size into a sequence of positioned

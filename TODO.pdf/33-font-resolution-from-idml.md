@@ -1,5 +1,12 @@
 # TODO PDF 33: Font resolution from IDML
 
+## Status: DONE — `Parts::Fonts` parses FontFamily → Font entries
+(`postscript_name` accessor). `FontReferenceResolver.build(package)`
+constructs the family → PSName lookup. `FontSetup` resolves to a file
+path via pdfrb's FontResolver. See TODOs 40, 93 and
+`lib/idml/render/font_reference_resolver.rb`,
+`lib/idml/render/font_setup.rb`.
+
 ## Goal
 
 Resolve fonts referenced in IDML documents using Resources/Fonts.xml.

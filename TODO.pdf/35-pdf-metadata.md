@@ -1,5 +1,11 @@
 # TODO PDF 35: PDF metadata
 
+## Status: DONE — `Render::MetadataBuilder` reads XMP from
+`META-INF/metadata.xml` via `Parts::XmpMeta` (typed dc:/xmp:/rdf:
+namespace composition), merges with defaults (Producer, CreationDate),
+and writes via `PdfrbWriter#set_info`. See
+`lib/idml/render/metadata_builder.rb`, `lib/idml/parts/xmp.rb`, TODO 75.
+
 ## Goal
 
 Embed document metadata (Title, Author, Subject, Keywords, Creator,

@@ -1,5 +1,9 @@
 # TODO PDF 05: Vertical layout
 
+## Status: DONE — `Idml::TextEngine::VerticalLayout` positions lines
+within frame insets and applies leading + paragraph spacing.
+Drop caps remain a stretch goal. See `lib/idml/text_engine/vertical_layout.rb`.
+
 ## Goal
 
 Position lines vertically within a text frame: leading, paragraph

@@ -1,5 +1,10 @@
 # TODO PDF 21: Coordinate transform utility
 
+## Status: DONE — Centralized in `Idml::Geometry` (Y-flip + matrix math)
+and `Render::Placement` (item → PDF rect, with memoized
+`geometric_bounds`). All renderers use `Placement.box`. See
+`lib/idml/geometry.rb`, `lib/idml/render/placement.rb`, TODO 39.
+
 ## Goal
 
 Centralize IDML-to-PDF coordinate system conversion in a dedicated
