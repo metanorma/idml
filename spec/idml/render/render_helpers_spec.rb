@@ -79,7 +79,7 @@ RSpec.describe Idml::Render do
 
       it "Paragraph carries space_before / space_after from PSR" do
         paragraphs = described_class.extract_paragraphs(
-          package.story_by_id("ue1")
+          package.story_by_id("ue1"),
         )
         para = paragraphs.first
         expect(para).to respond_to(:space_before)
