@@ -50,6 +50,31 @@ module Idml
         nil
       end
 
+      # Pre-registers every non-missing font in the document and
+      # returns a map of family_name → pdfrb Symbol resource. Used
+      # by the renderer to resolve per-run AppliedFont references.
+      # Falls back to DEFAULT_FONT for families that can't be resolved.
+      def font_map(writer)
+        map = {}
+        return map unless @package&.fonts
+
+        @package.fonts.font_family.each do |family|
+          next unless family.name
+
+          map[family.name] = resource_for_family(writer, family)
+        end
+        map
+      end
+
+      def resource_for_family(writer, family)
+        path = find_font_file(family)
+        return DEFAULT_FONT unless path
+
+        writer.register_font(path)
+      rescue StandardError
+        DEFAULT_FONT
+      end
+
       private
 
       def resolve_document_font_path

@@ -18,6 +18,7 @@ module Idml
                 font_ref_resolver: context.font_ref_resolver,
                 color_resolver: context.color_resolver,
                 font_ps_name: context.font_ps_name,
+                font_map: context.font_map,
                 page_width: context.page_width,
                 page_height: context.page_height,
                 layer_filter: context.layer_filter,

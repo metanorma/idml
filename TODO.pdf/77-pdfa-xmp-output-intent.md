@@ -1,6 +1,6 @@
 # TODO PDF 77: PDF/A XMP packet and Catalog /Metadata stream
 
-## Status: PARTIAL — XMP packet emitted; ICC output intent deferred
+## Status: DONE — XMP + ICC output intent both implemented
 
 ## What was implemented
 

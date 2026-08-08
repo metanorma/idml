@@ -1,6 +1,6 @@
 # TODO PDF 93: Per-run font resolution from CharacterStyleRange
 
-## Status: PLANNED (last major rendering fidelity gap)
+## Status: DONE — font_map architecture implemented
 
 ## Problem
 
