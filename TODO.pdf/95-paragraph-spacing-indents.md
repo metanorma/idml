@@ -1,6 +1,7 @@
 # TODO PDF 95: Paragraph spacing and indents (SpaceBefore, SpaceAfter, FirstLineIndent)
 
-## Status: OPEN — gap identified in 2026-08-08 audit
+## Status: DONE — Paragraph struct carries these from PSR; renderer
+passes them to VerticalLayout.layout_block.
 
 ## Problem
 

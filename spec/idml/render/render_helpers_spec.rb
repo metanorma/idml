@@ -63,6 +63,34 @@ RSpec.describe Idml::Render do
       end
     end
 
+    describe ".extract_paragraphs" do
+      it "returns empty array for nil story" do
+        expect(described_class.extract_paragraphs(nil)).to eq([])
+      end
+
+      it "groups runs by paragraph and carries paragraph-level attrs" do
+        story = package.story_by_id("ue1")
+        paragraphs = described_class.extract_paragraphs(story)
+        expect(paragraphs).not_to be_empty
+        expect(paragraphs.first).to be_a(described_class::Paragraph)
+        expect(paragraphs.first.runs).to be_an(Array)
+        expect(paragraphs.first.runs).not_to be_empty
+      end
+
+      it "Paragraph carries space_before / space_after from PSR" do
+        paragraphs = described_class.extract_paragraphs(
+          package.story_by_id("ue1")
+        )
+        para = paragraphs.first
+        expect(para).to respond_to(:space_before)
+        expect(para).to respond_to(:space_after)
+        expect(para).to respond_to(:first_line_indent)
+        expect(para).to respond_to(:left_indent)
+        expect(para).to respond_to(:right_indent)
+        expect(para).to respond_to(:auto_leading)
+      end
+    end
+
     describe "ALIGNMENT_MAP" do
       it "maps IDML Left to :left" do
         expect(described_class::ALIGNMENT_MAP["Left"]).to eq(:left)
