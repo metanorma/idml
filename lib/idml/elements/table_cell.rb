@@ -15,7 +15,7 @@ module Idml
       attribute :name, :string
       attribute :column, :integer
       attribute :row, :integer
-      attribute :key_value, :string
+      attribute :cell_key_value, :string
       attribute :character_style_range, Idml::Elements::CharacterStyleRange,
                 collection: true
 
@@ -25,7 +25,7 @@ module Idml
         map_attribute "Name", to: :name
         map_attribute "Column", to: :column
         map_attribute "Row", to: :row
-        map_attribute "KeyValue", to: :key_value
+        map_attribute "KeyValue", to: :cell_key_value
         map_element "CharacterStyleRange", to: :character_style_range
       end
 
