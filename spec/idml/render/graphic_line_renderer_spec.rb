@@ -44,37 +44,37 @@ RSpec.describe Idml::Render::Renderers::GraphicLineRenderer do
   it "renders nothing when stroke is not strokeable" do
     line = build_line(stroke_color: nil)
     described_class.render(canvas, build_context(line))
-    path = Tempfile.new("line-empty").path
-    writer.write(path)
-    expect(File.binread(path)).not_to include(" m")
+    write_to_temp_pdf(writer, "line-empty") do |path|
+      expect(File.binread(path)).not_to include(" m")
+    end
   end
 
   it "renders nothing when color cannot be resolved" do
     line = build_line(stroke_color: "Color/Missing")
     described_class.render(canvas, build_context(line))
-    path = Tempfile.new("line-missing-color").path
-    writer.write(path)
-    expect(File.binread(path)).not_to include(" m")
+    write_to_temp_pdf(writer, "line-missing-color") do |path|
+      expect(File.binread(path)).not_to include(" m")
+    end
   end
 
   it "draws a line using move_to/line_to/stroke" do
     line = build_line
     described_class.render(canvas, build_context(line))
-    path = Tempfile.new("line-basic").path
-    writer.write(path)
-    raw = File.binread(path)
-    expect(raw).to include(" m").or include("\nm\n")
-    expect(raw).to include(" l").or include("\nl\n")
+    write_to_temp_pdf(writer, "line-basic") do |path|
+      raw = File.binread(path)
+      expect(raw).to include(" m").or include("\nm\n")
+      expect(raw).to include(" l").or include("\nl\n")
+    end
   end
 
   it "applies StrokeStyle within save/restore" do
     line = build_line(end_cap: "RoundEndCap", stroke_dash_and_gap: "3 2")
     described_class.render(canvas, build_context(line))
-    path = Tempfile.new("line-styled").path
-    writer.write(path)
-    raw = File.binread(path)
-    expect(raw).to match(/1 J\b/)
-    expect(raw).to match(/\[3.*2.*\].*0 d\b/)
+    write_to_temp_pdf(writer, "line-styled") do |path|
+      raw = File.binread(path)
+      expect(raw).to match(/1 J\b/)
+      expect(raw).to match(/\[3.*2.*\].*0 d\b/)
+    end
   end
 end
 # rubocop:enable RSpec/SpecFilePathFormat

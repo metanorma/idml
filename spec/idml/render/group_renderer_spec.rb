@@ -30,9 +30,9 @@ RSpec.describe Idml::Render::Renderers::GroupRenderer do
   it "yields nothing for an empty group" do
     group = group_from_xml('<Group Self="g1"/>')
     described_class.render(canvas, build_context(group))
-    path = Tempfile.new("group-empty").path
-    writer.write(path)
-    expect(File.binread(path)).to start_with("%PDF")
+    write_to_temp_pdf(writer, "group-empty") do |path|
+      expect(File.binread(path)).to start_with("%PDF")
+    end
   end
 
   it "dispatches to PageItemRenderer for each child" do
@@ -42,18 +42,18 @@ RSpec.describe Idml::Render::Renderers::GroupRenderer do
       </Group>
     XML
     described_class.render(canvas, build_context(group))
-    path = Tempfile.new("group-child").path
-    writer.write(path)
-    expect(File.binread(path)).to start_with("%PDF")
+    write_to_temp_pdf(writer, "group-child") do |path|
+      expect(File.binread(path)).to start_with("%PDF")
+    end
   end
 
   it "applies item_transform via Geometry concat" do
     group = group_from_xml('<Group Self="g1" ItemTransform="2 0 0 2 50 50"/>')
     described_class.render(canvas, build_context(group))
-    path = Tempfile.new("group-xform").path
-    writer.write(path)
-    raw = File.binread(path)
-    expect(raw).to include("cm")
+    write_to_temp_pdf(writer, "group-xform") do |path|
+      raw = File.binread(path)
+      expect(raw).to include("cm")
+    end
   end
 
   it "skips children when layer_filter says invisible" do
@@ -64,10 +64,10 @@ RSpec.describe Idml::Render::Renderers::GroupRenderer do
     XML
     hidden = AlwaysHiddenLayerFilter.new
     described_class.render(canvas, build_context(group, layer_filter: hidden))
-    path = Tempfile.new("group-hidden").path
-    writer.write(path)
-    raw = File.binread(path)
-    expect(raw).to start_with("%PDF")
+    write_to_temp_pdf(writer, "group-hidden") do |path|
+      raw = File.binread(path)
+      expect(raw).to start_with("%PDF")
+    end
   end
 end
 # rubocop:enable RSpec/SpecFilePathFormat

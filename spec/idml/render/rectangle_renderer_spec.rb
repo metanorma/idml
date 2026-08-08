@@ -86,11 +86,11 @@ RSpec.describe Idml::Render::Renderers::RectangleRenderer do
 
     it "emits a rectangle path and shading fill" do
       described_class.render(canvas, context)
-      path = Tempfile.new("rect-render").path
-      writer.write(path)
-      raw = File.binread(path)
-      expect(raw).to include(" re").or include("\nre\n")
-      expect(raw).to include(" sh")
+      write_to_temp_pdf(writer, "rect-render") do |path|
+        raw = File.binread(path)
+        expect(raw).to include(" re").or include("\nre\n")
+        expect(raw).to include(" sh")
+      end
     end
   end
 

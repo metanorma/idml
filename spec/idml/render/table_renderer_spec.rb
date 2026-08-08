@@ -48,36 +48,36 @@ RSpec.describe Idml::Render::Renderers::TableRenderer do
   it "renders nothing when visible is false" do
     table = table_from_xml('<Table Self="t1" Visible="false"/>')
     described_class.render(canvas, build_context(table))
-    path = Tempfile.new("table-hidden").path
-    writer.write(path)
-    expect(File.binread(path)).not_to include(" re")
+    write_to_temp_pdf(writer, "table-hidden") do |path|
+      expect(File.binread(path)).not_to include(" re")
+    end
   end
 
   it "renders nothing when there are no rows" do
     table = table_from_xml('<Table Self="t1"/>')
     described_class.render(canvas, build_context(table))
-    path = Tempfile.new("table-empty").path
-    writer.write(path)
-    expect(File.binread(path)).not_to include(" re")
+    write_to_temp_pdf(writer, "table-empty") do |path|
+      expect(File.binread(path)).not_to include(" re")
+    end
   end
 
   it "draws one rectangle per cell" do
     table = table_from_xml(TABLE_GRID_XML)
     described_class.render(canvas, build_context(table))
-    path = Tempfile.new("table-grid").path
-    writer.write(path)
-    raw = File.binread(path)
-    # 2 rows × 2 cells = 4 rectangle ops
-    expect(raw.scan(/ re\b/).length).to eq(4)
+    write_to_temp_pdf(writer, "table-grid") do |path|
+      raw = File.binread(path)
+      # 2 rows × 2 cells = 4 rectangle ops
+      expect(raw.scan(/ re\b/).length).to eq(4)
+    end
   end
 
   it "divides height evenly across rows" do
     table = table_from_xml(TABLE_GRID_XML)
     described_class.render(canvas, build_context(table))
-    path = Tempfile.new("table-rows").path
-    writer.write(path)
-    raw = File.binread(path)
-    expect(raw).to match(/\bS\b/)
+    write_to_temp_pdf(writer, "table-rows") do |path|
+      raw = File.binread(path)
+      expect(raw).to match(/\bS\b/)
+    end
   end
 
   describe "schema-faithful path (real IDML Cell/Row siblings)" do
@@ -117,29 +117,29 @@ RSpec.describe Idml::Render::Renderers::TableRenderer do
     it "renders a rectangle per cell" do
       table = table_from_xml(real_table_xml)
       described_class.render(canvas, build_context(table))
-      path = Tempfile.new("schema-table").path
-      writer.write(path)
-      raw = File.binread(path)
-      # 2x2 grid = 4 cells = 4 rectangle ops
-      expect(raw.scan(/ re\b/).length).to eq(4)
+      write_to_temp_pdf(writer, "schema-table") do |path|
+        raw = File.binread(path)
+        # 2x2 grid = 4 cells = 4 rectangle ops
+        expect(raw.scan(/ re\b/).length).to eq(4)
+      end
     end
 
     it "emits each cell's text via text_rich" do
       table = table_from_xml(real_table_xml)
       described_class.render(canvas, build_context(table))
-      path = Tempfile.new("schema-table-text").path
-      writer.write(path)
-      raw = File.binread(path)
-      expect(raw).to include("BT")
-      expect(raw).to include("ET")
+      write_to_temp_pdf(writer, "schema-table-text") do |path|
+        raw = File.binread(path)
+        expect(raw).to include("BT")
+        expect(raw).to include("ET")
+      end
     end
 
     it "returns nothing when visible is false" do
       table = table_from_xml('<Table Self="t1" Visible="false"/>')
       described_class.render(canvas, build_context(table))
-      path = Tempfile.new("schema-hidden").path
-      writer.write(path)
-      expect(File.binread(path)).not_to include(" re")
+      write_to_temp_pdf(writer, "schema-hidden") do |path|
+        expect(File.binread(path)).not_to include(" re")
+      end
     end
   end
 end

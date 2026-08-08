@@ -51,25 +51,25 @@ RSpec.describe Idml::Render::Renderers::PolygonRenderer do
   it "renders nothing when visible is false" do
     poly = build_poly(visible: false)
     described_class.render(canvas, build_context(poly))
-    path = Tempfile.new("poly-invisible").path
-    writer.write(path)
-    expect(File.binread(path)).not_to include(" re")
+    write_to_temp_pdf(writer, "poly-invisible") do |path|
+      expect(File.binread(path)).not_to include(" re")
+    end
   end
 
   it "renders nothing when geometric_bounds is nil" do
     poly = build_poly(geometric_bounds: nil)
     described_class.render(canvas, build_context(poly))
-    path = Tempfile.new("poly-nobounds").path
-    writer.write(path)
-    expect(File.binread(path)).not_to include(" re")
+    write_to_temp_pdf(writer, "poly-nobounds") do |path|
+      expect(File.binread(path)).not_to include(" re")
+    end
   end
 
   it "renders a fill rectangle when fill_color resolves" do
     poly = build_poly(fill_color: "Color/Red")
     described_class.render(canvas, build_context(poly))
-    path = Tempfile.new("poly-fill").path
-    writer.write(path)
-    expect(File.binread(path)).to include(" re")
+    write_to_temp_pdf(writer, "poly-fill") do |path|
+      expect(File.binread(path)).to include(" re")
+    end
   end
 
   it "renders a stroke when stroke_color and weight are set" do
@@ -80,11 +80,11 @@ RSpec.describe Idml::Render::Renderers::PolygonRenderer do
       end_cap: "RoundEndCap",
     )
     described_class.render(canvas, build_context(poly))
-    path = Tempfile.new("poly-stroke").path
-    writer.write(path)
-    raw = File.binread(path)
-    expect(raw).to include(" re")
-    expect(raw).to match(/(\b| )S\b/)
+    write_to_temp_pdf(writer, "poly-stroke") do |path|
+      raw = File.binread(path)
+      expect(raw).to include(" re")
+      expect(raw).to match(/(\b| )S\b/)
+    end
   end
 end
 # rubocop:enable RSpec/SpecFilePathFormat

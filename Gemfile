@@ -4,6 +4,7 @@ source "https://rubygems.org"
 
 gemspec
 
+gem "logger"
 gem "lutaml-model", "~> 0.8.0"
 gem "pdfrb", github: "claricle/pdfrb", ref: "629c72a"
 gem "rake"
