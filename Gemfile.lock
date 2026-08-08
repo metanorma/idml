@@ -1,17 +1,19 @@
+GIT
+  remote: https://github.com/claricle/pdfrb.git
+  revision: 629c72a74720f91cd2de7b1967869f0f63dbc80a
+  ref: 629c72a
+  specs:
+    pdfrb (0.6.0)
+      thor
+
 PATH
   remote: .
   specs:
     idml (0.6.1)
       bigdecimal
       lutaml-model (~> 0.8.18)
-      pdfrb
+      pdfrb (~> 0.6)
       rubyzip
-      thor
-
-PATH
-  remote: /Users/mulgogi/src/claricle/pdfrb
-  specs:
-    pdfrb (0.6.0)
       thor
 
 GEM
