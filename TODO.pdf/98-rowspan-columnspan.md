@@ -1,6 +1,9 @@
 # TODO PDF 98: RowSpan / ColumnSpan (merged cells) in TableRenderer
 
-## Status: OPEN — gap identified in 2026-08-08 audit
+## Status: DONE — SchemaLayout reads cell.column_span and cell.row_span,
+multiplies width/height by the span, tracks a coverage set, and skips
+positions covered by a spanning cell. Spanning cell renders once at
+its top-left corner.
 
 ## Problem
 
