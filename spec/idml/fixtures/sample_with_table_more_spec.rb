@@ -12,6 +12,10 @@ RSpec.describe "sample-with-table-more fixture" do
   end
   let(:package) { Idml::Package.new(fixture_path) }
 
+  def document_font_resolvable?
+    Idml::Render::FontSetup.new(package: package).font_resolvable?
+  end
+
   describe "package structure" do
     it "parses without error" do
       expect(package).to be_a(Idml::Package)
@@ -216,6 +220,8 @@ RSpec.describe "sample-with-table-more fixture" do
     end
 
     it "embeds fonts as Type1/CFF with subset prefix (not TrueType)" do
+      skip "document fonts not installed" unless document_font_resolvable?
+
       Dir.mktmpdir do |dir|
         path = File.join(dir, "fonts.pdf")
         Idml::Render.render(package: package, to: path, compress: false)

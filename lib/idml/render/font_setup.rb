@@ -66,6 +66,15 @@ module Idml
         map
       end
 
+      # True if at least one non-missing font declared in the
+      # document can be located on disk. Lets callers (and tests)
+      # gate font-embedding assertions on the document's fonts
+      # actually being installed, rather than silently falling
+      # back to the default.
+      def font_resolvable?
+        !resolve_document_font_path.nil?
+      end
+
       def resource_for_family(writer, family)
         path = find_font_file(family)
         return DEFAULT_FONT unless path
