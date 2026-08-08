@@ -1,6 +1,10 @@
 # TODO PDF 99: Table column widths from ColumnAttributes
 
-## Status: OPEN — gap identified in 2026-08-08 audit
+## Status: DONE — Table now models `column_count` and
+`single_column_width`; SchemaLayout uses SingleColumnWidth when
+declared, else falls back to even division. (IDML has no separate
+ColumnAttributes element — column widths live on Table directly
+when uniform.)
 
 ## Problem
 

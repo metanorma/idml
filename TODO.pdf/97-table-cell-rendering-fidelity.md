@@ -1,6 +1,9 @@
 # TODO PDF 97: Table cell rendering — fill, stroke, insets, vertical justification
 
-## Status: OPEN — gap identified in 2026-08-08 audit
+## Status: DONE — cell fill_color renders as background; per-cell
+TextTopInset/Left/Bottom/Right honored (was hardcoded 4.0);
+VerticalJustification positions text Top/Bottom/Center; per-cell
+PSR walks typed runs with their own font/size.
 
 ## Problem
 

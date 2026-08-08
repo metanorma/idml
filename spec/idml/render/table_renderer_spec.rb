@@ -2,6 +2,12 @@
 
 require "spec_helper"
 
+TableColorResolver = Struct.new(:table, keyword_init: true) do
+  def resolve(name)
+    table[name]
+  end
+end
+
 TABLE_GRID_XML = <<~XML
   <Table Self="t1" ItemTransform="1 0 0 1 0 0">
     <Properties>
@@ -139,6 +145,91 @@ RSpec.describe Idml::Render::Renderers::TableRenderer do
       described_class.render(canvas, build_context(table))
       write_to_temp_pdf(writer, "schema-hidden") do |path|
         expect(File.binread(path)).not_to include(" re")
+      end
+    end
+
+    describe "column widths from Table#single_column_width" do
+      let(:uneven_table_xml) do
+        <<~XML
+          <Table Self="t1" ItemTransform="1 0 0 1 0 0" ColumnCount="2" SingleColumnWidth="100">
+            <Properties>
+              <PathGeometry>
+                <GeometryPathType PathOpen="false">
+                  <PathPointArray>
+                    <PathPointType Anchor="-10 -10" LeftDirection="-10 -10" RightDirection="-10 -10"/>
+                    <PathPointType Anchor="210 -10" LeftDirection="210 -10" RightDirection="210 -10"/>
+                    <PathPointType Anchor="210 110" LeftDirection="210 110" RightDirection="210 110"/>
+                    <PathPointType Anchor="-10 110" LeftDirection="-10 110" RightDirection="-10 110"/>
+                  </PathPointArray>
+                </GeometryPathType>
+              </PathGeometry>
+            </Properties>
+            <Row Self="t1Row0" Name="0" SingleRowHeight="120"/>
+            <Cell Self="t1c0" Name="0:0"/>
+            <Cell Self="t1c1" Name="1:0"/>
+          </Table>
+        XML
+      end
+
+      it "uses SingleColumnWidth instead of even division" do
+        table = table_from_xml(uneven_table_xml)
+        # box width = 220 (from -10 to 210), so even division = 110
+        # per col. SingleColumnWidth = 100 means columns are 100 wide.
+        described_class.render(canvas, build_context(table))
+        write_to_temp_pdf(writer, "schema-column-width") do |path|
+          raw = File.binread(path)
+          # The first rectangle's width should be 100, not 110.
+          # Look for "100 120 re" (width=100, height=120).
+          expect(raw).to match(/100\s+120\s+re\b/)
+        end
+      end
+    end
+
+    describe "cell background fill" do
+      let(:filled_table_xml) do
+        <<~XML
+          <Table Self="t1" ItemTransform="1 0 0 1 0 0">
+            <Properties>
+              <PathGeometry>
+                <GeometryPathType PathOpen="false">
+                  <PathPointArray>
+                    <PathPointType Anchor="-10 -10" LeftDirection="-10 -10" RightDirection="-10 -10"/>
+                    <PathPointType Anchor="110 -10" LeftDirection="110 -10" RightDirection="110 -10"/>
+                    <PathPointType Anchor="110 110" LeftDirection="110 110" RightDirection="110 110"/>
+                    <PathPointType Anchor="-10 110" LeftDirection="-10 110" RightDirection="-10 110"/>
+                  </PathPointArray>
+                </GeometryPathType>
+              </PathGeometry>
+            </Properties>
+            <Row Self="t1Row0" Name="0" SingleRowHeight="120"/>
+            <Cell Self="t1c0" Name="0:0" FillColor="Color/Red"/>
+          </Table>
+        XML
+      end
+
+      let(:color_resolver) do
+        TableColorResolver.new(
+          table: { "Color/Red" => { model: :rgb, r: 1, g: 0, b: 0 } },
+        )
+      end
+
+      def build_context_with_color(table)
+        Idml::Render::RenderContext.new(
+          item: table,
+          package: nil,
+          color_resolver: color_resolver,
+          page_height: 400,
+        )
+      end
+
+      it "emits a fill rectangle before the stroke" do
+        table = table_from_xml(filled_table_xml)
+        described_class.render(canvas, build_context_with_color(table))
+        write_to_temp_pdf(writer, "schema-cell-fill") do |path|
+          raw = File.binread(path)
+          # RGB fill op for red.
+          expect(raw).to match(/1\s+0\s+0\s+rg\b/)
+        end
       end
     end
   end
