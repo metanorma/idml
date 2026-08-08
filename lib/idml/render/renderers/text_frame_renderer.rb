@@ -210,23 +210,39 @@ module Idml
             first_line_indent: first_line_indent,
             left_indent: left_indent,
           )
-          0 # only on the paragraph's first line
 
           bottom_limit = TextEngine::VerticalLayout.bottom_limit(layout_frame)
           positioned.each do |line|
             break if line.y < bottom_limit
 
-            canvas.text(
-              line_text(line),
-              at: [line.x, line.y],
-              font: font_for_run(run, context),
-              size: size,
-            )
+            emit_line(canvas, line, run, context, size)
             record_position(context, line, size, char_cursor)
           end
           [positioned, next_y]
         end
         private_class_method :layout_run
+
+        # Emits one positioned line: applies character-level styling
+        # (fill color, capitalization, position) via CharacterStyle,
+        # then draws underline/strike-through rules after the text.
+        def self.emit_line(canvas, line, run, context, size)
+          text = CharacterStyle.transform_text(line_text(line),
+                                               run.capitalization)
+          scaled_size, baseline_offset = CharacterStyle.position_scale(
+            run.position, size
+          )
+          CharacterStyle.apply(canvas, run, context,
+                               x: line.x, y: line.y + baseline_offset,
+                               width: line.width, size: scaled_size) do
+            canvas.text(
+              text,
+              at: [line.x, line.y + baseline_offset],
+              font: font_for_run(run, context),
+              size: scaled_size,
+            )
+          end
+        end
+        private_class_method :emit_line
 
         def self.leading_for(paragraph, size)
           explicit = paragraph.auto_leading

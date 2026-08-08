@@ -1,6 +1,16 @@
 # TODO PDF 100: Character-level styling (underline, strikethrough, caps, color)
 
-## Status: OPEN — gap identified in 2026-08-08 audit
+## Status: DONE — new `Render::CharacterStyle` helper applies
+per-run fill color, draws underline / strike-through rules, and
+handles Capitalization (AllCaps/SmallCaps → uppercase) and Position
+(Superscript/Subscript → shrunk font + baseline offset).
+TextFrameRenderer.emit_line wraps canvas.text via CharacterStyle.
+StyledRun extended with underline_offset/weight, strike_through_offset/weight
+attrs from CSR.
+
+Open follow-ups (lower priority): glyph horizontal/vertical scaling
+(needs pdfrb text-matrix support), tracking (needs Shaper-level
+width adjustment), text stroke outline.
 
 ## Problem
 
