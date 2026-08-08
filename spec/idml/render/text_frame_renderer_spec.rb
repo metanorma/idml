@@ -34,10 +34,10 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   it "renders nothing when frame has no parent_story" do
     frame = Idml::Elements::TextFrame.from_xml('<TextFrame Self="t1"/>')
     described_class.render(canvas, build_context(frame))
-    path = Tempfile.new("tf-empty").path
-    writer.write(path)
-    raw = File.binread(path)
-    expect(raw).not_to include("BT")
+    write_to_temp_pdf(writer, "tf-empty") do |path|
+      raw = File.binread(path)
+      expect(raw).not_to include("BT")
+    end
   end
 
   it "skips frames that are not the chain head" do
@@ -45,10 +45,10 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
       '<TextFrame Self="t1" ParentStory="s1" PreviousTextFrame="prev1"/>',
     )
     described_class.render(canvas, build_context(frame))
-    path = Tempfile.new("tf-chained").path
-    writer.write(path)
-    raw = File.binread(path)
-    expect(raw).not_to include("BT")
+    write_to_temp_pdf(writer, "tf-chained") do |path|
+      raw = File.binread(path)
+      expect(raw).not_to include("BT")
+    end
   end
 
   it "emits a BT/ET block when story resolves" do
@@ -56,11 +56,11 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     skip "fixture has no text frame" unless frame
 
     described_class.render(canvas, build_context(frame))
-    path = Tempfile.new("tf-text").path
-    writer.write(path)
-    raw = File.binread(path)
-    expect(raw).to include("BT")
-    expect(raw).to include("ET")
+    write_to_temp_pdf(writer, "tf-text") do |path|
+      raw = File.binread(path)
+      expect(raw).to include("BT")
+      expect(raw).to include("ET")
+    end
   end
 end
 # rubocop:enable RSpec/SpecFilePathFormat

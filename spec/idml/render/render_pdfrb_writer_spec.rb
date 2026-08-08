@@ -120,11 +120,11 @@ RSpec.describe Idml::Render do
       canvas.text("Hello", at: [50, 350], font: font, size: 12)
       writer.subset_fonts!
 
-      path = Tempfile.new("writer-subset").path
-      writer.write(path)
-      raw = File.binread(path)
-      expect(raw).to start_with("%PDF")
-      expect(raw.strip).to end_with("%%EOF")
+      write_to_temp_pdf(writer, "writer-subset") do |path|
+        raw = File.binread(path)
+        expect(raw).to start_with("%PDF")
+        expect(raw.strip).to end_with("%%EOF")
+      end
     end
   end
 end

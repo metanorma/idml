@@ -55,31 +55,31 @@ RSpec.describe Idml::Render::PdfaPacket do
     it "registers a /Metadata stream on the Catalog" do
       writer.add_page
       described_class.attach(writer.document, Title: "Doc")
-      path = Tempfile.new("pdfa").path
-      writer.write(path)
-      raw = File.binread(path)
-      expect(raw).to include("/Metadata")
-      expect(raw).to include("/Subtype /XML")
-      expect(raw).to include("pdfaid:part")
+      write_to_temp_pdf(writer, "pdfa") do |path|
+        raw = File.binread(path)
+        expect(raw).to include("/Metadata")
+        expect(raw).to include("/Subtype /XML")
+        expect(raw).to include("pdfaid:part")
+      end
     end
 
     it "sets /Lang on the Catalog" do
       writer.add_page
       described_class.attach(writer.document, {})
-      path = Tempfile.new("pdfa-lang").path
-      writer.write(path)
-      raw = File.binread(path)
-      expect(raw).to match(%r{/Lang\s*/?en-?US}i).or include("/Lang")
+      write_to_temp_pdf(writer, "pdfa-lang") do |path|
+        raw = File.binread(path)
+        expect(raw).to match(%r{/Lang\s*/?en-?US}i).or include("/Lang")
+      end
     end
 
     it "is idempotent — second call replaces the first /Metadata" do
       writer.add_page
       described_class.attach(writer.document, Title: "First")
       described_class.attach(writer.document, Title: "Second")
-      path = Tempfile.new("pdfa-idempotent").path
-      writer.write(path)
-      raw = File.binread(path)
-      expect(raw).to include("Second")
+      write_to_temp_pdf(writer, "pdfa-idempotent") do |path|
+        raw = File.binread(path)
+        expect(raw).to include("Second")
+      end
     end
   end
 end
