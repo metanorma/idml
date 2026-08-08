@@ -2,63 +2,68 @@
 
 module Idml
   module TextEngine
-    # A glyph with absolute (x, y) position, ready for rendering.
-    PositionedGlyph = Struct.new(:codepoint, :x, :y, :font_size)
+    # Geometry of a text frame as seen by the layout engine: outer
+    # bounds plus the four inset margins. Inset values are nil when
+    # the TextFramePreference doesn't declare them.
+    Frame = Struct.new(
+      :x, :y, :width, :height,
+      :inset_top, :inset_bottom, :inset_left, :inset_right,
+      keyword_init: true
+    )
 
-    # Positions justified lines vertically within a text frame.
-    # Applies leading, paragraph spacing, first-line indent, and
-    # left/right insets.
+    # A line that's been positioned absolutely within a frame.
+    # `glyphs` is the original ShapedGlyph array (carrying widths);
+    # `x`, `y` is the left edge / baseline; `width` is the line's
+    # natural width after justification.
+    PositionedLine = Struct.new(:glyphs, :x, :y, :width, keyword_init: true)
+
+    # Positions lines vertically within a text frame. The layout is
+    # block-oriented: each call to `layout_block` returns the
+    # positioned lines for one block (paragraph, run, etc.) and the
+    # y cursor for the next block, so callers can stack paragraphs
+    # without re-deriving cursor math.
     class VerticalLayout
-      Frame = Struct.new(:x, :y, :width, :height,
-                         :inset_top, :inset_bottom,
-                         :inset_left, :inset_right)
+      DEFAULT_LEADING_FACTOR = 1.2
 
-      def self.layout(lines:, frame:, font_size:,
-                      leading: nil, space_before: 0, space_after: 0,
-                      first_line_indent: 0, left_indent: 0)
-        new(frame, font_size, leading, space_before, space_after,
-            first_line_indent, left_indent).layout(lines)
-      end
+      # Position `lines` starting at `cursor_y` and walking downward.
+      # `cursor_y` is the top of the available space; the first line
+      # sits one `leading` below it. Returns `[positioned_lines, next_y]`
+      # where `next_y` is where the next block should start (i.e. below
+      # this block's last line plus `space_after`).
+      def self.layout_block(lines:, frame:, font_size:, cursor_y:, leading: nil, space_before: 0, space_after: 0,
+                            first_line_indent: 0, left_indent: 0)
+        effective_leading = leading || (font_size * DEFAULT_LEADING_FACTOR)
+        y = cursor_y - space_before
+        positioned = []
 
-      def initialize(frame, font_size, leading, space_before,
-                     space_after, first_line_indent, left_indent)
-        @frame = frame
-        @font_size = font_size
-        @leading = leading || (font_size * 1.2)
-        @space_before = space_before
-        @space_after = space_after
-        @first_line_indent = first_line_indent
-        @left_indent = left_indent
-      end
-
-      def layout(lines)
-        result = []
-        y = top_y - @space_before
         lines.each_with_index do |line, idx|
-          y -= @leading
-          x = frame_left + (idx.zero? ? @first_line_indent : @left_indent)
-          x += line.x_offset.to_f
-          current_x = x
-          line.glyphs.each do |glyph|
-            result << PositionedGlyph.new(glyph.codepoint,
-                                          current_x,
-                                          y,
-                                          @font_size)
-            current_x += glyph.width
-          end
+          y -= effective_leading
+          x = frame_left(frame) + left_indent +
+            (idx.zero? ? first_line_indent : 0) + line.x_offset.to_f
+          positioned << PositionedLine.new(
+            glyphs: line.glyphs, x: x, y: y, width: line.width,
+          )
         end
-        result
+
+        [positioned, y - space_after]
       end
 
-      private
-
-      def top_y
-        @frame.y - (@frame.inset_top || 0)
+      # Bottom y of the frame's text area (frame bottom edge + bottom
+      # inset). Lines whose y falls below this are clipped.
+      def self.bottom_limit(frame)
+        frame.y + (frame.inset_bottom || 0)
       end
 
-      def frame_left
-        @frame.x + (@frame.inset_left || 0)
+      # Effective wrap width after subtracting insets and indents.
+      def self.wrap_width(frame, right_indent = 0)
+        width = frame.width - (frame.inset_left || 0) - (frame.inset_right || 0)
+        width - right_indent
       end
+
+      def self.frame_left(frame)
+        frame.x + (frame.inset_left || 0)
+      end
+      private_class_method :frame_left
     end
   end
 end

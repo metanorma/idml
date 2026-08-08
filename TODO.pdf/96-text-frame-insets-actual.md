@@ -1,6 +1,8 @@
 # TODO PDF 96: TextFramePreference insets honored in layout
 
-## Status: OPEN — gap identified in 2026-08-08 audit
+## Status: DONE — layout_frame helper reads TextFramePreference
+insets and passes them to the Frame struct; VerticalLayout honors
+them in positioning and wrap_width.
 
 ## Problem
 

@@ -1,6 +1,10 @@
 # TODO PDF 94: TextFrameRenderer should delegate to VerticalLayout
 
-## Status: OPEN — gap identified in 2026-08-08 audit
+## Status: DONE — VerticalLayout refactored to block-style API
+(`layout_block` returns positioned lines + next cursor y);
+TextFrameRenderer now uses StyleResolver.extract_paragraphs +
+VerticalLayout.layout_block for proper vertical stacking across
+paragraphs and runs.
 
 ## Problem
 
