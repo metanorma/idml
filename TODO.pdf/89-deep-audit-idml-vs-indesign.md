@@ -1,18 +1,28 @@
 # TODO PDF 89: Deep audit — idml-generated PDF vs InDesign PDF
 
-## Status: PARTIAL — font + lossless compression fixed; no downsampling
+## Status: COMPLETE — all fixable gaps closed; remaining gap is no-data-loss constraint
 
 ## TL;DR
 
-**No** — the generated PDF is still not byte-identical to InDesign's
-output. Two of three substantive gaps closed without data loss:
+**No** — the generated PDF is not byte-identical to InDesign's output.
+This is by design: the user requirement is **no data loss**. InDesign's
+100KB output downsamples the 1.94MB source image to ~12KB; we preserve
+the image at full resolution. All other gaps (font selection, font
+embedding type, subset prefix, xref compliance, Info dict, lossless
+compression) are now closed.
 
-1. **Font selection (closed, v0.5.0)** — FontSetup now prefers the
-   family's Regular/Normal/Book/Roman variant over first-in-family.
-   Sample-with-table-more now embeds `MinionPro-Regular` (matching
-   InDesign).
-2. **Lossless FlateDecode compression (closed, v0.5.1)** — pdfrb
-   writes FlateDecode-compressed content streams, XRef streams, and
+Closed gaps (v0.5.0–v0.5.4):
+1. Font selection — Regular weight preferred over first-in-family.
+2. Font embedding via IO (not string path) — properly embeds as CFF.
+3. Font type — Type1/CFF (not TrueType), matching InDesign.
+4. Font subset prefix — 6-char uppercase tag (not FileFont-).
+5. xref compliance — 20-byte entries (pdfrb 0.6.0 fix).
+6. Info dict — no spurious /Type/Metadata.
+7. Lossless FlateDecode compression — opt-in via --compress.
+
+Remaining gap (cannot close without data loss):
+- File size: 2.1MB vs 100KB. The 1.94MB embedded JPEG is preserved
+  at source resolution per the no-data-loss requirement.
    object streams when `compress: true`. Saves ~96KB (4%) on the
    sample-with-table-more fixture without any data loss.
 3. **Image downsampling** — **not pursued**. The user requirement is
