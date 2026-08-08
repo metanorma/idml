@@ -4,9 +4,8 @@ module Idml
   module Render
     module Renderers
       # Renders an IDML Table. Draws the cell grid via rectangle
-      # ops, then renders inline text in each cell via
-      # `canvas.text_rich`. Cells with no text render as empty
-      # rectangles.
+      # ops, then renders inline text in each cell. Cells with no
+      # text render as empty rectangles.
       #
       # Two table layouts are supported:
       #
@@ -19,9 +18,20 @@ module Idml
       #      `table_cell` collection. Nested structure.
       #
       # The renderer auto-detects which layout is present.
+      #
+      # Honors per-cell:
+      # - `fill_color` / `fill_tint` — background fill before stroke.
+      # - `top_inset` / `left_inset` / `bottom_inset` / `right_inset`
+      #   — text insets (replaces fixed `INSET = 4.0`).
+      # - `vertical_justification` — Top / Center / Bottom / Justify.
+      # - `paragraph_style_range` → typed runs (per-run font + size).
+      #
+      # Honors per-table:
+      # - `single_column_width` — overrides the even-division default
+      #   for column widths.
       class TableRenderer
         DEFAULT_SIZE = 10.0
-        INSET = 4.0
+        DEFAULT_INSET = 4.0
 
         def self.render(canvas, context)
           table = context.item
@@ -57,16 +67,41 @@ module Idml
 
         # Real IDML: Table > {Cell, Row} siblings. Cell Name is
         # "col:row". Row count from `row` collection; column count
-        # derived from max col + 1 across cells.
+        # derived from `column_count` attribute or max col + 1.
         def self.render_schema_faithful(canvas, table, box, context)
           layout = SchemaLayout.new(table: table, box: box)
           layout.each_cell do |cell_x, cell_y, cell_w, cell_h, cell|
-            canvas.rectangle(cell_x, cell_y, cell_w, cell_h)
-            canvas.stroke
+            render_cell_background(canvas, cell, cell_x, cell_y, cell_w, cell_h,
+                                   context)
+            render_cell_border(canvas, cell_x, cell_y, cell_w, cell_h)
             render_cell_text(canvas, cell, cell_x, cell_y, cell_h, context)
           end
         end
         private_class_method :render_schema_faithful
+
+        def self.render_cell_background(canvas, cell, x, y, w, h, context)
+          color = cell_fill_color(cell, context)
+          return unless color
+
+          canvas.fill_color(ColorHelper.to_canvas(color))
+          canvas.rectangle(x, y, w, h)
+          canvas.fill
+        end
+        private_class_method :render_cell_background
+
+        def self.render_cell_border(canvas, x, y, w, h)
+          canvas.rectangle(x, y, w, h)
+          canvas.stroke
+        end
+        private_class_method :render_cell_border
+
+        def self.cell_fill_color(cell, context)
+          return nil unless cell.fill_color
+          return nil if cell.fill_color == "Color/None"
+
+          context.color_resolver&.resolve(cell.fill_color)
+        end
+        private_class_method :cell_fill_color
 
         # Legacy: Table > TableRow > TableCell nested.
         def self.render_legacy(canvas, table, box, context)
@@ -93,24 +128,100 @@ module Idml
         private_class_method :render_legacy
 
         def self.render_cell_text(canvas, cell, x, y, height, context)
-          text = cell.text_content
-          return if text.nil? || text.empty?
+          runs = cell_text_runs(cell, context)
+          return if runs.empty?
 
-          runs = [{
+          insets = cell_insets(cell)
+          baseline = vertical_baseline(y, height, insets, cell)
+          canvas.text_rich(runs, at: [x + insets[:left], baseline])
+        end
+        private_class_method :render_cell_text
+
+        # Builds pdfrb runs from the cell's typed PSR/CSR children.
+        # Walks ParagraphStyleRange → CharacterStyleRange → Content
+        # so each run carries its own font + size (per-cell CSR
+        # styling). Falls back to a single DEFAULT_SIZE run when
+        # the cell has no typed paragraphs (legacy TableCell).
+        def self.cell_text_runs(cell, context)
+          psr = typed_paragraphs(cell)
+          return default_text_runs(cell, context) if psr.empty?
+
+          psr.flat_map { |paragraph| paragraph_runs(paragraph, context) }
+        end
+        private_class_method :cell_text_runs
+
+        def self.paragraph_runs(paragraph, context)
+          paragraph.character_style_range.filter_map do |csr|
+            text = csr.text_content
+            next if text.nil? || text.empty?
+
+            {
+              text: text,
+              font: context.font_ps_name,
+              size: csr.point_size || DEFAULT_SIZE,
+            }
+          end
+        end
+        private_class_method :paragraph_runs
+
+        # Real IDML `Cell` exposes paragraph_style_range; the legacy
+        # `TableCell` (synthetic fixture only) doesn't, so we treat
+        # it as having no typed paragraphs and fall through to the
+        # default_text_runs path.
+        def self.typed_paragraphs(cell)
+          return [] unless cell.is_a?(Idml::Elements::Cell)
+
+          cell.paragraph_style_range
+        end
+        private_class_method :typed_paragraphs
+
+        def self.default_text_runs(cell, context)
+          text = cell.text_content
+          return [] if text.nil? || text.empty?
+
+          [{
             text: text,
             font: context.font_ps_name,
             size: DEFAULT_SIZE,
           }]
-          baseline = y + (height / 2)
-          canvas.text_rich(runs, at: [x + INSET, baseline])
         end
-        private_class_method :render_cell_text
+        private_class_method :default_text_runs
+
+        # Cell insets: prefer typed TextTopInset/Left/Bottom/Right,
+        # fall back to DEFAULT_INSET for any that are missing.
+        def self.cell_insets(cell)
+          {
+            top: cell.top_inset || DEFAULT_INSET,
+            bottom: cell.bottom_inset || DEFAULT_INSET,
+            left: cell.left_inset || DEFAULT_INSET,
+            right: cell.right_inset || DEFAULT_INSET,
+          }
+        end
+        private_class_method :cell_insets
+
+        # Vertical baseline for the cell's first text line, per the
+        # cell's VerticalJustification. IDML values: TopAlign,
+        # CenterAlign, BottomAlign, JustifyAlign. Default: CenterAlign
+        # (legacy behavior).
+        def self.vertical_baseline(y, height, insets, cell)
+          case cell.vertical_justification
+          when "TopAlign"
+            y + height - insets[:top]
+          when "BottomAlign"
+            y + insets[:bottom]
+          else # CenterAlign, JustifyAlign, nil
+            y + (height / 2)
+          end
+        end
+        private_class_method :vertical_baseline
 
         # Computes per-cell rects for the schema-faithful layout.
         # Row heights come from `Row#single_row_height` when present,
         # else fall back to evenly-divided table height. Column
-        # widths are evenly divided (precise column widths would
-        # require ColumnAttributes lookup, deferred).
+        # widths come from `Table#single_column_width` when present
+        # (uniform columns only — per-column widths would require
+        # ColumnAttributes, which IDML doesn't model separately),
+        # else divide evenly.
         SchemaLayout = Struct.new(:table, :box, keyword_init: true) do
           def each_cell
             row_count.times do |row_idx|
@@ -130,9 +241,14 @@ module Idml
 
           def col_count
             @col_count ||= begin
-              max_col = cells.filter_map(&:col_row).map(&:first).max || 0
-              max_col + 1
+              declared = table.column_count
+              declared&.positive? ? declared : derived_col_count
             end
+          end
+
+          def derived_col_count
+            max_col = cells.filter_map(&:col_row).map(&:first).max || 0
+            max_col + 1
           end
 
           def rows
@@ -156,7 +272,15 @@ module Idml
           end
 
           def cell_w
-            box[:width] / [col_count, 1].max
+            return @cell_w if @cell_w
+
+            declared = table.single_column_width
+            per_col = if declared&.positive?
+                        declared
+                      else
+                        box[:width] / [col_count, 1].max
+                      end
+            @cell_w = per_col
           end
 
           def cell_h(row_idx)

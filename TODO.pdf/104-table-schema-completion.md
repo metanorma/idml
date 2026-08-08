@@ -1,6 +1,11 @@
 # TODO PDF 104: Schema-faithful Table model completion
 
-## Status: OPEN — gap identified in 2026-08-08 audit
+## Status: PARTIAL — added the rendering-relevant subset (column_count,
+single_column_width, header/body/footer row counts, table_direction,
+outer-border strokes). The remaining ~150 schema attributes (alternating
+stroke rows, column rules, table-flavor bits) aren't needed for
+rendering and would be pure model bloat. Add incrementally as use
+cases demand.
 
 ## Problem
 

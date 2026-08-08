@@ -1,6 +1,9 @@
 # TODO PDF 105: Whole-package round-trip suite (byte-equivalent)
 
-## Status: OPEN — gap identified in 2026-08-08 audit
+## Status: DONE — `spec/idml/round_trip_all_fixtures_spec.rb` already
+runs byte-equivalent round-trip for every fixture .idml (28 examples,
+all passing). `spec/idml/package_spec.rb:140` verifies the mimetype
+entry is stored and first.
 
 ## Problem
 
