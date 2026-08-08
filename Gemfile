@@ -5,7 +5,7 @@ source "https://rubygems.org"
 gemspec
 
 gem "lutaml-model", "~> 0.8.0"
-gem "pdfrb", path: "/Users/mulgogi/src/claricle/pdfrb"
+gem "pdfrb", github: "claricle/pdfrb", ref: "629c72a"
 gem "rake"
 gem "rspec"
 gem "rubocop"
