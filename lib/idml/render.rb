@@ -2,16 +2,6 @@
 
 require "pdfrb"
 
-# pdfrb 0.6.0 autoloads OptContentUsage from opt_content_ext.rb but
-# that file doesn't define it, causing eager_load! to crash.
-# Trigger the autoload (catching the failure) then define a stub.
-begin
-  Pdfrb::Model::Type::OptContentUsage
-rescue NameError
-  Pdfrb::Model::Type.const_set(:OptContentUsage,
-                               Class.new(Pdfrb::Model::Cos::Dictionary))
-end
-
 module Idml
   module Render
     autoload :ColorHelper,         "#{__dir__}/render/color_helper"
