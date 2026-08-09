@@ -31,7 +31,8 @@ RSpec.describe Idml::Parts::Designmap do
         transparency_attribute_default_property applied_math_ml_font_size
         applied_math_ml_rgb_color tint_value prefer_math_ml_in_epub_export
         active_process layer
-        bookmark hyperlink hyperlink_page_destination hyperlink_url_destination
+        bookmark condition
+        hyperlink hyperlink_page_destination hyperlink_url_destination
       ].each(&:to_s)
       expect(described_class.attributes.keys).to match_array(expected)
     end

@@ -1,6 +1,12 @@
 # TODO PDF 110: Conditional text (AppliedConditions)
 
-## Status: OPEN — gap identified in 2026-08-09 audit
+## Status: DONE — `Elements::Condition` models the `<Condition>`
+element from designmap.rnc. `Render::ConditionFilter` indexes
+conditions by Self and answers `visible?(applied_conditions_string)`
+per run. `StyleResolver.extract_paragraphs` takes optional
+`condition_filter:` kwarg and drops PSRs/CSRs whose AppliedConditions
+reference a hidden Condition. Pipeline constructs the filter from
+`designmap.condition` and threads it through RenderContext.
 
 ## Problem
 

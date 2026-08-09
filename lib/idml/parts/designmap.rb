@@ -48,6 +48,7 @@ module Idml
 
       attribute :layer, Idml::Elements::Layer, collection: true
       attribute :bookmark, Idml::Elements::Bookmark, collection: true
+      attribute :condition, Idml::Elements::Condition, collection: true
       attribute :hyperlink, Idml::Elements::Hyperlink, collection: true
       attribute :hyperlink_page_destination,
                 Idml::Elements::HyperlinkPageDestination, collection: true
@@ -92,6 +93,7 @@ module Idml
         map_attribute "ActiveProcess", to: :active_process
         map_element "Layer", to: :layer
         map_element "Bookmark", to: :bookmark
+        map_element "Condition", to: :condition
         map_element "Hyperlink", to: :hyperlink
         map_element "HyperlinkPageDestination",
                     to: :hyperlink_page_destination

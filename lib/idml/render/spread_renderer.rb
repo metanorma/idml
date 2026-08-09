@@ -7,7 +7,8 @@ module Idml
       def initialize(font_metrics: nil, font_ps_name: Render::DEFAULT_FONT,
                      package: nil, layer_filter: LayerFilter::EXCLUDE_NONE,
                      font_ref_resolver: nil, structure: nil,
-                     position_tracker: nil, font_map: {})
+                     position_tracker: nil, font_map: {},
+                     condition_filter: nil)
         @font_metrics = font_metrics
         @font_ps_name = font_ps_name
         @package = package
@@ -16,6 +17,7 @@ module Idml
         @structure = structure
         @position_tracker = position_tracker
         @font_map = font_map
+        @condition_filter = condition_filter
       end
 
       def render(canvas, spread, page_width:, page_height:, image_refs: [],
@@ -34,6 +36,7 @@ module Idml
           page_index: page_index,
           position_tracker: @position_tracker,
           chain_controller: StoryChainController.new,
+          condition_filter: @condition_filter,
         }
 
         canvas.save_graphics_state do

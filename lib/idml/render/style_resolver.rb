@@ -104,11 +104,13 @@ module Idml
       # its runs and carries the paragraph-level attributes from the
       # owning PSR. Empty paragraphs (no runs after filtering) are
       # skipped.
-      def self.extract_paragraphs(story)
+      def self.extract_paragraphs(story, condition_filter: nil)
         return [] unless story&.inner
 
         story.inner.paragraph_style_range.filter_map do |psr|
-          runs = csr_runs(psr)
+          next unless condition_visible?(psr, condition_filter)
+
+          runs = csr_runs(psr, condition_filter: condition_filter)
           next if runs.empty?
 
           Paragraph.new(
@@ -140,8 +142,10 @@ module Idml
         end
       end
 
-      def self.csr_runs(psr)
+      def self.csr_runs(psr, condition_filter: nil)
         psr.character_style_range.filter_map do |csr|
+          next unless condition_visible?(csr, condition_filter)
+
           text = csr.text_content
           next if text.nil? || text.empty?
 
@@ -169,6 +173,16 @@ module Idml
         end
       end
       private_class_method :csr_runs
+
+      # Drops the PSR/CSR when any of its AppliedConditions
+      # references a hidden Condition. Returns true when no filter
+      # is supplied (caller doesn't care about conditions).
+      def self.condition_visible?(psr_or_csr, condition_filter)
+        return true unless condition_filter
+
+        condition_filter.visible?(psr_or_csr.applied_conditions)
+      end
+      private_class_method :condition_visible?
 
       def self.alignment_for(csr)
         ALIGNMENT_MAP[csr.justification] || :left
