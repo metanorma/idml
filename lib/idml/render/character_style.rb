@@ -20,12 +20,51 @@ module Idml
       # Yields with the run's fill color applied, then draws underline
       # and/or strike-through rules above/below the text baseline.
       # `x`, `y`, `width`, `size` describe the line's geometry so the
-      # rules can be positioned correctly.
+      # rules can be positioned correctly. The block's emitted text
+      # gets the run's character-level adjustments baked in via
+      # `text_kwargs` (caller passes the canvas.text kwargs in, and
+      # CharacterStyle adds tracking/scale on top).
       def self.apply(canvas, run, context, x:, y:, width:, size:)
         apply_fill_color(canvas, run, context)
         yield
         draw_underline(canvas, run, x, y, width, size)
         draw_strike_through(canvas, run, x, y, width, size)
+      end
+
+      # Returns the canvas.text kwargs augmented with the run's
+      # Tracking (PDF char_spacing). IDML Tracking is in points;
+      # pdfrb's char_spacing is also in text-space units, so the
+      # mapping is 1:1.
+      def self.text_kwargs(run, base_kwargs)
+        return base_kwargs unless run.tracking
+
+        base_kwargs.merge(char_spacing: run.tracking.to_f)
+      end
+
+      # Yields within a transformed coordinate space when the run
+      # declares glyph scaling. IDML HorizontalScale/VerticalScale
+      # are percentages (100 = no scaling). When both are 100 / nil,
+      # yields without transformation (no graphics-state push).
+      def self.with_glyph_scaling(canvas, run, &)
+        sx = scale_factor(run.horizontal_scale)
+        sy = scale_factor(run.vertical_scale)
+        return yield if scaling_identity?(sx, sy)
+
+        canvas.scale(sx, sy, &)
+      end
+
+      def self.scaling_identity?(sx, sy)
+        (sx - 1.0).abs < FLOAT_EPSILON && (sy - 1.0).abs < FLOAT_EPSILON
+      end
+
+      FLOAT_EPSILON = 1e-9
+      private_constant :FLOAT_EPSILON
+
+      # Returns the run's baseline shift (in PDF units). Positive
+      # values shift up; negative shift down. Used to offset the
+      # text's `at: y` for CSR's BaselineShift.
+      def self.baseline_offset(run)
+        run.baseline_shift&.nonzero? ? run.baseline_shift.to_f : 0.0
       end
 
       # Transforms the text per the CSR's Capitalization attribute.
@@ -55,9 +94,38 @@ module Idml
         color = context.color_resolver&.resolve(run.fill_color)
         return unless color
 
-        canvas.fill_color(ColorHelper.to_canvas(color))
+        tinted = apply_tint(color, run.fill_tint)
+        canvas.fill_color(ColorHelper.to_canvas(tinted))
       end
       private_class_method :apply_fill_color
+
+      # Scales a resolved color's components by `tint` (1.0 = full
+      # strength, 0.5 = half). Tint is the IDML mechanism for
+      # lightening a color without defining a new one.
+      def self.apply_tint(color, tint)
+        return color unless tint
+        return color if tint >= 1.0
+
+        case color[:model]
+        when :rgb
+          { model: :rgb, r: color[:r] * tint, g: color[:g] * tint,
+            b: color[:b] * tint }
+        when :cmyk
+          { model: :cmyk, c: color[:c] * tint, m: color[:m] * tint,
+            y: color[:y] * tint, k: color[:k] * tint }
+        else
+          color
+        end
+      end
+      private_class_method :apply_tint
+
+      def self.scale_factor(declared)
+        return 1.0 unless declared
+        return 1.0 if declared <= 0
+
+        declared.to_f / 100.0
+      end
+      private_class_method :scale_factor
 
       def self.draw_underline(canvas, run, x, y, width, size)
         return unless run.underline
