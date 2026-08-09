@@ -246,23 +246,32 @@ module Idml
         private_class_method :layout_run
 
         # Emits one positioned line: applies character-level styling
-        # (fill color, capitalization, position) via CharacterStyle,
-        # then draws underline/strike-through rules after the text.
+        # (fill color + tint, capitalization, position, tracking,
+        # glyph scaling, baseline shift) via CharacterStyle, then
+        # draws underline/strike-through rules after the text.
         def self.emit_line(canvas, line, run, context, size)
           text = CharacterStyle.transform_text(line_text(line),
                                                run.capitalization)
-          scaled_size, baseline_offset = CharacterStyle.position_scale(
+          scaled_size, position_offset = CharacterStyle.position_scale(
             run.position, size
+          )
+          baseline_offset = CharacterStyle.baseline_offset(run) +
+            position_offset
+          text_at = [line.x, line.y + baseline_offset]
+          text_kwargs = CharacterStyle.text_kwargs(
+            run,
+            {
+              at: text_at,
+              font: font_for_run(run, context),
+              size: scaled_size,
+            },
           )
           CharacterStyle.apply(canvas, run, context,
                                x: line.x, y: line.y + baseline_offset,
                                width: line.width, size: scaled_size) do
-            canvas.text(
-              text,
-              at: [line.x, line.y + baseline_offset],
-              font: font_for_run(run, context),
-              size: scaled_size,
-            )
+            CharacterStyle.with_glyph_scaling(canvas, run) do
+              canvas.text(text, **text_kwargs)
+            end
           end
         end
         private_class_method :emit_line

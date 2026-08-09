@@ -37,6 +37,55 @@ RSpec.describe Idml::Render::CharacterStyle do
     end
   end
 
+  describe ".text_kwargs" do
+    let(:base) { { at: [10, 20], font: "F1", size: 12 } }
+
+    it "returns base kwargs unchanged when run has no tracking" do
+      run = Idml::Render::StyleResolver::StyledRun.new(text: "x")
+      expect(described_class.text_kwargs(run, base)).to eq(base)
+    end
+
+    it "adds char_spacing when run has tracking" do
+      run = Idml::Render::StyleResolver::StyledRun.new(text: "x",
+                                                       tracking: 35.0)
+      result = described_class.text_kwargs(run, base)
+      expect(result[:char_spacing]).to eq(35.0)
+    end
+  end
+
+  describe ".baseline_offset" do
+    it "returns 0 when run has no baseline_shift" do
+      run = Idml::Render::StyleResolver::StyledRun.new(text: "x")
+      expect(described_class.baseline_offset(run)).to eq(0.0)
+    end
+
+    it "returns the baseline_shift value when set" do
+      run = Idml::Render::StyleResolver::StyledRun.new(text: "x",
+                                                       baseline_shift: 5.0)
+      expect(described_class.baseline_offset(run)).to eq(5.0)
+    end
+
+    it "returns 0 when baseline_shift is 0" do
+      run = Idml::Render::StyleResolver::StyledRun.new(text: "x",
+                                                       baseline_shift: 0.0)
+      expect(described_class.baseline_offset(run)).to eq(0.0)
+    end
+  end
+
+  describe ".with_glyph_scaling" do
+    it "yields directly when both scales are nil" do
+      run = Idml::Render::StyleResolver::StyledRun.new(text: "x")
+      expect { |b| described_class.with_glyph_scaling(nil, run, &b) }.to yield_with_no_args
+    end
+
+    it "yields directly when both scales are 100" do
+      run = Idml::Render::StyleResolver::StyledRun.new(
+        text: "x", horizontal_scale: 100.0, vertical_scale: 100.0,
+      )
+      expect { |b| described_class.with_glyph_scaling(nil, run, &b) }.to yield_with_no_args
+    end
+  end
+
   describe ".apply" do
     let(:writer) { Idml::Render::PdfrbWriter.new }
     let(:canvas) { writer.add_page(width: 400, height: 400) }
