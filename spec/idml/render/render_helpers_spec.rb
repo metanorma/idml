@@ -21,6 +21,44 @@ RSpec.describe Idml::Render do
         expect(described_class.to_canvas(nil)).to be_nil
       end
     end
+
+    describe ".apply_tint" do
+      let(:red) { { model: :rgb, r: 1.0, g: 0.0, b: 0.0 } }
+      let(:cyan) { { model: :cmyk, c: 1.0, m: 0.0, y: 0.0, k: 0.0 } }
+
+      it "returns the color unchanged when tint is nil" do
+        expect(described_class.apply_tint(red, nil)).to eq(red)
+      end
+
+      it "returns the color unchanged when tint >= 1.0" do
+        expect(described_class.apply_tint(red, 1.0)).to eq(red)
+        expect(described_class.apply_tint(red, 1.5)).to eq(red)
+      end
+
+      it "scales RGB components by tint" do
+        result = described_class.apply_tint(red, 0.5)
+        expect(result).to eq(model: :rgb, r: 0.5, g: 0.0, b: 0.0)
+      end
+
+      it "scales CMYK components by tint" do
+        result = described_class.apply_tint(cyan, 0.25)
+        expect(result).to eq(model: :cmyk, c: 0.25, m: 0.0, y: 0.0, k: 0.0)
+      end
+
+      it "tint 0.0 zeroes all components" do
+        result = described_class.apply_tint(red, 0.0)
+        expect(result).to eq(model: :rgb, r: 0.0, g: 0.0, b: 0.0)
+      end
+
+      it "passes through unknown color models unchanged" do
+        weird = { model: :lab, l: 50, a: 0, b: 0 }
+        expect(described_class.apply_tint(weird, 0.5)).to eq(weird)
+      end
+
+      it "returns nil for nil input" do
+        expect(described_class.apply_tint(nil, 0.5)).to be_nil
+      end
+    end
   end
 
   describe Idml::Render::StyleResolver do

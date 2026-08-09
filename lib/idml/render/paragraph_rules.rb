@@ -117,30 +117,9 @@ module Idml
         color = context&.color_resolver&.resolve(color_name)
         return [:gray, 1.0 * tint_value] unless color
 
-        scale_color(color, tint_value)
+        ColorHelper.apply_tint(color, tint_value)
       end
       private_class_method :resolve_color
-
-      # Applies tint (opacity) to a color by scaling each component
-      # toward zero. Tint 1.0 = full strength; tint 0.5 = halved.
-      def self.scale_color(color, tint_value)
-        case color[:model]
-        when :rgb
-          { model: :rgb,
-            r: (color[:r] * tint_value),
-            g: (color[:g] * tint_value),
-            b: (color[:b] * tint_value) }
-        when :cmyk
-          { model: :cmyk,
-            c: (color[:c] * tint_value),
-            m: (color[:m] * tint_value),
-            y: (color[:y] * tint_value),
-            k: (color[:k] * tint_value) }
-        else
-          color
-        end
-      end
-      private_class_method :scale_color
     end
   end
 end
