@@ -20,6 +20,7 @@ module Idml
       :structure,
       :page_index,
       :position_tracker,
+      :chain_controller,
       keyword_init: true,
     )
   end

@@ -30,7 +30,6 @@ module Idml
         def self.render(canvas, context)
           frame = context.item
           return unless frame.parent_story
-          return unless chain_head?(frame)
 
           story = context.package&.story_by_id(frame.parent_story)
           return unless story
@@ -38,11 +37,50 @@ module Idml
           box = frame_box(frame, context.page_height)
           render_inline_tables(canvas, story, box, context)
 
-          paragraphs = StyleResolver.extract_paragraphs(story)
-          return if paragraphs.empty?
+          state = initial_chain_state(frame, story, context)
+          return unless state
 
-          render_text(canvas, paragraphs, context, box)
+          render_text(canvas, state, context, box)
+          store_chain_state(frame, state, context)
         end
+
+        # Returns the StoryChainController::State to render this frame
+        # with. For chain heads (no predecessor), this is a fresh
+        # state built from extract_paragraphs. For chain non-heads,
+        # this is the leftover state from the previous frame in the
+        # chain (nil when there's nothing left to render).
+        def self.initial_chain_state(frame, story, context)
+          controller = context.chain_controller
+          return fresh_state(story) if chain_head?(frame)
+          return nil unless controller
+
+          controller.state_for(frame.parent_story)
+        end
+        private_class_method :initial_chain_state
+
+        # Records the post-render state for the chain so the next
+        # frame in the chain picks up where this one left off. Only
+        # meaningful when a chain_controller is wired.
+        def self.store_chain_state(frame, state, context)
+          controller = context.chain_controller
+          return unless controller
+
+          controller.store_state(frame.parent_story, state)
+        end
+        private_class_method :store_chain_state
+
+        def self.fresh_state(story)
+          paragraphs = StyleResolver.extract_paragraphs(story)
+          return nil if paragraphs.empty?
+
+          StoryChainController::State.new(
+            paragraphs: paragraphs,
+            current_paragraph: nil,
+            runs_remaining: [],
+            char_cursor: 0,
+          )
+        end
+        private_class_method :fresh_state
 
         # Discovers Tables inlined in the story (Story > PSR > CSR >
         # Table — the real IDML structure) and renders each within
@@ -70,12 +108,12 @@ module Idml
         end
         private_class_method :tables_in_story
 
-        def self.render_text(canvas, paragraphs, context, box)
+        def self.render_text(canvas, state, context, box)
           font = context.font_metrics
           if font
-            engine_render(canvas, paragraphs, context, box, font)
+            engine_render(canvas, state, context, box, font)
           else
-            simple_render(canvas, paragraphs, context, box)
+            simple_render(canvas, state, context, box)
           end
         end
         private_class_method :render_text
@@ -109,56 +147,150 @@ module Idml
         end
         private_class_method :layout_frame
 
-        # Walks paragraphs and emits one `canvas.text` per line via
-        # the Shaper → LineBreaker → Justifier → VerticalLayout
-        # pipeline. Cursor y descends monotonically across
-        # paragraphs so text flows top-to-bottom (the previous
-        # implementation reset every run to the frame top).
-        def self.engine_render(canvas, paragraphs, context, box, font)
+        # Walks the chain state's paragraphs/runs and emits one
+        # `canvas.text` per line via the Shaper → LineBreaker →
+        # Justifier → VerticalLayout pipeline. Cursor y descends
+        # monotonically across paragraphs. When a paragraph partially
+        # fits, its remaining runs go back into the state for the
+        # next frame in the chain.
+        def self.engine_render(canvas, state, context, box, font)
           layout_frame = layout_frame(context.item, box)
           cursor_y = box[:y] + box[:height] - (layout_frame.inset_top || 0)
           bottom_limit = TextEngine::VerticalLayout.bottom_limit(layout_frame)
-          char_cursor = 0
+          char_cursor = state.char_cursor
 
-          paragraphs.each do |paragraph|
-            break if cursor_y < bottom_limit
-
-            cursor_y, char_cursor = render_paragraph(
-              canvas, paragraph, context, layout_frame, font,
+          if state.current_paragraph
+            cursor_y, char_cursor = resume_paragraph(
+              canvas, state, context, layout_frame, font,
               cursor_y, bottom_limit, char_cursor
             )
+            return if state.current_paragraph
           end
+
+          consume_paragraphs(canvas, state, context, layout_frame, font,
+                             cursor_y, bottom_limit, char_cursor)
         end
         private_class_method :engine_render
 
-        def self.render_paragraph(canvas, paragraph, context, layout_frame,
-                                  font, cursor_y, bottom_limit, char_cursor)
+        def self.resume_paragraph(canvas, state, context, layout_frame, font,
+                                  cursor_y, bottom_limit, char_cursor)
+          paragraph = state.current_paragraph
+          remaining_runs, cursor_y, char_cursor = render_runs_for_paragraph(
+            canvas, paragraph, state.runs_remaining, context,
+            layout_frame, font, cursor_y, bottom_limit, char_cursor,
+            first_paragraph: true
+          )
+          if remaining_runs.any?
+            state.runs_remaining = remaining_runs
+          else
+            state.current_paragraph = nil
+            state.runs_remaining = []
+          end
+          [cursor_y, char_cursor]
+        end
+        private_class_method :resume_paragraph
+
+        def self.consume_paragraphs(canvas, state, context, layout_frame, font,
+                                    cursor_y, bottom_limit, char_cursor)
+          pending = 0
+          state.paragraphs.each do |paragraph|
+            break if cursor_y < bottom_limit
+
+            remaining_runs, cursor_y, char_cursor = render_runs_for_paragraph(
+              canvas, paragraph, paragraph.runs, context,
+              layout_frame, font, cursor_y, bottom_limit, char_cursor,
+              first_paragraph: pending.zero?
+            )
+            if remaining_runs.any?
+              state.current_paragraph = paragraph
+              state.runs_remaining = remaining_runs
+              break
+            end
+            pending += 1
+          end
+
+          state.paragraphs = state.paragraphs[pending..]
+          state.char_cursor = char_cursor
+        end
+        private_class_method :consume_paragraphs
+
+        # Renders a paragraph's runs (a subset when resuming mid-para).
+        # Returns [remaining_runs, cursor_y, char_cursor] where
+        # remaining_runs is the runs that didn't fit (empty when all
+        # done). Emits RuleAbove before the first run and RuleBelow
+        # after the last successfully-rendered run.
+        def self.render_runs_for_paragraph(canvas, paragraph, runs, context,
+                                           layout_frame, font, cursor_y,
+                                           bottom_limit, char_cursor,
+                                           first_paragraph:)
           wrap_width = TextEngine::VerticalLayout.wrap_width(
             layout_frame, paragraph.right_indent || 0
           )
           para_attrs = paragraph_attrs(paragraph)
           frame_left, frame_right = paragraph_frame_extents(layout_frame)
 
-          # RuleAbove sits at the paragraph's top edge (before
-          # space_before is subtracted), so emit it first using the
-          # incoming cursor_y as the anchor.
+          emit_paragraph_top_rule(canvas, paragraph, context, cursor_y,
+                                  frame_left, frame_right, first_paragraph)
+
+          rendered_count = 0
+          runs.each do |run|
+            break if cursor_y < bottom_limit
+
+            space_before = paragraph_space_before(para_attrs, first_paragraph,
+                                                  rendered_count)
+            positioned, next_y = layout_run(
+              canvas, run, paragraph, context, layout_frame, font,
+              wrap_width, cursor_y, space_before,
+              para_attrs[:first_line_indent], para_attrs[:left_indent],
+              char_cursor
+            )
+            char_cursor += positioned.length
+            cursor_y = next_y
+            rendered_count += 1
+          end
+
+          remaining_runs = runs[rendered_count..]
+          cursor_y = emit_paragraph_bottom_rule(canvas, paragraph, context,
+                                                cursor_y, frame_left,
+                                                frame_right, para_attrs,
+                                                remaining_runs)
+          [remaining_runs, cursor_y, char_cursor]
+        end
+        private_class_method :render_runs_for_paragraph
+
+        def self.emit_paragraph_top_rule(canvas, paragraph, context, cursor_y,
+                                         frame_left, frame_right,
+                                         first_paragraph)
+          return unless first_paragraph
+
           ParagraphRules.emit_rule_above(canvas, paragraph, context,
                                          cursor_y, frame_left, frame_right)
+        end
+        private_class_method :emit_paragraph_top_rule
 
-          cursor_y, char_cursor = render_runs(
-            canvas, paragraph, context, layout_frame, font,
-            wrap_width, cursor_y, bottom_limit, char_cursor, para_attrs
-          )
+        def self.paragraph_space_before(para_attrs, first_paragraph,
+                                        rendered_count)
+          return 0 unless first_paragraph && rendered_count.zero?
+
+          para_attrs[:space_before]
+        end
+        private_class_method :paragraph_space_before
+
+        # Emits RuleBelow after a paragraph's last run. Returns the
+        # updated cursor_y (subtracting space_after when the paragraph
+        # completed).
+        def self.emit_paragraph_bottom_rule(canvas, paragraph, context,
+                                            cursor_y, frame_left,
+                                            frame_right, para_attrs,
+                                            remaining_runs)
+          return cursor_y unless remaining_runs.empty?
+
           after_y = cursor_y - para_attrs[:space_after]
-
-          # RuleBelow sits at the paragraph's bottom edge (after the
-          # last line + space_after), so emit it last using after_y
-          # as the anchor.
           ParagraphRules.emit_rule_below(canvas, paragraph, context,
                                          after_y, frame_left, frame_right)
-          [after_y, char_cursor]
+          after_y
         end
-        private_class_method :render_paragraph
+        private_class_method :emit_paragraph_bottom_rule
 
         def self.paragraph_frame_extents(layout_frame)
           inset_left = layout_frame.inset_left || 0
@@ -177,27 +309,6 @@ module Idml
           }
         end
         private_class_method :paragraph_attrs
-
-        def self.render_runs(canvas, paragraph, context, layout_frame, font,
-                             wrap_width, cursor_y, bottom_limit, char_cursor,
-                             para_attrs)
-          space_before = para_attrs[:space_before]
-          paragraph.runs.each do |run|
-            break if cursor_y < bottom_limit
-
-            positioned, next_y = layout_run(
-              canvas, run, paragraph, context, layout_frame, font,
-              wrap_width, cursor_y, space_before,
-              para_attrs[:first_line_indent], para_attrs[:left_indent],
-              char_cursor
-            )
-            char_cursor += positioned.length
-            cursor_y = next_y
-            space_before = 0
-          end
-          [cursor_y, char_cursor]
-        end
-        private_class_method :render_runs
 
         # Shapes one run's text, wraps to the inset/indent-adjusted
         # width, justifies per paragraph alignment, and asks
@@ -321,8 +432,11 @@ module Idml
 
         # Fallback when no metrics are available: emit all runs as
         # one `text_rich` block, letting pdfrb measure advance widths.
-        def self.simple_render(canvas, paragraphs, context, box)
-          runs = paragraphs.flat_map(&:runs)
+        # Chain threading is best-effort here — the simple path
+        # doesn't wrap, so the first frame's render typically emits
+        # all content and clears the chain state.
+        def self.simple_render(canvas, state, context, box)
+          runs = collect_runs(state)
           return if runs.empty?
 
           runs_for = build_rich_runs(runs, context)
@@ -331,8 +445,21 @@ module Idml
             runs_for,
             at: [box[:x], box[:y] + box[:height] - first_size],
           )
+          state.paragraphs = []
+          state.current_paragraph = nil
+          state.runs_remaining = []
         end
         private_class_method :simple_render
+
+        def self.collect_runs(state)
+          runs = state.runs_remaining || []
+          if state.current_paragraph
+            runs + state.current_paragraph.runs
+          else
+            runs + state.paragraphs.flat_map(&:runs)
+          end
+        end
+        private_class_method :collect_runs
 
         def self.build_rich_runs(runs, context)
           runs.map do |run|

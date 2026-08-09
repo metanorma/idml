@@ -1,6 +1,10 @@
 # TODO PDF 108: Multi-frame story flow (use StoryThreader)
 
-## Status: OPEN — gap identified in 2026-08-09 audit
+## Status: DONE — `Render::StoryChainController` threads paragraph/run
+state across linked TextFrames. TextFrameRenderer no longer treats
+chain non-heads as standalone; it picks up leftover state from the
+controller, renders what fits, and stores the new leftover for the
+next frame. Overflow text is no longer silently dropped.
 
 ## Problem
 
