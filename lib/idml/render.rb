@@ -16,6 +16,7 @@ module Idml
     autoload :CharacterStyle,      "#{__dir__}/render/character_style"
     autoload :ParagraphRules,      "#{__dir__}/render/paragraph_rules"
     autoload :DropCap,             "#{__dir__}/render/drop_cap"
+    autoload :ListMarker,          "#{__dir__}/render/list_marker"
     autoload :StoryChainController, "#{__dir__}/render/story_chain_controller"
     autoload :LayerFilter,         "#{__dir__}/render/layer_filter"
     autoload :ConditionFilter,     "#{__dir__}/render/condition_filter"

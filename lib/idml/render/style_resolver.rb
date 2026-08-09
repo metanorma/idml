@@ -55,6 +55,10 @@ module Idml
         :right_indent,
         :auto_leading,
         :drop_cap_lines,
+        :bullets_and_numbering_list_type,
+        :bullet_character_value,
+        :bullets_text_after,
+        :numbering_expression,
         :drop_cap_characters,
         # RuleAbove / RuleBelow — paragraph rules (horizontal lines
         # above/below the paragraph block). Driven by PSR attributes.
@@ -115,7 +119,7 @@ module Idml
           runs = csr_runs(psr, condition_filter: condition_filter)
           next if runs.empty?
 
-          Paragraph.new(
+          paragraph = Paragraph.new(
             runs: runs,
             alignment: runs.first.alignment,
             space_before: psr.space_before,
@@ -126,6 +130,10 @@ module Idml
             auto_leading: psr.auto_leading,
             drop_cap_lines: psr.drop_cap_lines,
             drop_cap_characters: psr.drop_cap_characters,
+            bullets_and_numbering_list_type: psr.bullets_and_numbering_list_type,
+            bullet_character_value: psr.bullet_character_value,
+            bullets_text_after: psr.bullets_text_after,
+            numbering_expression: psr.numbering_expression,
             rule_above: psr.rule_above,
             rule_above_line_weight: psr.rule_above_line_weight,
             rule_above_color: psr.stroke_color,
@@ -143,6 +151,8 @@ module Idml
             rule_below_right_indent: psr.rule_below_right_indent,
             rule_below_width: psr.rule_below_width,
           )
+          prepend_list_marker(paragraph)
+          paragraph
         end
       end
 
@@ -192,6 +202,19 @@ module Idml
         ALIGNMENT_MAP[csr.justification] || :left
       end
       private_class_method :alignment_for
+
+      # Prepends the list marker (bullet glyph or numbered expression)
+      # to the paragraph's first run when the paragraph is part of
+      # a list. Mutates the first run's text in place.
+      def self.prepend_list_marker(paragraph)
+        marker = ListMarker.marker_for(paragraph)
+        return unless marker
+        return if paragraph.runs.empty?
+
+        first_run = paragraph.runs.first
+        first_run.text = "#{marker}#{first_run.text}"
+      end
+      private_class_method :prepend_list_marker
 
       # Concatenate runs into a single block. Used when the renderer
       # can't handle per-run styling (e.g., no font metrics available).
