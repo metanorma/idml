@@ -157,8 +157,9 @@ module Idml
         # next frame in the chain.
         def self.engine_render(canvas, state, context, box, font)
           layout_frame = layout_frame(context.item, box)
-          cursor_y = box[:y] + box[:height] - (layout_frame.inset_top || 0)
+          top_y = box[:y] + box[:height] - (layout_frame.inset_top || 0)
           bottom_limit = TextEngine::VerticalLayout.bottom_limit(layout_frame)
+          cursor_y = vertical_justify_top(top_y, bottom_limit, state, context)
           char_cursor = state.char_cursor
 
           if state.current_paragraph
@@ -173,6 +174,77 @@ module Idml
                              cursor_y, bottom_limit, char_cursor)
         end
         private_class_method :engine_render
+
+        # Computes the starting cursor_y for vertical justification.
+        # IDML's TextFramePreference.VerticalJustification can be:
+        # - TopAlign (default): start at frame top, no offset
+        # - CenterAlign: center the content block vertically
+        # - BottomAlign: align content to the frame bottom
+        # - JustifyAlign: distribute extra space between paragraphs
+        #   (deferred — falls back to TopAlign behavior)
+        #
+        # Content height is estimated by walking paragraphs and
+        # summing leading × lines + space_before/after. Without
+        # shaping/wrapping we can't know exact line count, so we
+        # approximate by treating each run as one line.
+        def self.vertical_justify_top(top_y, bottom_limit, state, context)
+          justification = text_frame_vertical_justification(context)
+          return top_y unless %w[CenterAlign BottomAlign].include?(justification)
+
+          content_height = estimate_content_height(state)
+          available = top_y - bottom_limit
+          slack = [available - content_height, 0].max
+          return top_y if slack.zero?
+
+          case justification
+          when "CenterAlign" then top_y - (slack / 2)
+          when "BottomAlign" then top_y - slack
+          else top_y
+          end
+        end
+        private_class_method :vertical_justify_top
+
+        def self.text_frame_vertical_justification(context)
+          pref = context.item&.text_frame_preference&.first
+          pref&.vertical_justification
+        end
+        private_class_method :text_frame_vertical_justification
+
+        # Estimates total renderable content height for vertical
+        # justification. Walks paragraphs and runs, summing leading
+        # per run plus paragraph space_before/after. Approximation:
+        # treats each run as one line (wrap may produce more lines,
+        # which would over-estimate slack; acceptable for
+        # justification since we'd rather under-offset than overflow).
+        def self.estimate_content_height(state)
+          paragraphs = paragraphs_for_estimate(state)
+          return 0 if paragraphs.empty?
+
+          paragraphs.sum do |paragraph|
+            paragraph_height(paragraph)
+          end
+        end
+        private_class_method :estimate_content_height
+
+        def self.paragraphs_for_estimate(state)
+          result = []
+          result << state.current_paragraph if state.current_paragraph
+          result + state.paragraphs
+        end
+        private_class_method :paragraphs_for_estimate
+
+        def self.paragraph_height(paragraph)
+          size = paragraph.runs.first&.point_size || DEFAULT_SIZE
+          leading = leading_for(paragraph, size)
+          line_count = [paragraph.runs.length, 1].max
+          (leading * line_count) + space_before_after(paragraph)
+        end
+        private_class_method :paragraph_height
+
+        def self.space_before_after(paragraph)
+          (paragraph.space_before || 0) + (paragraph.space_after || 0)
+        end
+        private_class_method :space_before_after
 
         def self.resume_paragraph(canvas, state, context, layout_frame, font,
                                   cursor_y, bottom_limit, char_cursor)
