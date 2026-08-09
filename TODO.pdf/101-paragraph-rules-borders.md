@@ -1,6 +1,15 @@
 # TODO PDF 101: Paragraph borders and rules (RuleAbove, RuleBelow, ParagraphBorder)
 
-## Status: OPEN — gap identified in 2026-08-08 audit
+## Status: PARTIAL — RuleAbove and RuleBelow implemented via new
+`Render::ParagraphRules` helper; TextFrameRenderer emits them at
+paragraph top/bottom. Rule color comes from PSR#stroke_color (IDML's
+PSR doesn't have a dedicated RuleAboveColor attribute). RuleAboveWidth
+"Text" vs "Column" honored. Tint scaling + line weight + offset honored.
+
+ParagraphBorder and ParagraphShading remain open — they need the
+paragraph's bounding rect, which the renderer doesn't currently
+expose to ParagraphRules. Will add when a real document fixture
+exercises them.
 
 ## Problem
 
