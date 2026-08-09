@@ -1,6 +1,17 @@
 # TODO PDF 103: Drop caps (DropCapLines, DropCapCharacters)
 
-## Status: OPEN — gap identified in 2026-08-08 audit
+## Status: PARTIAL — `Render::DropCap` helper computes drop-cap
+geometry (font_size = base × lines, width via font_metrics.measure_text,
+height = leading × lines). TextFrameRenderer.emit_drop_cap emits the
+drop cap as an enlarged glyph at the paragraph's top-left when the
+paragraph declares DropCapLines/DropCapCharacters > 0 and is the
+chain's first paragraph.
+
+Wrap-around text is NOT yet implemented — the drop cap renders as an
+enlarged glyph; subsequent paragraph text flows normally and may
+overlap the drop cap. Real wrap-around (indent lines 1..M to the
+right of the drop cap) requires per-line wrap-width control in
+VerticalLayout, which is a bigger refactor. Tracked as follow-up.
 
 ## Problem
 

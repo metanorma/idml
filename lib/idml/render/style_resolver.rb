@@ -54,6 +54,8 @@ module Idml
         :left_indent,
         :right_indent,
         :auto_leading,
+        :drop_cap_lines,
+        :drop_cap_characters,
         # RuleAbove / RuleBelow — paragraph rules (horizontal lines
         # above/below the paragraph block). Driven by PSR attributes.
         :rule_above,
@@ -122,6 +124,8 @@ module Idml
             left_indent: psr.left_indent,
             right_indent: psr.right_indent,
             auto_leading: psr.auto_leading,
+            drop_cap_lines: psr.drop_cap_lines,
+            drop_cap_characters: psr.drop_cap_characters,
             rule_above: psr.rule_above,
             rule_above_line_weight: psr.rule_above_line_weight,
             rule_above_color: psr.stroke_color,

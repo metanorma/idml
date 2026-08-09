@@ -233,6 +233,8 @@ module Idml
 
           emit_paragraph_top_rule(canvas, paragraph, context, cursor_y,
                                   frame_left, frame_right, first_paragraph)
+          emit_drop_cap(canvas, paragraph, context, frame_left, cursor_y,
+                        first_paragraph)
 
           rendered_count = 0
           runs.each do |run|
@@ -259,6 +261,33 @@ module Idml
           [remaining_runs, cursor_y, char_cursor]
         end
         private_class_method :render_runs_for_paragraph
+
+        # Renders the drop cap for a paragraph (when declared and the
+        # first paragraph of the chain). Wrap-around text is not yet
+        # implemented — the drop cap renders as an enlarged glyph at
+        # the paragraph's top-left; subsequent text may overlap it.
+        # Marked as a follow-up in TODO 103.
+        def self.emit_drop_cap(canvas, paragraph, context, frame_left,
+                               cursor_y, first_paragraph)
+          return nil unless first_paragraph
+          return nil unless DropCap.active?(paragraph)
+
+          base_size = paragraph.runs.first&.point_size || DEFAULT_SIZE
+          leading = leading_for(paragraph, base_size)
+          drop_cap = DropCap.layout(paragraph,
+                                    font_metrics: context.font_metrics,
+                                    base_size: base_size, leading: leading)
+          return nil unless drop_cap
+
+          drop_at_y = cursor_y - drop_cap.font_size + (base_size * 0.25)
+          canvas.text(
+            drop_cap.text,
+            at: [frame_left, drop_at_y],
+            font: font_for_run(paragraph.runs.first, context),
+            size: drop_cap.font_size,
+          )
+        end
+        private_class_method :emit_drop_cap
 
         def self.emit_paragraph_top_rule(canvas, paragraph, context, cursor_y,
                                          frame_left, frame_right,
