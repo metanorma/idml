@@ -38,6 +38,7 @@ module Idml
         structure = StructureTracker.new(enabled: @tagged)
         position_tracker = PositionTracker.new
         layer_filter = LayerFilter.from_designmap(@package.designmap)
+        condition_filter = ConditionFilter.from_designmap(@package.designmap)
         font_ref_resolver = FontReferenceResolver.build(@package)
         font_setup = FontSetup.new(package: @package,
                                    font_search_paths: @font_search_paths)
@@ -50,7 +51,8 @@ module Idml
           page_index = render_spread(writer, spread, layer_filter,
                                      font_ref_resolver, font_resource,
                                      font_metrics, font_map, structure,
-                                     position_tracker, page_index)
+                                     position_tracker, condition_filter,
+                                     page_index)
         end
 
         structure.flush(writer)
@@ -90,14 +92,14 @@ module Idml
 
       def render_spread(writer, spread, layer_filter, font_ref_resolver,
                         font_resource, font_metrics, font_map, structure,
-                        position_tracker, page_offset)
+                        position_tracker, condition_filter, page_offset)
         pages = spread.spread.flat_map(&:page)
         image_refs = ImageCollector.new(writer: writer,
                                         base_dir: File.dirname(@package.path),
                                         page_height: DEFAULT_HEIGHT).collect(spread)
         renderer = build_renderer(layer_filter, font_ref_resolver,
                                   font_resource, font_metrics, font_map,
-                                  structure, position_tracker)
+                                  structure, position_tracker, condition_filter)
         current = page_offset
 
         pages.each do |page|
@@ -126,7 +128,8 @@ module Idml
       end
 
       def build_renderer(layer_filter, font_ref_resolver, font_resource,
-                         font_metrics, font_map, structure, position_tracker)
+                         font_metrics, font_map, structure, position_tracker,
+                         condition_filter)
         SpreadRenderer.new(
           font_metrics: font_metrics,
           font_ps_name: font_resource,
@@ -136,6 +139,7 @@ module Idml
           font_ref_resolver: font_ref_resolver,
           structure: structure,
           position_tracker: position_tracker,
+          condition_filter: condition_filter,
         )
       end
 

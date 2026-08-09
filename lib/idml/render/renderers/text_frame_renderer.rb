@@ -51,7 +51,7 @@ module Idml
         # chain (nil when there's nothing left to render).
         def self.initial_chain_state(frame, story, context)
           controller = context.chain_controller
-          return fresh_state(story) if chain_head?(frame)
+          return fresh_state(story, context) if chain_head?(frame)
           return nil unless controller
 
           controller.state_for(frame.parent_story)
@@ -69,8 +69,10 @@ module Idml
         end
         private_class_method :store_chain_state
 
-        def self.fresh_state(story)
-          paragraphs = StyleResolver.extract_paragraphs(story)
+        def self.fresh_state(story, context)
+          paragraphs = StyleResolver.extract_paragraphs(
+            story, condition_filter: context.condition_filter
+          )
           return nil if paragraphs.empty?
 
           StoryChainController::State.new(

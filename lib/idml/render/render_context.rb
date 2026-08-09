@@ -21,6 +21,7 @@ module Idml
       :page_index,
       :position_tracker,
       :chain_controller,
+      :condition_filter,
       keyword_init: true,
     )
   end
