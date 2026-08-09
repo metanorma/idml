@@ -94,30 +94,10 @@ module Idml
         color = context.color_resolver&.resolve(run.fill_color)
         return unless color
 
-        tinted = apply_tint(color, run.fill_tint)
+        tinted = ColorHelper.apply_tint(color, run.fill_tint)
         canvas.fill_color(ColorHelper.to_canvas(tinted))
       end
       private_class_method :apply_fill_color
-
-      # Scales a resolved color's components by `tint` (1.0 = full
-      # strength, 0.5 = half). Tint is the IDML mechanism for
-      # lightening a color without defining a new one.
-      def self.apply_tint(color, tint)
-        return color unless tint
-        return color if tint >= 1.0
-
-        case color[:model]
-        when :rgb
-          { model: :rgb, r: color[:r] * tint, g: color[:g] * tint,
-            b: color[:b] * tint }
-        when :cmyk
-          { model: :cmyk, c: color[:c] * tint, m: color[:m] * tint,
-            y: color[:y] * tint, k: color[:k] * tint }
-        else
-          color
-        end
-      end
-      private_class_method :apply_tint
 
       def self.scale_factor(declared)
         return 1.0 unless declared
