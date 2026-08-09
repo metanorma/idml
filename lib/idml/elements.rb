@@ -17,6 +17,7 @@ module Idml
     autoload :ButtonPreference, "idml/elements/pref_button_preference"
     autoload :Bookmark, "idml/elements/bookmark"
     autoload :Cell, "idml/elements/cell"
+    autoload :Column, "idml/elements/column"
     autoload :Condition, "idml/elements/condition"
     autoload :CellStyle, "idml/elements/cell_style"
     autoload :CellStyleGroup, "idml/elements/cell_style_group"

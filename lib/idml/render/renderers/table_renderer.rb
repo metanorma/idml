@@ -243,7 +243,8 @@ module Idml
                 mark_covered(covered, col_idx, row_idx, col_span, row_span)
 
                 yield cell_x(col_idx), cell_y(row_idx, col_span, row_span),
-                      cell_w(col_span), cell_h(row_idx, row_span), cell
+                      cell_w(col_idx, col_span), cell_h(row_idx, row_span),
+                      cell
               end
             end
           end
@@ -286,7 +287,7 @@ module Idml
           private :mark_covered
 
           def cell_x(col)
-            box[:x] + (col * per_col_width)
+            box[:x] + cumulative_col_width(col)
           end
 
           # PDF-coordinate bottom y of the cell's rectangle. For a
@@ -297,9 +298,11 @@ module Idml
             box[:y] + total_height - cumulative_height(last_row + 1)
           end
 
-          # Width covered by `span` columns starting at the cell's col.
-          def cell_w(span)
-            per_col_width * (span || 1)
+          # Width covered by `span` columns starting at `col`. Uses
+          # per-column widths from Column elements when available;
+          # falls back to uniform width when not.
+          def cell_w(col, span)
+            span.to_i.times.sum { |i| column_width_at(col + i) }
           end
 
           # Total height covered by `span` rows starting at `row_idx`.
@@ -316,6 +319,41 @@ module Idml
                              else
                                box[:width] / [col_count, 1].max
                              end
+          end
+
+          # Returns per-column widths from Column elements when
+          # present; empty array otherwise. When non-empty, the
+          # renderer uses per-column widths for x positions and
+          # span widths instead of uniform per_col_width.
+          def per_column_widths
+            return @per_column_widths if defined?(@per_column_widths)
+
+            cols = table.column
+            @per_column_widths = if cols.empty?
+                                   []
+                                 else
+                                   cols.filter_map do |col|
+                                     w = col.single_column_width
+                                     w&.positive? ? w : nil
+                                   end
+                                 end
+          end
+
+          # Width of a single column at index `idx`. Uses per-column
+          # widths when available; falls back to uniform.
+          def column_width_at(idx)
+            return per_col_width if per_column_widths.empty?
+            return per_col_width unless idx.between?(0, per_column_widths.length - 1)
+
+            per_column_widths[idx]
+          end
+
+          # Cumulative width from column 0 up to (but not including)
+          # column `col`. Used for x positioning.
+          def cumulative_col_width(col)
+            return col * per_col_width if per_column_widths.empty?
+
+            col.times.sum { |i| column_width_at(i) }
           end
 
           def row_height(idx)
