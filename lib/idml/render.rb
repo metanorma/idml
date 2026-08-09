@@ -15,6 +15,7 @@ module Idml
     autoload :StrokeStyle,         "#{__dir__}/render/stroke_style"
     autoload :CharacterStyle,      "#{__dir__}/render/character_style"
     autoload :ParagraphRules,      "#{__dir__}/render/paragraph_rules"
+    autoload :StoryChainController, "#{__dir__}/render/story_chain_controller"
     autoload :LayerFilter,         "#{__dir__}/render/layer_filter"
     autoload :Placement,           "#{__dir__}/render/placement"
     autoload :ImageCollector,      "#{__dir__}/render/image_collector"

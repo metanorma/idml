@@ -33,6 +33,7 @@ module Idml
           structure: @structure,
           page_index: page_index,
           position_tracker: @position_tracker,
+          chain_controller: StoryChainController.new,
         }
 
         canvas.save_graphics_state do
