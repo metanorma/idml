@@ -1,6 +1,9 @@
 # TODO PDF 115: Bullet and numbered list rendering
 
-## Status: OPEN — gap identified in 2026-08-10 audit
+## Status: DONE for inline marker emission. Hanging-indent layout
+(bullet in a left gutter with wrapped lines indented to align with
+text after marker) is a follow-up — currently the marker sits inline
+before the first run's text.
 
 ## Problem
 
