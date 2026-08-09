@@ -1,6 +1,10 @@
 # TODO PDF 112: TextFrame vertical justification (TopAlign / CenterAlign / BottomAlign / JustifyAlign)
 
-## Status: OPEN — gap identified in 2026-08-10 audit
+## Status: DONE for TopAlign / CenterAlign / BottomAlign. JustifyAlign
+defers to TopAlign (inter-paragraph space distribution not yet
+implemented). Content height is approximated by treating each run
+as one line — wrap may produce more lines, so slack is over-estimated;
+we'd rather under-offset than overflow.
 
 ## Problem
 
