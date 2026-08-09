@@ -46,6 +46,7 @@ module Idml
       attribute :table_row, Idml::Elements::TableRow, collection: true
       attribute :cell, Idml::Elements::Cell, collection: true
       attribute :row, Idml::Elements::Row, collection: true
+      attribute :column, Idml::Elements::Column, collection: true
       attribute :properties, Idml::Elements::Properties, collection: true
 
       xml do
@@ -77,6 +78,7 @@ module Idml
         map_element "TableRow", to: :table_row
         map_element "Cell", to: :cell
         map_element "Row", to: :row
+        map_element "Column", to: :column
         map_element "Properties", to: :properties
       end
 

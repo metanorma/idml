@@ -1,10 +1,10 @@
-# TODO PDF 99: Table column widths from ColumnAttributes
+# TODO PDF 99: Table column widths from Column elements
 
-## Status: DONE — Table now models `column_count` and
-`single_column_width`; SchemaLayout uses SingleColumnWidth when
-declared, else falls back to even division. (IDML has no separate
-ColumnAttributes element — column widths live on Table directly
-when uniform.)
+## Status: DONE — Table now models both `single_column_width`
+(uniform) and per-column `<Column>` elements with individual
+`SingleColumnWidth` values. SchemaLayout uses per-column widths
+when `<Column>` children are present; falls back to uniform when
+not.
 
 ## Problem
 
