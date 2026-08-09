@@ -54,6 +54,24 @@ module Idml
         :left_indent,
         :right_indent,
         :auto_leading,
+        # RuleAbove / RuleBelow — paragraph rules (horizontal lines
+        # above/below the paragraph block). Driven by PSR attributes.
+        :rule_above,
+        :rule_above_line_weight,
+        :rule_above_color,
+        :rule_above_tint,
+        :rule_above_offset,
+        :rule_above_left_indent,
+        :rule_above_right_indent,
+        :rule_above_width,
+        :rule_below,
+        :rule_below_line_weight,
+        :rule_below_color,
+        :rule_below_tint,
+        :rule_below_offset,
+        :rule_below_left_indent,
+        :rule_below_right_indent,
+        :rule_below_width,
         keyword_init: true,
       )
 
@@ -102,6 +120,22 @@ module Idml
             left_indent: psr.left_indent,
             right_indent: psr.right_indent,
             auto_leading: psr.auto_leading,
+            rule_above: psr.rule_above,
+            rule_above_line_weight: psr.rule_above_line_weight,
+            rule_above_color: psr.stroke_color,
+            rule_above_tint: psr.rule_above_tint,
+            rule_above_offset: psr.rule_above_offset,
+            rule_above_left_indent: psr.rule_above_left_indent,
+            rule_above_right_indent: psr.rule_above_right_indent,
+            rule_above_width: psr.rule_above_width,
+            rule_below: psr.rule_below,
+            rule_below_line_weight: psr.rule_below_line_weight,
+            rule_below_color: psr.stroke_color,
+            rule_below_tint: psr.rule_below_tint,
+            rule_below_offset: psr.rule_below_offset,
+            rule_below_left_indent: psr.rule_below_left_indent,
+            rule_below_right_indent: psr.rule_below_right_indent,
+            rule_below_width: psr.rule_below_width,
           )
         end
       end

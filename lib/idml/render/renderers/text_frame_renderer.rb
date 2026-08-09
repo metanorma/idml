@@ -137,13 +137,36 @@ module Idml
             layout_frame, paragraph.right_indent || 0
           )
           para_attrs = paragraph_attrs(paragraph)
+          frame_left, frame_right = paragraph_frame_extents(layout_frame)
+
+          # RuleAbove sits at the paragraph's top edge (before
+          # space_before is subtracted), so emit it first using the
+          # incoming cursor_y as the anchor.
+          ParagraphRules.emit_rule_above(canvas, paragraph, context,
+                                         cursor_y, frame_left, frame_right)
+
           cursor_y, char_cursor = render_runs(
             canvas, paragraph, context, layout_frame, font,
             wrap_width, cursor_y, bottom_limit, char_cursor, para_attrs
           )
-          [cursor_y - para_attrs[:space_after], char_cursor]
+          after_y = cursor_y - para_attrs[:space_after]
+
+          # RuleBelow sits at the paragraph's bottom edge (after the
+          # last line + space_after), so emit it last using after_y
+          # as the anchor.
+          ParagraphRules.emit_rule_below(canvas, paragraph, context,
+                                         after_y, frame_left, frame_right)
+          [after_y, char_cursor]
         end
         private_class_method :render_paragraph
+
+        def self.paragraph_frame_extents(layout_frame)
+          inset_left = layout_frame.inset_left || 0
+          inset_right = layout_frame.inset_right || 0
+          [layout_frame.x + inset_left,
+           layout_frame.x + layout_frame.width - inset_right]
+        end
+        private_class_method :paragraph_frame_extents
 
         def self.paragraph_attrs(paragraph)
           {
