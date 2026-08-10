@@ -8,6 +8,7 @@ module Idml
     autoload :Image,               "#{__dir__}/render/image"
     autoload :ColorResolver,       "#{__dir__}/render/color_resolver"
     autoload :StyleResolver,       "#{__dir__}/render/style_resolver"
+    autoload :StyleLookup,         "#{__dir__}/render/style_lookup"
     autoload :FontReferenceResolver,
              "#{__dir__}/render/font_reference_resolver"
     autoload :GradientResolver,    "#{__dir__}/render/gradient_resolver"

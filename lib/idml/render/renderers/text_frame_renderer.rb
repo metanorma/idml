@@ -71,7 +71,8 @@ module Idml
 
         def self.fresh_state(story, context)
           paragraphs = StyleResolver.extract_paragraphs(
-            story, condition_filter: context.condition_filter
+            story, condition_filter: context.condition_filter,
+                   style_lookup: context.style_lookup
           )
           return nil if paragraphs.empty?
 

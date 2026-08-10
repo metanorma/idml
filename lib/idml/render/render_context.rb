@@ -22,6 +22,7 @@ module Idml
       :position_tracker,
       :chain_controller,
       :condition_filter,
+      :style_lookup,
       keyword_init: true,
     )
   end
