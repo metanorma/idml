@@ -110,53 +110,74 @@ module Idml
       # its runs and carries the paragraph-level attributes from the
       # owning PSR. Empty paragraphs (no runs after filtering) are
       # skipped.
-      def self.extract_paragraphs(story, condition_filter: nil)
+      def self.extract_paragraphs(story, condition_filter: nil,
+                                  style_lookup: nil)
         return [] unless story&.inner
 
         story.inner.paragraph_style_range.filter_map do |psr|
           next unless condition_visible?(psr, condition_filter)
 
-          runs = csr_runs(psr, condition_filter: condition_filter)
+          runs = csr_runs(psr, condition_filter: condition_filter,
+                               style_lookup: style_lookup)
           next if runs.empty?
 
           paragraph = Paragraph.new(
             runs: runs,
             alignment: runs.first.alignment,
-            space_before: psr.space_before,
-            space_after: psr.space_after,
-            first_line_indent: psr.first_line_indent,
-            left_indent: psr.left_indent,
-            right_indent: psr.right_indent,
-            auto_leading: psr.auto_leading,
-            drop_cap_lines: psr.drop_cap_lines,
-            drop_cap_characters: psr.drop_cap_characters,
-            bullets_and_numbering_list_type: psr.bullets_and_numbering_list_type,
-            bullet_character_value: psr.bullet_character_value,
-            bullets_text_after: psr.bullets_text_after,
-            numbering_expression: psr.numbering_expression,
-            rule_above: psr.rule_above,
-            rule_above_line_weight: psr.rule_above_line_weight,
-            rule_above_color: psr.stroke_color,
-            rule_above_tint: psr.rule_above_tint,
-            rule_above_offset: psr.rule_above_offset,
-            rule_above_left_indent: psr.rule_above_left_indent,
-            rule_above_right_indent: psr.rule_above_right_indent,
-            rule_above_width: psr.rule_above_width,
-            rule_below: psr.rule_below,
-            rule_below_line_weight: psr.rule_below_line_weight,
-            rule_below_color: psr.stroke_color,
-            rule_below_tint: psr.rule_below_tint,
-            rule_below_offset: psr.rule_below_offset,
-            rule_below_left_indent: psr.rule_below_left_indent,
-            rule_below_right_indent: psr.rule_below_right_indent,
-            rule_below_width: psr.rule_below_width,
+            space_before: resolve_attr(style_lookup, psr, :space_before),
+            space_after: resolve_attr(style_lookup, psr, :space_after),
+            first_line_indent: resolve_attr(style_lookup, psr,
+                                            :first_line_indent),
+            left_indent: resolve_attr(style_lookup, psr, :left_indent),
+            right_indent: resolve_attr(style_lookup, psr, :right_indent),
+            auto_leading: resolve_attr(style_lookup, psr, :auto_leading),
+            drop_cap_lines: resolve_attr(style_lookup, psr, :drop_cap_lines),
+            drop_cap_characters: resolve_attr(style_lookup, psr,
+                                              :drop_cap_characters),
+            bullets_and_numbering_list_type: resolve_attr(
+              style_lookup, psr, :bullets_and_numbering_list_type
+            ),
+            bullet_character_value: resolve_attr(style_lookup, psr,
+                                                 :bullet_character_value),
+            bullets_text_after: resolve_attr(style_lookup, psr,
+                                             :bullets_text_after),
+            numbering_expression: resolve_attr(style_lookup, psr,
+                                               :numbering_expression),
+            rule_above: resolve_attr(style_lookup, psr, :rule_above),
+            rule_above_line_weight: resolve_attr(style_lookup, psr,
+                                                 :rule_above_line_weight),
+            rule_above_color: resolve_attr(style_lookup, psr, :stroke_color),
+            rule_above_tint: resolve_attr(style_lookup, psr,
+                                          :rule_above_tint),
+            rule_above_offset: resolve_attr(style_lookup, psr,
+                                            :rule_above_offset),
+            rule_above_left_indent: resolve_attr(style_lookup, psr,
+                                                 :rule_above_left_indent),
+            rule_above_right_indent: resolve_attr(style_lookup, psr,
+                                                  :rule_above_right_indent),
+            rule_above_width: resolve_attr(style_lookup, psr,
+                                           :rule_above_width),
+            rule_below: resolve_attr(style_lookup, psr, :rule_below),
+            rule_below_line_weight: resolve_attr(style_lookup, psr,
+                                                 :rule_below_line_weight),
+            rule_below_color: resolve_attr(style_lookup, psr, :stroke_color),
+            rule_below_tint: resolve_attr(style_lookup, psr,
+                                          :rule_below_tint),
+            rule_below_offset: resolve_attr(style_lookup, psr,
+                                            :rule_below_offset),
+            rule_below_left_indent: resolve_attr(style_lookup, psr,
+                                                 :rule_below_left_indent),
+            rule_below_right_indent: resolve_attr(style_lookup, psr,
+                                                  :rule_below_right_indent),
+            rule_below_width: resolve_attr(style_lookup, psr,
+                                           :rule_below_width),
           )
           prepend_list_marker(paragraph)
           paragraph
         end
       end
 
-      def self.csr_runs(psr, condition_filter: nil)
+      def self.csr_runs(psr, condition_filter: nil, style_lookup: nil)
         psr.character_style_range.filter_map do |csr|
           next unless condition_visible?(csr, condition_filter)
 
@@ -165,28 +186,53 @@ module Idml
 
           StyledRun.new(
             text: text,
-            font_style: csr.font_style,
-            point_size: csr.point_size || DEFAULT_POINT_SIZE,
-            fill_color: csr.fill_color,
-            fill_tint: csr.fill_tint,
-            applied_font: csr.applied_font,
+            font_style: resolve_csr(style_lookup, csr, :font_style),
+            point_size: resolve_csr(style_lookup, csr, :point_size) ||
+                        DEFAULT_POINT_SIZE,
+            fill_color: resolve_csr(style_lookup, csr, :fill_color),
+            fill_tint: resolve_csr(style_lookup, csr, :fill_tint),
+            applied_font: resolve_csr(style_lookup, csr, :applied_font),
             alignment: alignment_for(csr),
-            tracking: csr.tracking,
-            capitalization: csr.capitalization,
-            position: csr.position,
-            underline: csr.underline,
-            underline_offset: csr.underline_offset,
-            underline_weight: csr.underline_weight,
-            strike_thru: csr.strike_thru,
-            strike_through_offset: csr.strike_through_offset,
-            strike_through_weight: csr.strike_through_weight,
-            horizontal_scale: csr.horizontal_scale,
-            vertical_scale: csr.vertical_scale,
-            baseline_shift: csr.baseline_shift,
+            tracking: resolve_csr(style_lookup, csr, :tracking),
+            capitalization: resolve_csr(style_lookup, csr, :capitalization),
+            position: resolve_csr(style_lookup, csr, :position),
+            underline: resolve_csr(style_lookup, csr, :underline),
+            underline_offset: resolve_csr(style_lookup, csr,
+                                          :underline_offset),
+            underline_weight: resolve_csr(style_lookup, csr,
+                                          :underline_weight),
+            strike_thru: resolve_csr(style_lookup, csr, :strike_thru),
+            strike_through_offset: resolve_csr(style_lookup, csr,
+                                               :strike_through_offset),
+            strike_through_weight: resolve_csr(style_lookup, csr,
+                                               :strike_through_weight),
+            horizontal_scale: resolve_csr(style_lookup, csr,
+                                          :horizontal_scale),
+            vertical_scale: resolve_csr(style_lookup, csr, :vertical_scale),
+            baseline_shift: resolve_csr(style_lookup, csr, :baseline_shift),
           )
         end
       end
       private_class_method :csr_runs
+
+      # Resolves a paragraph-level attribute from PSR or its
+      # referenced ParagraphStyle. When style_lookup is nil,
+      # falls back to reading the PSR directly (backward compat).
+      def self.resolve_attr(style_lookup, psr, attr_name)
+        return psr.public_send(attr_name) unless style_lookup
+
+        style_lookup.resolve_para_attr(psr, attr_name)
+      end
+      private_class_method :resolve_attr
+
+      # Resolves a character-level attribute from CSR or its
+      # referenced CharacterStyle.
+      def self.resolve_csr(style_lookup, csr, attr_name)
+        return csr.public_send(attr_name) unless style_lookup
+
+        style_lookup.resolve_char_attr(csr, attr_name)
+      end
+      private_class_method :resolve_csr
 
       # Drops the PSR/CSR when any of its AppliedConditions
       # references a hidden Condition. Returns true when no filter

@@ -8,7 +8,7 @@ module Idml
                      package: nil, layer_filter: LayerFilter::EXCLUDE_NONE,
                      font_ref_resolver: nil, structure: nil,
                      position_tracker: nil, font_map: {},
-                     condition_filter: nil)
+                     condition_filter: nil, style_lookup: nil)
         @font_metrics = font_metrics
         @font_ps_name = font_ps_name
         @package = package
@@ -18,6 +18,7 @@ module Idml
         @position_tracker = position_tracker
         @font_map = font_map
         @condition_filter = condition_filter
+        @style_lookup = style_lookup
       end
 
       def render(canvas, spread, page_width:, page_height:, image_refs: [],
@@ -37,6 +38,7 @@ module Idml
           position_tracker: @position_tracker,
           chain_controller: StoryChainController.new,
           condition_filter: @condition_filter,
+          style_lookup: @style_lookup,
         }
 
         canvas.save_graphics_state do

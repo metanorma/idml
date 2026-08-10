@@ -1,6 +1,9 @@
 # TODO PDF 116: AppliedParagraphStyle / AppliedCharacterStyle resolution from Resources/Styles.xml
 
-## Status: OPEN — critical gap identified in 2026-08-10 audit
+## Status: DONE — `Render::StyleLookup` indexes ParagraphStyle and
+CharacterStyle from Resources/Styles.xml by Self. StyleResolver
+uses it to fill in formatting attributes that PSR/CSR elements don't
+declare inline. PSR/CSR inline attributes override style values.
 
 ## Problem
 
