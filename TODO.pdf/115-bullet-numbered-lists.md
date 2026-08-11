@@ -1,9 +1,10 @@
 # TODO PDF 115: Bullet and numbered list rendering
 
-## Status: DONE for inline marker emission. Hanging-indent layout
-(bullet in a left gutter with wrapped lines indented to align with
-text after marker) is a follow-up — currently the marker sits inline
-before the first run's text.
+## Status: DONE — markers are prepended inline AND a hanging indent
+(18pt) is applied so wrapped lines align with text after the marker.
+The indent is approximate (fixed width) since tab-stop measurement
+requires font metrics at style-resolution time; future refinement
+would measure the actual marker width.
 
 ## Problem
 

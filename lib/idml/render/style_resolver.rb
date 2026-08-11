@@ -249,9 +249,12 @@ module Idml
       end
       private_class_method :alignment_for
 
+      HANGING_INDENT_WIDTH = 18.0
+
       # Prepends the list marker (bullet glyph or numbered expression)
       # to the paragraph's first run when the paragraph is part of
-      # a list. Mutates the first run's text in place.
+      # a list. Also applies a hanging indent so wrapped lines align
+      # with the text after the marker, not with the marker itself.
       def self.prepend_list_marker(paragraph)
         marker = ListMarker.marker_for(paragraph)
         return unless marker
@@ -259,8 +262,20 @@ module Idml
 
         first_run = paragraph.runs.first
         first_run.text = "#{marker}#{first_run.text}"
+        apply_hanging_indent(paragraph)
       end
       private_class_method :prepend_list_marker
+
+      # Adjusts left_indent and first_line_indent for a hanging
+      # indent effect: first line starts at the original left edge
+      # (with the marker), wrapped lines indent by HANGING_INDENT_WIDTH.
+      def self.apply_hanging_indent(paragraph)
+        current_left = paragraph.left_indent || 0
+        current_first = paragraph.first_line_indent || 0
+        paragraph.left_indent = current_left + HANGING_INDENT_WIDTH
+        paragraph.first_line_indent = current_first - HANGING_INDENT_WIDTH
+      end
+      private_class_method :apply_hanging_indent
 
       # Concatenate runs into a single block. Used when the renderer
       # can't handle per-run styling (e.g., no font metrics available).
