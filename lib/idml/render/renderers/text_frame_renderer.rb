@@ -306,27 +306,20 @@ module Idml
 
           emit_paragraph_top_rule(canvas, paragraph, context, cursor_y,
                                   frame_left, frame_right, first_paragraph)
-          emit_drop_cap(canvas, paragraph, context, frame_left, cursor_y,
-                        first_paragraph)
+          drop_cap = emit_drop_cap(canvas, paragraph, context, frame_left,
+                                   cursor_y, first_paragraph)
 
-          rendered_count = 0
-          runs.each do |run|
-            break if cursor_y < bottom_limit
+          effective_runs = prepare_runs_for_drop_cap(runs, drop_cap)
+          dc_width = drop_cap&.wrap_offset || 0
+          dc_lines = drop_cap&.lines || 0
 
-            space_before = paragraph_space_before(para_attrs, first_paragraph,
-                                                  rendered_count)
-            positioned, next_y = layout_run(
-              canvas, run, paragraph, context, layout_frame, font,
-              wrap_width, cursor_y, space_before,
-              para_attrs[:first_line_indent], para_attrs[:left_indent],
-              char_cursor
-            )
-            char_cursor += positioned.length
-            cursor_y = next_y
-            rendered_count += 1
-          end
+          rendered, cursor_y, char_cursor = iterate_paragraph_runs(
+            canvas, paragraph, effective_runs, context, layout_frame,
+            font, wrap_width, cursor_y, bottom_limit, char_cursor,
+            first_paragraph, para_attrs, dc_width, dc_lines
+          )
 
-          remaining_runs = runs[rendered_count..]
+          remaining_runs = effective_runs[rendered..]
           cursor_y = emit_paragraph_bottom_rule(canvas, paragraph, context,
                                                 cursor_y, frame_left,
                                                 frame_right, para_attrs,
@@ -334,6 +327,67 @@ module Idml
           [remaining_runs, cursor_y, char_cursor]
         end
         private_class_method :render_runs_for_paragraph
+
+        def self.iterate_paragraph_runs(canvas, paragraph, runs, context,
+                                        layout_frame, font, wrap_width,
+                                        cursor_y, bottom_limit, char_cursor,
+                                        first_paragraph, para_attrs,
+                                        dc_width, dc_lines)
+          rendered_count = 0
+          runs.each do |run|
+            break if cursor_y < bottom_limit
+
+            space_before = paragraph_space_before(para_attrs, first_paragraph,
+                                                  rendered_count)
+            run_wrap = drop_cap_wrap_width(wrap_width, dc_width,
+                                           dc_lines, rendered_count)
+            positioned, next_y = layout_run(
+              canvas, run, paragraph, context, layout_frame, font,
+              run_wrap, cursor_y, space_before,
+              para_attrs[:first_line_indent], para_attrs[:left_indent],
+              char_cursor
+            )
+            char_cursor += positioned.length
+            cursor_y = next_y
+            rendered_count += 1
+          end
+          [rendered_count, cursor_y, char_cursor]
+        end
+        private_class_method :iterate_paragraph_runs
+
+        # Strips drop cap characters from the first run so they don't
+        # render twice (once as the enlarged drop cap, once as normal
+        # text). Returns a new run list with the first run's text
+        # adjusted. If stripping empties the first run, removes it.
+        def self.prepare_runs_for_drop_cap(runs, drop_cap)
+          return runs unless drop_cap
+          return runs if runs.empty?
+
+          stripped_count = drop_cap.text.length
+          first = runs.first
+          return runs if first.text.length < stripped_count
+
+          remaining_text = first.text[stripped_count..]
+          return runs.drop(1) if remaining_text.nil? || remaining_text.empty?
+
+          stripped_run = first.dup
+          stripped_run.text = remaining_text
+          [stripped_run] + runs[1..]
+        end
+        private_class_method :prepare_runs_for_drop_cap
+
+        # Returns reduced wrap width for runs within the drop cap zone
+        # (first `drop_cap_lines` runs). After the zone, returns full
+        # width. Approximation: treats each run as one line. Proper
+        # implementation would track actual line count per run.
+        def self.drop_cap_wrap_width(full_width, drop_cap_width,
+                                      drop_cap_lines, run_index)
+          return full_width if drop_cap_width.zero? || drop_cap_lines.zero?
+          return full_width if run_index >= drop_cap_lines
+
+          full_width - drop_cap_width
+        end
+        private_class_method :drop_cap_wrap_width
 
         # Renders the drop cap for a paragraph (when declared and the
         # first paragraph of the chain). Wrap-around text is not yet
