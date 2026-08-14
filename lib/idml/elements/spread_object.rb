@@ -22,6 +22,8 @@ module Idml
 
       attribute :page, Idml::Elements::Page, collection: true
       attribute :rectangle, Idml::Elements::Rectangle, collection: true
+      attribute :oval, Idml::Elements::Oval, collection: true
+      attribute :path, Idml::Elements::Path, collection: true
       attribute :text_frame, Idml::Elements::TextFrame, collection: true
       attribute :polygon, Idml::Elements::Polygon, collection: true
       attribute :group, Idml::Elements::Group, collection: true
@@ -43,6 +45,8 @@ module Idml
         map_attribute "FlattenerOverride", to: :flattener_override
         map_element "Page", to: :page
         map_element "Rectangle", to: :rectangle
+        map_element "Oval", to: :oval
+        map_element "Path", to: :path
         map_element "TextFrame", to: :text_frame
         map_element "Polygon", to: :polygon
         map_element "Group", to: :group

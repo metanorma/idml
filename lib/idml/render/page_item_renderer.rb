@@ -9,6 +9,8 @@ module Idml
     module PageItemRenderer
       RENDERER_MAP = {
         Idml::Elements::Rectangle => "RectangleRenderer",
+        Idml::Elements::Oval => "OvalRenderer",
+        Idml::Elements::Path => "PathRenderer",
         Idml::Elements::TextFrame => "TextFrameRenderer",
         Idml::Elements::Polygon => "PolygonRenderer",
         Idml::Elements::GraphicLine => "GraphicLineRenderer",
