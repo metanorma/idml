@@ -1,6 +1,19 @@
 # TODO PDF 107: Image rendering unification via PageItemRenderer
 
-## Status: OPEN — gap identified in 2026-08-08 audit
+## Status: DONE for z-order — ImageCollector now tags each ref with
+`parent_self` (the containing page item's Self). SpreadRenderer
+groups refs by parent and renders each item's images when that item
+is reached in the each_page_item loop (instead of all upfront as a
+background layer). Images now respect z-order relative to other
+page items.
+
+Intra-item ordering (fill behind image, stroke on top) remains
+approximate: the image renders BEFORE the item's fill/stroke dispatch.
+For the common case (image inside unfilled rectangle with stroke)
+this produces correct output — image behind stroke. For filled
+rectangles containing images (rare), the fill would cover the image.
+Full intra-item ordering would require integrating image rendering
+into RectangleRenderer between fill and stroke.
 
 ## Problem
 
