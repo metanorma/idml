@@ -56,11 +56,13 @@ module Idml
 
         load_new(image, parent, uri)
       end
+      private :register
 
       def reuse(name, image, parent)
         { name: name, placement: placement_for(image, parent),
-          clip_box: clip_box_for(parent) }
+          clip_box: clip_box_for(parent), parent_self: parent.self_attr }
       end
+      private :reuse
 
       def load_new(image, parent, uri)
         path = Image.resolve_path(uri, base_dir: @base_dir)
@@ -73,8 +75,9 @@ module Idml
         name = @writer.add_image(data: data)
         @writer.register_image_name(uri, name)
         { name: name, placement: placement_for(image, parent, dims[1]),
-          clip_box: clip_box_for(parent) }
+          clip_box: clip_box_for(parent), parent_self: parent.self_attr }
       end
+      private :load_new
 
       def clip_box_for(parent)
         return nil unless parent.geometric_bounds

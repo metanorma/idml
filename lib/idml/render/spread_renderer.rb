@@ -40,14 +40,15 @@ module Idml
           condition_filter: @condition_filter,
           style_lookup: @style_lookup,
         }
+        images_by_parent = group_images_by_parent(image_refs)
 
         canvas.save_graphics_state do
           render_background(canvas, page_width, page_height)
-          render_images(canvas, image_refs)
-          render_master_items(canvas, spread, context_base)
+          render_master_items(canvas, spread, context_base, images_by_parent)
           spread.each_page_item do |item|
             next unless @layer_filter.visible?(item)
 
+            render_item_images(canvas, images_by_parent, item.self_attr)
             context = RenderContext.new(context_base.merge(item: item))
             PageItemRenderer.render(canvas, context)
           end
@@ -62,13 +63,30 @@ module Idml
         canvas.fill
       end
 
+      # Groups image refs by their parent page item's Self so each
+      # item's images render when that item is reached in z-order
+      # (instead of all upfront as a background layer).
+      def group_images_by_parent(image_refs)
+        image_refs.each_with_object({}) do |ref, hash|
+          parent = ref[:parent_self]
+          next unless parent
+
+          (hash[parent] ||= []) << ref
+        end
+      end
+
+      def render_item_images(canvas, images_by_parent, item_self)
+        refs = images_by_parent[item_self]
+        return unless refs
+
+        render_images(canvas, refs)
+      end
+
       def render_images(canvas, image_refs)
         return if image_refs.empty?
 
         image_refs.each do |ref|
           placement = ref[:placement]
-          placement[:scale_x].abs
-          placement[:scale_y].abs
           canvas.save_graphics_state do
             apply_image_clip(canvas, ref)
             canvas.draw_image_matrix(ref[:name],
@@ -88,11 +106,12 @@ module Idml
         canvas.clip
       end
 
-      def render_master_items(canvas, spread, context_base)
+      def render_master_items(canvas, spread, context_base, images_by_parent)
         return unless @package
 
         resolve_master_spreads(spread).each do |master|
-          render_master_page_items(canvas, master, context_base)
+          render_master_page_items(canvas, master, context_base,
+                                   images_by_parent)
         end
       end
 
@@ -107,11 +126,13 @@ module Idml
         masters
       end
 
-      def render_master_page_items(canvas, master_part, context_base)
+      def render_master_page_items(canvas, master_part, context_base,
+                                   images_by_parent)
         master_part.master_spread.each do |master_so|
           master_so.each_page_item do |item|
             next unless @layer_filter.visible?(item)
 
+            render_item_images(canvas, images_by_parent, item.self_attr)
             context = RenderContext.new(context_base.merge(item: item))
             PageItemRenderer.render(canvas, context)
           end
