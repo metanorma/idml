@@ -1,6 +1,10 @@
 # TODO PDF 113: Multi-column text frames (TextColumnCount, TextColumnGutter)
 
-## Status: OPEN — gap identified in 2026-08-10 audit
+## Status: DONE — engine_render detects TextColumnCount > 1 and
+splits the frame into N column-specific Frame structs. Text flows
+column 1 → column 2 → ... → chain to next frame via StoryChainController.
+Each column acts as a mini-frame with the same height/insets but a
+narrower width. TextColumnGutter honored as the gap between columns.
 
 ## Problem
 
