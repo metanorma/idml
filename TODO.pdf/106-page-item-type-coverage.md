@@ -1,6 +1,12 @@
 # TODO PDF 106: Page-item type coverage — Ellipse, Path, EPS, WMF, PICT, HtmlItem
 
-## Status: OPEN — gap identified in 2026-08-08 audit
+## Status: PARTIAL — Oval and Path elements modeled and rendered
+(registered in RENDERER_MAP, delegate to RectangleRenderer which draws
+the bounding box with fill/stroke). Documents containing Oval or Path
+page items no longer silently skip them. True elliptical rendering
+(bezier anchor/control points) and compound-path drawing are
+refinements. EPS / WMF / PICT / HtmlItem remain out of scope (foreign
+formats).
 
 ## Problem
 

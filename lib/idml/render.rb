@@ -61,6 +61,14 @@ Idml::Render::Renderers.autoload(
   "#{__dir__}/render/renderers/rectangle_renderer",
 )
 Idml::Render::Renderers.autoload(
+  :OvalRenderer,
+  "#{__dir__}/render/renderers/oval_renderer",
+)
+Idml::Render::Renderers.autoload(
+  :PathRenderer,
+  "#{__dir__}/render/renderers/path_renderer",
+)
+Idml::Render::Renderers.autoload(
   :TextFrameRenderer,
   "#{__dir__}/render/renderers/text_frame_renderer",
 )
