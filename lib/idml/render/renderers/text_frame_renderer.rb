@@ -158,7 +158,22 @@ module Idml
         # next frame in the chain.
         def self.engine_render(canvas, state, context, box, font)
           layout_frame = layout_frame(context.item, box)
-          top_y = box[:y] + box[:height] - (layout_frame.inset_top || 0)
+          col_count = text_column_count(context)
+
+          if col_count && col_count > 1
+            engine_render_multi_column(canvas, state, context, layout_frame,
+                                       font, col_count)
+          else
+            engine_render_single_column(canvas, state, context, layout_frame,
+                                        font)
+          end
+        end
+        private_class_method :engine_render
+
+        def self.engine_render_single_column(canvas, state, context,
+                                              layout_frame, font)
+          top_y = layout_frame.y + layout_frame.height -
+            (layout_frame.inset_top || 0)
           bottom_limit = TextEngine::VerticalLayout.bottom_limit(layout_frame)
           cursor_y = vertical_justify_top(top_y, bottom_limit, state, context)
           char_cursor = state.char_cursor
@@ -174,7 +189,87 @@ module Idml
           consume_paragraphs(canvas, state, context, layout_frame, font,
                              cursor_y, bottom_limit, char_cursor)
         end
-        private_class_method :engine_render
+        private_class_method :engine_render_single_column
+
+        # Renders text across N columns within a single frame. Text
+        # flows column 1 → column 2 → ... → chain to next frame. Each
+        # column acts as a mini-frame with the same height but a
+        # narrower width. The chain state threads across columns
+        # transparently.
+        def self.engine_render_multi_column(canvas, state, context,
+                                             layout_frame, font, col_count)
+          gutter = text_column_gutter(context) || 0
+          col_frames = build_column_frames(layout_frame, col_count, gutter)
+
+          col_frames.each do |col_frame|
+            break if state_empty?(state)
+
+            render_column(canvas, state, context, col_frame, font)
+          end
+        end
+        private_class_method :engine_render_multi_column
+
+        def self.render_column(canvas, state, context, col_frame, font)
+          top_y = col_frame.y + col_frame.height - (col_frame.inset_top || 0)
+          bottom_limit = TextEngine::VerticalLayout.bottom_limit(col_frame)
+          cursor_y = top_y
+          char_cursor = state.char_cursor
+
+          if state.current_paragraph
+            cursor_y, char_cursor = resume_paragraph(
+              canvas, state, context, col_frame, font,
+              cursor_y, bottom_limit, char_cursor
+            )
+            return if state.current_paragraph
+          end
+
+          consume_paragraphs(canvas, state, context, col_frame, font,
+                             cursor_y, bottom_limit, char_cursor)
+        end
+        private_class_method :render_column
+
+        def self.state_empty?(state)
+          state.paragraphs.empty? && state.current_paragraph.nil?
+        end
+        private_class_method :state_empty?
+
+        def self.text_column_count(context)
+          pref = context.item&.text_frame_preference&.first
+          pref&.text_column_count
+        end
+        private_class_method :text_column_count
+
+        def self.text_column_gutter(context)
+          pref = context.item&.text_frame_preference&.first
+          pref&.text_column_gutter
+        end
+        private_class_method :text_column_gutter
+
+        # Builds N column-specific Frame structs from the parent
+        # layout frame. Each column has the same y/height/insets but
+        # a different x and width so VerticalLayout's geometry math
+        # produces correct per-column results.
+        def self.build_column_frames(layout_frame, col_count, gutter)
+          inset_left = layout_frame.inset_left || 0
+          inset_right = layout_frame.inset_right || 0
+          content_width = layout_frame.width - inset_left - inset_right
+          col_width = (content_width - ((col_count - 1) * gutter)) / col_count
+
+          Array.new(col_count) do |i|
+            col_left = layout_frame.x + inset_left + (i * (col_width + gutter))
+            TextEngine::Frame.new(
+              x: col_left - inset_left,
+              y: layout_frame.y,
+              width: col_width + inset_left + inset_right,
+              height: layout_frame.height,
+              inset_top: layout_frame.inset_top,
+              inset_bottom: layout_frame.inset_bottom,
+              inset_left: inset_left,
+              inset_right: inset_right,
+            )
+          end
+        end
+        private_class_method :build_column_frames
 
         # Computes the starting cursor_y for vertical justification.
         # IDML's TextFramePreference.VerticalJustification can be:
