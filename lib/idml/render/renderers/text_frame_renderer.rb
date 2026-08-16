@@ -35,6 +35,7 @@ module Idml
 
           box = frame_box(frame, context.page_height)
           render_inline_tables(canvas, story, box, context)
+          render_anchored_objects(canvas, story, context)
 
           state = initial_chain_state(frame, story, context)
           return unless state
@@ -102,14 +103,47 @@ module Idml
         private_class_method :render_inline_tables
 
         def self.tables_in_story(story)
+          story_csrs(story).flat_map(&:table).compact
+        end
+        private_class_method :tables_in_story
+
+        # All CharacterStyleRanges of a story, in document order.
+        # Shared by the story-level item discovery walks (tables,
+        # anchored objects).
+        def self.story_csrs(story)
           inner = story&.inner
           return [] unless inner
 
-          inner.paragraph_style_range.flat_map do |psr|
-            psr.character_style_range.flat_map(&:table)
-          end.compact
+          inner.paragraph_style_range.flat_map(&:character_style_range)
         end
-        private_class_method :tables_in_story
+        private_class_method :story_csrs
+
+        # Renders anchored page items embedded in the story flow
+        # (Story > PSR > CSR > Rectangle/Oval/Polygon/GraphicLine/
+        # Group/TextFrame — the IDML structure for anchored objects).
+        # Each item renders at its own stored geometry, which
+        # InDesign resolves to the anchored position when saving;
+        # AnchorType-specific text reflow is not simulated (the
+        # layout engine positions text independently either way).
+        def self.render_anchored_objects(canvas, story, context)
+          anchored_items_in_story(story).each do |item|
+            PageItemRenderer.render(canvas, context_for_item(context, item))
+          end
+        end
+        private_class_method :render_anchored_objects
+
+        def self.anchored_items_in_story(story)
+          story_csrs(story).flat_map do |csr|
+            [csr.rectangle, csr.oval, csr.polygon,
+             csr.graphic_line, csr.group, csr.text_frame]
+          end.flatten.compact
+        end
+        private_class_method :anchored_items_in_story
+
+        def self.context_for_item(context, item)
+          RenderContext.new(**context.to_h, item: item)
+        end
+        private_class_method :context_for_item
 
         def self.render_text(canvas, state, context, box)
           font = context.font_metrics

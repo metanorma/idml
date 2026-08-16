@@ -26,6 +26,8 @@ module Idml
       attribute :properties, Idml::Elements::Properties, collection: true
       attribute :transparency_setting, Idml::Elements::TransparencySetting
       attribute :text_wrap_preference, Idml::Elements::TextWrapPreference
+      attribute :anchored_object_setting,
+                Idml::Elements::AnchoredObjectSetting
 
       xml do
         root "Path"
@@ -43,6 +45,7 @@ module Idml
         map_element "Properties", to: :properties
         map_element "TransparencySetting", to: :transparency_setting
         map_element "TextWrapPreference", to: :text_wrap_preference
+        map_element "AnchoredObjectSetting", to: :anchored_object_setting
       end
 
       def geometric_bounds
