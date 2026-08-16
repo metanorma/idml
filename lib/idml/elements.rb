@@ -54,6 +54,7 @@ module Idml
              "idml/elements/flex_layout_attribute_option"
     autoload :Font, "idml/elements/font"
     autoload :FontFamily, "idml/elements/font_family"
+    autoload :Footnote, "idml/elements/footnote"
     autoload :FootnoteOption, "idml/elements/pref_footnote_option"
     autoload :FrameFittingOption, "idml/elements/frame_fitting_option"
     autoload :GraphicLine, "idml/elements/graphic_line"

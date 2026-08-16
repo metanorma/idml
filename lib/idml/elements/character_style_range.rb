@@ -300,6 +300,7 @@ module Idml
                 collection: true
       attribute :table, Idml::Elements::Table, collection: true
       attribute :xml_element, Idml::Elements::XmlElement, collection: true
+      attribute :footnote, Idml::Elements::Footnote, collection: true
 
       xml do
         root "CharacterStyleRange"
@@ -655,6 +656,7 @@ module Idml
         map_element "HyperlinkTextSource", to: :hyperlink_text_source
         map_element "Table", to: :table
         map_element "XMLElement", to: :xml_element
+        map_element "Footnote", to: :footnote
       end
 
       def text_content

@@ -25,7 +25,6 @@ module Idml
       # FontMetrics is available (no shaper → no wrap → rough output).
       class TextFrameRenderer
         DEFAULT_SIZE = 12.0
-        LEADING_FACTOR = 1.2
 
         def self.render(canvas, context)
           frame = context.item
@@ -72,7 +71,8 @@ module Idml
         def self.fresh_state(story, context)
           paragraphs = StyleResolver.extract_paragraphs(
             story, condition_filter: context.condition_filter,
-                   style_lookup: context.style_lookup
+                   style_lookup: context.style_lookup,
+                   footnote_option: Footnote.option(context.package)
           )
           return nil if paragraphs.empty?
 
@@ -175,19 +175,23 @@ module Idml
           top_y = layout_frame.y + layout_frame.height -
             (layout_frame.inset_top || 0)
           bottom_limit = TextEngine::VerticalLayout.bottom_limit(layout_frame)
+          footnotes = []
           cursor_y = vertical_justify_top(top_y, bottom_limit, state, context)
           char_cursor = state.char_cursor
 
           if state.current_paragraph
             cursor_y, char_cursor = resume_paragraph(
               canvas, state, context, layout_frame, font,
-              cursor_y, bottom_limit, char_cursor
+              cursor_y, bottom_limit, char_cursor, footnotes
             )
-            return if state.current_paragraph
           end
 
-          consume_paragraphs(canvas, state, context, layout_frame, font,
-                             cursor_y, bottom_limit, char_cursor)
+          unless state.current_paragraph
+            consume_paragraphs(canvas, state, context, layout_frame, font,
+                               cursor_y, bottom_limit, char_cursor, footnotes)
+          end
+          render_footnote_entries(canvas, footnotes, layout_frame,
+                                  context, font)
         end
         private_class_method :engine_render_single_column
 
@@ -212,19 +216,23 @@ module Idml
         def self.render_column(canvas, state, context, col_frame, font)
           top_y = col_frame.y + col_frame.height - (col_frame.inset_top || 0)
           bottom_limit = TextEngine::VerticalLayout.bottom_limit(col_frame)
+          footnotes = []
           cursor_y = top_y
           char_cursor = state.char_cursor
 
           if state.current_paragraph
             cursor_y, char_cursor = resume_paragraph(
               canvas, state, context, col_frame, font,
-              cursor_y, bottom_limit, char_cursor
+              cursor_y, bottom_limit, char_cursor, footnotes
             )
-            return if state.current_paragraph
           end
 
-          consume_paragraphs(canvas, state, context, col_frame, font,
-                             cursor_y, bottom_limit, char_cursor)
+          unless state.current_paragraph
+            consume_paragraphs(canvas, state, context, col_frame, font,
+                               cursor_y, bottom_limit, char_cursor, footnotes)
+          end
+          render_footnote_entries(canvas, footnotes, col_frame,
+                                  context, font)
         end
         private_class_method :render_column
 
@@ -343,12 +351,13 @@ module Idml
         private_class_method :space_before_after
 
         def self.resume_paragraph(canvas, state, context, layout_frame, font,
-                                  cursor_y, bottom_limit, char_cursor)
+                                  cursor_y, bottom_limit, char_cursor,
+                                  footnotes)
           paragraph = state.current_paragraph
           remaining_runs, cursor_y, char_cursor = render_runs_for_paragraph(
             canvas, paragraph, state.runs_remaining, context,
             layout_frame, font, cursor_y, bottom_limit, char_cursor,
-            first_paragraph: true
+            first_paragraph: true, footnotes: footnotes
           )
           if remaining_runs.any?
             state.runs_remaining = remaining_runs
@@ -361,7 +370,8 @@ module Idml
         private_class_method :resume_paragraph
 
         def self.consume_paragraphs(canvas, state, context, layout_frame, font,
-                                    cursor_y, bottom_limit, char_cursor)
+                                    cursor_y, bottom_limit, char_cursor,
+                                    footnotes)
           pending = 0
           state.paragraphs.each do |paragraph|
             break if cursor_y < bottom_limit
@@ -369,7 +379,7 @@ module Idml
             remaining_runs, cursor_y, char_cursor = render_runs_for_paragraph(
               canvas, paragraph, paragraph.runs, context,
               layout_frame, font, cursor_y, bottom_limit, char_cursor,
-              first_paragraph: pending.zero?
+              first_paragraph: pending.zero?, footnotes: footnotes
             )
             if remaining_runs.any?
               state.current_paragraph = paragraph
@@ -392,7 +402,7 @@ module Idml
         def self.render_runs_for_paragraph(canvas, paragraph, runs, context,
                                            layout_frame, font, cursor_y,
                                            bottom_limit, char_cursor,
-                                           first_paragraph:)
+                                           first_paragraph:, footnotes:)
           wrap_width = TextEngine::VerticalLayout.wrap_width(
             layout_frame, paragraph.right_indent || 0
           )
@@ -411,7 +421,7 @@ module Idml
           rendered, cursor_y, char_cursor = iterate_paragraph_runs(
             canvas, paragraph, effective_runs, context, layout_frame,
             font, wrap_width, cursor_y, bottom_limit, char_cursor,
-            first_paragraph, para_attrs, dc_width, dc_lines
+            first_paragraph, para_attrs, dc_width, dc_lines, footnotes
           )
 
           remaining_runs = effective_runs[rendered..]
@@ -427,7 +437,7 @@ module Idml
                                         layout_frame, font, wrap_width,
                                         cursor_y, bottom_limit, char_cursor,
                                         first_paragraph, para_attrs,
-                                        dc_width, dc_lines)
+                                        dc_width, dc_lines, footnotes)
           rendered_count = 0
           runs.each do |run|
             break if cursor_y < bottom_limit
@@ -442,15 +452,64 @@ module Idml
               canvas, run, paragraph, context, layout_frame, font,
               run_wrap, cursor_y, space_before,
               para_attrs[:first_line_indent], para_attrs[:left_indent],
-              char_cursor
+              char_cursor, bottom_limit
             )
             char_cursor += positioned.length
             cursor_y = next_y
             rendered_count += 1
+            bottom_limit = register_footnote(footnotes, run, layout_frame,
+                                             font, context, bottom_limit)
           end
           [rendered_count, cursor_y, char_cursor]
         end
         private_class_method :iterate_paragraph_runs
+
+        # Collects the footnote anchored by a marker run and raises
+        # the effective bottom limit to reserve room for all
+        # footnotes collected so far. Pass-through for regular runs.
+        def self.register_footnote(footnotes, run, layout_frame, font,
+                                   context, bottom_limit)
+          return bottom_limit unless run.footnote_paragraphs
+
+          footnotes << Footnote::Entry.new(
+            number: run.footnote_number,
+            paragraphs: run.footnote_paragraphs,
+          )
+          option = Footnote.option(context.package)
+          frame_bottom = TextEngine::VerticalLayout.bottom_limit(layout_frame)
+          reserved = Footnote.reserved_height(footnotes, font, layout_frame,
+                                              option)
+          frame_bottom + reserved
+        end
+        private_class_method :register_footnote
+
+        # Renders the collected footnotes at the bottom of the
+        # frame: separator rule at the area's top edge, then the
+        # footnote paragraphs (marker-prefixed at extraction)
+        # flowing downward to the content bottom.
+        def self.render_footnote_entries(canvas, footnotes, layout_frame,
+                                         context, font)
+          return if footnotes.empty?
+
+          option = Footnote.option(context.package)
+          content_bottom = TextEngine::VerticalLayout.bottom_limit(
+            layout_frame,
+          )
+          area_top = content_bottom +
+            Footnote.reserved_height(footnotes, font, layout_frame, option)
+
+          Footnote.emit_separator(canvas, layout_frame, area_top, option)
+          positioned, = Footnote.layout_entries(
+            footnotes, layout_frame, font,
+            area_top - Footnote.rule_gap(option), option
+          )
+          positioned.each do |item|
+            next if item.line.y < content_bottom
+
+            emit_line(canvas, item.line, item.run, context, item.font_size)
+          end
+        end
+        private_class_method :render_footnote_entries
 
         # Computes the text-wrap overlap for a run at its current y
         # position. Uses the run's point_size as the line height
@@ -594,7 +653,7 @@ module Idml
         def self.layout_run(canvas, run, paragraph, context, layout_frame,
                             font, wrap_width, cursor_y, space_before,
                             first_line_indent, left_indent,
-                            char_cursor)
+                            char_cursor, bottom_limit)
           size = run.point_size || DEFAULT_SIZE
           glyphs = TextEngine::Shaper.shape(
             text: run.text, font: font, size: size,
@@ -621,7 +680,6 @@ module Idml
             left_indent: left_indent,
           )
 
-          bottom_limit = TextEngine::VerticalLayout.bottom_limit(layout_frame)
           positioned.each do |line|
             break if line.y < bottom_limit
 
@@ -664,10 +722,7 @@ module Idml
         private_class_method :emit_line
 
         def self.leading_for(paragraph, size)
-          explicit = paragraph.auto_leading
-          return size * LEADING_FACTOR unless explicit&.positive?
-
-          size * explicit
+          TextEngine::VerticalLayout.leading_for(paragraph.auto_leading, size)
         end
         private_class_method :leading_for
 

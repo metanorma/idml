@@ -54,6 +54,17 @@ module Idml
         frame.y + (frame.inset_bottom || 0)
       end
 
+      # Leading for a text block: AutoLeading × size when the
+      # paragraph declares a positive AutoLeading, else the default
+      # factor. Shared by the frame renderer and the footnote
+      # layout so both stack lines identically.
+      def self.leading_for(auto_leading, font_size)
+        return font_size * DEFAULT_LEADING_FACTOR unless
+          auto_leading&.positive?
+
+        font_size * auto_leading
+      end
+
       # Effective wrap width after subtracting insets and indents.
       def self.wrap_width(frame, right_indent = 0)
         width = frame.width - (frame.inset_left || 0) - (frame.inset_right || 0)
@@ -63,7 +74,6 @@ module Idml
       def self.frame_left(frame)
         frame.x + (frame.inset_left || 0)
       end
-      private_class_method :frame_left
     end
   end
 end
