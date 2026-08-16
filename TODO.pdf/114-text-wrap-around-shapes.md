@@ -1,6 +1,12 @@
 # TODO PDF 114: Text wrap around shapes (TextWrapPreference)
 
-## Status: OPEN — gap identified in 2026-08-10 audit
+## Status: PARTIAL — `Render::TextWrapResolver` computes BoundingBox-mode
+contours from page items declaring TextWrapPreference.
+`overlap_width(line_y, line_height, frame_x, frame_right)` returns the
+horizontal overlap for a text line. Rectangle now carries the
+TextWrapPreference child. Integration with TextFrameRenderer
+(per-line wrap width adjustment during layout) is the remaining work —
+requires line-by-line contour queries in the layout pipeline.
 
 ## Problem
 
