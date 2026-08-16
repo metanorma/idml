@@ -18,7 +18,9 @@ module Idml
     class StyleResolver
       # Character-level attributes carried per run. Defaults are
       # applied at render time (e.g., DEFAULT_POINT_SIZE) — the Struct
-      # itself stores only what the CSR declares.
+      # itself stores only what the CSR declares. `footnote_number`
+      # and `footnote_paragraphs` are set only on synthesized
+      # footnote-marker runs (see Render::Footnote).
       StyledRun = Struct.new(
         :text,
         :font_style,
@@ -39,6 +41,8 @@ module Idml
         :horizontal_scale,
         :vertical_scale,
         :baseline_shift,
+        :footnote_number,
+        :footnote_paragraphs,
         keyword_init: true,
       )
 
@@ -98,27 +102,48 @@ module Idml
 
       # Returns the flat run list for a story. Each run carries only
       # character-level attributes. Paragraph boundaries are lost.
+      # Footnote markers number sequentially across the story.
       def self.extract_runs(story)
         return [] unless story&.inner
 
+        counter = Footnote.counter_for(nil)
         story.inner.paragraph_style_range.flat_map do |psr|
-          csr_runs(psr)
+          csr_runs(psr, footnote_counter: counter)
         end
       end
 
       # Returns the paragraph list for a story. Each paragraph groups
       # its runs and carries the paragraph-level attributes from the
       # owning PSR. Empty paragraphs (no runs after filtering) are
-      # skipped.
+      # skipped. Footnotes anchored in the story emit superscript
+      # marker runs, numbered sequentially from the FootnoteOption's
+      # StartAt (default 1).
       def self.extract_paragraphs(story, condition_filter: nil,
-                                  style_lookup: nil)
+                                  style_lookup: nil, footnote_option: nil)
         return [] unless story&.inner
 
-        story.inner.paragraph_style_range.filter_map do |psr|
+        extract_container_paragraphs(
+          story.inner,
+          condition_filter: condition_filter, style_lookup: style_lookup,
+          footnote_option: footnote_option
+        )
+      end
+
+      # Extracts paragraphs from any container exposing
+      # `paragraph_style_range` (StoryInner, Elements::Footnote).
+      # Footnote-counter state is shared across the whole walk so
+      # footnotes number in document order.
+      def self.extract_container_paragraphs(container, condition_filter: nil,
+                                            style_lookup: nil,
+                                            footnote_option: nil)
+        counter = Footnote.counter_for(footnote_option)
+        container.paragraph_style_range.filter_map do |psr|
           next unless condition_visible?(psr, condition_filter)
 
           runs = csr_runs(psr, condition_filter: condition_filter,
-                               style_lookup: style_lookup)
+                               style_lookup: style_lookup,
+                               footnote_counter: counter,
+                               footnote_option: footnote_option)
           next if runs.empty?
 
           paragraph = Paragraph.new(
@@ -177,43 +202,73 @@ module Idml
         end
       end
 
-      def self.csr_runs(psr, condition_filter: nil, style_lookup: nil)
-        psr.character_style_range.filter_map do |csr|
-          next unless condition_visible?(csr, condition_filter)
+      def self.csr_runs(psr, condition_filter: nil, style_lookup: nil,
+                        footnote_counter: nil, footnote_option: nil)
+        counter = footnote_counter || Footnote.counter_for(footnote_option)
+        psr.character_style_range.flat_map do |csr|
+          next [] unless condition_visible?(csr, condition_filter)
 
-          text = csr.text_content
-          next if text.nil? || text.empty?
-
-          StyledRun.new(
-            text: text,
-            font_style: resolve_csr(style_lookup, csr, :font_style),
-            point_size: resolve_csr(style_lookup, csr, :point_size) ||
-                        DEFAULT_POINT_SIZE,
-            fill_color: resolve_csr(style_lookup, csr, :fill_color),
-            fill_tint: resolve_csr(style_lookup, csr, :fill_tint),
-            applied_font: resolve_csr(style_lookup, csr, :applied_font),
-            alignment: alignment_for(csr),
-            tracking: resolve_csr(style_lookup, csr, :tracking),
-            capitalization: resolve_csr(style_lookup, csr, :capitalization),
-            position: resolve_csr(style_lookup, csr, :position),
-            underline: resolve_csr(style_lookup, csr, :underline),
-            underline_offset: resolve_csr(style_lookup, csr,
-                                          :underline_offset),
-            underline_weight: resolve_csr(style_lookup, csr,
-                                          :underline_weight),
-            strike_thru: resolve_csr(style_lookup, csr, :strike_thru),
-            strike_through_offset: resolve_csr(style_lookup, csr,
-                                               :strike_through_offset),
-            strike_through_weight: resolve_csr(style_lookup, csr,
-                                               :strike_through_weight),
-            horizontal_scale: resolve_csr(style_lookup, csr,
-                                          :horizontal_scale),
-            vertical_scale: resolve_csr(style_lookup, csr, :vertical_scale),
-            baseline_shift: resolve_csr(style_lookup, csr, :baseline_shift),
-          )
+          csr_content_runs(csr, condition_filter: condition_filter,
+                                style_lookup: style_lookup,
+                                footnote_counter: counter,
+                                footnote_option: footnote_option)
         end
       end
-      private_class_method :csr_runs
+
+      # Builds the runs for one CSR: its text run (when non-empty)
+      # plus one superscript marker run per anchored Footnote. A CSR
+      # holding only a footnote still emits its marker.
+      def self.csr_content_runs(csr, condition_filter:, style_lookup:,
+                                footnote_counter:, footnote_option:)
+        text = csr.text_content
+        runs = []
+        unless text.nil? || text.empty?
+          runs << text_run(csr, style_lookup: style_lookup)
+        end
+        csr.footnote.each do |element|
+          number = footnote_counter.next_number
+          paragraphs = Footnote.extract(
+            element, number, condition_filter: condition_filter,
+                             style_lookup: style_lookup,
+                             option: footnote_option
+          )
+          runs << Footnote.marker_run(number, runs.last, paragraphs,
+                                      footnote_option)
+        end
+        runs
+      end
+      private_class_method :csr_content_runs
+
+      def self.text_run(csr, style_lookup:)
+        StyledRun.new(
+          text: csr.text_content,
+          font_style: resolve_csr(style_lookup, csr, :font_style),
+          point_size: resolve_csr(style_lookup, csr, :point_size) ||
+            DEFAULT_POINT_SIZE,
+          fill_color: resolve_csr(style_lookup, csr, :fill_color),
+          fill_tint: resolve_csr(style_lookup, csr, :fill_tint),
+          applied_font: resolve_csr(style_lookup, csr, :applied_font),
+          alignment: alignment_for(csr),
+          tracking: resolve_csr(style_lookup, csr, :tracking),
+          capitalization: resolve_csr(style_lookup, csr, :capitalization),
+          position: resolve_csr(style_lookup, csr, :position),
+          underline: resolve_csr(style_lookup, csr, :underline),
+          underline_offset: resolve_csr(style_lookup, csr,
+                                        :underline_offset),
+          underline_weight: resolve_csr(style_lookup, csr,
+                                        :underline_weight),
+          strike_thru: resolve_csr(style_lookup, csr, :strike_thru),
+          strike_through_offset: resolve_csr(style_lookup, csr,
+                                             :strike_through_offset),
+          strike_through_weight: resolve_csr(style_lookup, csr,
+                                             :strike_through_weight),
+          horizontal_scale: resolve_csr(style_lookup, csr,
+                                        :horizontal_scale),
+          vertical_scale: resolve_csr(style_lookup, csr, :vertical_scale),
+          baseline_shift: resolve_csr(style_lookup, csr, :baseline_shift),
+        )
+      end
+      private_class_method :text_run
 
       # Resolves a paragraph-level attribute from PSR or its
       # referenced ParagraphStyle. When style_lookup is nil,

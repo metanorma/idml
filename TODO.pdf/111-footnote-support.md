@@ -1,40 +1,50 @@
 # TODO PDF 111: Footnote support
 
-## Status: OPEN — gap identified in 2026-08-09 audit
+## Status: COMPLETE — implemented 2026-08-16
 
-## Problem
+## What was built
 
-IDML has full footnote support:
-- `<Footnote>` elements in Stories (inline footnote markers + text)
-- `<FootnoteOption>` on PSR (numbering rules, layout)
-- `TextFramePreference.FootnotesEnableOverrides`,
-  `FootnotesSpanAcrossColumns`, `FootnotesMinimumSpacing`,
-  `FootnotesSpaceBetween` — frame-level footnote layout
-- `<TextFrameFootnoteOptionsObject>` — per-frame footnote config
+- `Elements::Footnote` — schema-faithful model of `Footnote_Object`
+  (Story.rnc): no attributes, PSR/CSR children carrying the footnote
+  text. Wired into `CharacterStyleRange` and `StoryInner` (`footnote`
+  collection). Footnote text is excluded from `text_content` so it
+  never leaks into body text.
+- `Render::Footnote` — footnote semantics unit (MECE):
+  - `Counter`: story-scoped sequential numbering, honoring
+    FootnoteOption `StartAt`.
+  - `marker_run`: superscript marker emitted into the body text at the
+    anchoring CSR's position; inherits the CSR's character styling.
+  - `extract`: footnote paragraphs via StyleResolver with the marker
+    text (`Prefix + number + Suffix`) prefixed to the first run.
+  - `layout_entries` / `reserved_height`: one shared Shaper →
+    LineBreaker → VerticalLayout walk drives both height measurement
+    and rendering, so the reserved area always matches what's drawn.
+  - `emit_separator`: separator rule honoring FootnoteOption RuleOn /
+    RuleLineWeight / RuleWidth / RuleLeftIndent.
+- `TextFrameRenderer`: marker runs are collected during body layout
+  (`register_footnote`), each raising the effective bottom limit so
+  body text avoids the footnote area (incremental reservation,
+  InDesign-style); after body layout, `render_footnote_entries` draws
+  the separator and the footnote paragraphs above the frame's content
+  bottom. Per-column in multi-column frames.
+- `FootnoteOption` (Preferences.xml) honored: StartAt, Prefix, Suffix,
+  RuleOn, RuleLineWeight, RuleWidth, RuleLeftIndent, Spacer
+  (separator gap), SpaceBetween (inter-entry gap).
 
-The renderer doesn't model footnote content or lay it out.
-Documents with footnotes (academic, legal, technical) currently
-lose footnote text in the PDF.
+## Known limitations
 
-## What needs to happen
-
-1. Model `<Footnote>` element (story-embedded footnote text +
-   reference marker).
-2. Story parsing extracts footnotes alongside main text.
-3. Footnote text renders at the bottom of the page that contains
-   the reference marker.
-4. Footnote numbering rules from FootnoteOption honored.
-5. Continuous footnotes flow across pages.
-
-This is a large feature — defer until needed by a real fixture.
+- Numbering restarts per story; document-wide continuous numbering
+  and per-section restart are not modeled.
+- Footnote overflow balancing (a footnote too tall for its frame
+  moving wholly to the next frame, NoSplitting) is not modeled.
+- The simple-render fallback (no font metrics) shows markers inline
+  but does not render footnote text at the frame bottom.
+- Footnotes nested in CSRs inside CSRs (CSR > CSR > Footnote) are
+  not extracted; only direct CSR children emit markers.
 
 ## Acceptance criteria
 
-- [ ] Footnote text rendered at bottom of containing page.
-- [ ] Footnote marker in body text links to footnote text.
-- [ ] Numbering restarts per document section per FootnoteOption.
-
-## Dependencies
-
-- TODO 108 (multi-frame story flow) — footnotes need to know which
-  page a reference appears on.
+- [x] Footnote text rendered at bottom of containing frame.
+- [x] Footnote marker in body text (superscript, numbered).
+- [x] Numbering honors FootnoteOption StartAt / Prefix / Suffix
+      (per-story scope).

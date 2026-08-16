@@ -22,6 +22,7 @@ module Idml
     autoload :LayerFilter,         "#{__dir__}/render/layer_filter"
     autoload :ConditionFilter,     "#{__dir__}/render/condition_filter"
     autoload :TextWrapResolver,    "#{__dir__}/render/text_wrap_resolver"
+    autoload :Footnote,            "#{__dir__}/render/footnote"
     autoload :Placement,           "#{__dir__}/render/placement"
     autoload :ImageCollector,      "#{__dir__}/render/image_collector"
     autoload :StructureTracker,    "#{__dir__}/render/structure_tracker"

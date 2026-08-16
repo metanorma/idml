@@ -312,6 +312,7 @@ module Idml
                 collection: true
       attribute :content, Idml::Elements::Content, collection: true
       attribute :xml_element, Idml::Elements::XmlElement, collection: true
+      attribute :footnote, Idml::Elements::Footnote, collection: true
 
       xml do
         root "Story"
@@ -676,6 +677,7 @@ module Idml
         map_element "CharacterStyleRange", to: :character_style_range
         map_element "Content", to: :content
         map_element "XMLElement", to: :xml_element
+        map_element "Footnote", to: :footnote
       end
 
       def text_content
