@@ -66,15 +66,34 @@ module Idml
       end
       private_class_method :contour_for
 
+      # Page item types that can declare TextWrapPreference per the
+      # Spread schema. Used to guard the attribute read — querying
+      # non-shape items (Page, Link) would raise NoMethodError.
+      WRAPPABLE_TYPES = [
+        Idml::Elements::Rectangle,
+        Idml::Elements::Oval,
+        Idml::Elements::Polygon,
+        Idml::Elements::GraphicLine,
+        Idml::Elements::Path,
+        Idml::Elements::Group,
+      ].freeze
+
       def self.wrap_preference(item)
-        pref = item.text_wrap_preference if item.is_a?(Lutaml::Model::Serializable)
-        return nil unless pref
-        return nil if pref.text_wrap_mode.nil? ||
+        return nil unless wrappable?(item)
+
+        pref = item.text_wrap_preference
+        return nil if pref.nil? ||
+          pref.text_wrap_mode.nil? ||
           pref.text_wrap_mode == "None"
 
         pref
       end
       private_class_method :wrap_preference
+
+      def self.wrappable?(item)
+        WRAPPABLE_TYPES.any? { |type| item.is_a?(type) }
+      end
+      private_class_method :wrappable?
 
       def self.bounding_box_mode?(pref)
         pref.text_wrap_mode == "BoundingBox"

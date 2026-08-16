@@ -1,12 +1,20 @@
 # TODO PDF 114: Text wrap around shapes (TextWrapPreference)
 
-## Status: PARTIAL — `Render::TextWrapResolver` computes BoundingBox-mode
-contours from page items declaring TextWrapPreference.
-`overlap_width(line_y, line_height, frame_x, frame_right)` returns the
-horizontal overlap for a text line. Rectangle now carries the
-TextWrapPreference child. Integration with TextFrameRenderer
-(per-line wrap width adjustment during layout) is the remaining work —
-requires line-by-line contour queries in the layout pipeline.
+## Status: DONE for BoundingBox mode — `Render::TextWrapResolver` computes
+wrap contours from page items declaring TextWrapPreference with
+TextWrapMode != "None". SpreadRenderer builds the resolver and passes
+it via RenderContext. TextFrameRenderer's `text_wrap_overlap` queries
+overlap at each run's y position and reduces the wrap width — text
+flows around the shape instead of running over it.
+
+Shape page items (Rectangle, Oval, Polygon, GraphicLine, Path) all
+carry the TextWrapPreference child element. Non-shape items (Page,
+Link) are filtered by WRAPPABLE_TYPES to avoid NoMethodError.
+
+Per-run approximation: all lines in a run get the same reduced width.
+True per-line adjustment (when a run spans the contour boundary)
+requires line-count-aware layout. Shape mode (contour following) and
+Inverse mode remain unsupported.
 
 ## Problem
 

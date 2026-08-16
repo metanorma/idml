@@ -436,6 +436,8 @@ module Idml
                                                   rendered_count)
             run_wrap = drop_cap_wrap_width(wrap_width, dc_width,
                                            dc_lines, rendered_count)
+            run_wrap -= text_wrap_overlap(context, layout_frame, cursor_y,
+                                          run)
             positioned, next_y = layout_run(
               canvas, run, paragraph, context, layout_frame, font,
               run_wrap, cursor_y, space_before,
@@ -449,6 +451,27 @@ module Idml
           [rendered_count, cursor_y, char_cursor]
         end
         private_class_method :iterate_paragraph_runs
+
+        # Computes the text-wrap overlap for a run at its current y
+        # position. Uses the run's point_size as the line height
+        # approximation. Returns 0.0 when no resolver is wired or no
+        # contours overlap. Per-run approximation: all lines in the
+        # run get the same reduced width (correct when the run is
+        # fully inside or outside the contour; approximate when it
+        # spans the boundary).
+        def self.text_wrap_overlap(context, layout_frame, cursor_y, run)
+          resolver = context.text_wrap_resolver
+          return 0.0 unless resolver
+
+          size = run.point_size || DEFAULT_SIZE
+          frame_x = layout_frame.x + (layout_frame.inset_left || 0)
+          frame_right = layout_frame.x + layout_frame.width -
+            (layout_frame.inset_right || 0)
+          overlap = resolver.overlap_width(cursor_y, size,
+                                           frame_x, frame_right)
+          [overlap, 0.0].max
+        end
+        private_class_method :text_wrap_overlap
 
         # Strips drop cap characters from the first run so they don't
         # render twice (once as the enlarged drop cap, once as normal

@@ -39,6 +39,7 @@ module Idml
           chain_controller: StoryChainController.new,
           condition_filter: @condition_filter,
           style_lookup: @style_lookup,
+          text_wrap_resolver: build_text_wrap_resolver(spread, page_height),
         }
         images_by_parent = group_images_by_parent(image_refs)
 
@@ -143,6 +144,10 @@ module Idml
         return nil unless @package&.graphic
 
         ColorResolver.new(@package.graphic)
+      end
+
+      def build_text_wrap_resolver(spread, page_height)
+        TextWrapResolver.build(spread, page_height: page_height)
       end
     end
   end
