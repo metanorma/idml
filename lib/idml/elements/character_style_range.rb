@@ -301,6 +301,16 @@ module Idml
       attribute :table, Idml::Elements::Table, collection: true
       attribute :xml_element, Idml::Elements::XmlElement, collection: true
       attribute :footnote, Idml::Elements::Footnote, collection: true
+      # Anchored page items embedded in the story flow. Their
+      # AnchoredObjectSetting (child of each item) declares how the
+      # item anchors to the surrounding text.
+      attribute :rectangle, Idml::Elements::Rectangle, collection: true
+      attribute :oval, Idml::Elements::Oval, collection: true
+      attribute :polygon, Idml::Elements::Polygon, collection: true
+      attribute :graphic_line, Idml::Elements::GraphicLine,
+                collection: true
+      attribute :group, Idml::Elements::Group, collection: true
+      attribute :text_frame, Idml::Elements::TextFrame, collection: true
 
       xml do
         root "CharacterStyleRange"
@@ -657,6 +667,12 @@ module Idml
         map_element "Table", to: :table
         map_element "XMLElement", to: :xml_element
         map_element "Footnote", to: :footnote
+        map_element "Rectangle", to: :rectangle
+        map_element "Oval", to: :oval
+        map_element "Polygon", to: :polygon
+        map_element "GraphicLine", to: :graphic_line
+        map_element "Group", to: :group
+        map_element "TextFrame", to: :text_frame
       end
 
       def text_content

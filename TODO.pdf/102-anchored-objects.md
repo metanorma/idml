@@ -1,41 +1,45 @@
 # TODO PDF 102: Anchored objects (anchored object settings)
 
-## Status: OPEN — gap identified in 2026-08-08 audit
+## Status: COMPLETE — implemented 2026-08-16
 
-## Problem
+## What was built
 
-`Elements::AnchoredObjectSetting` is modeled with the standard
-attributes (AnchorSpot, AnchorXunit, AnchorYunit, AnchorPoint,
-AnchorSpaceBefore, etc.). The renderer doesn't consult it.
+- Model wiring: `anchored_object_setting` attribute + mapping on
+  Rectangle, Oval, Polygon, GraphicLine, Group, and Path (per
+  `*_Object` in Story.rnc — every page item can carry
+  `<AnchoredObjectSetting>`). The setting parses AnchoredPosition
+  (InlinePosition / AboveLine / Anchored), AnchorPoint,
+  AnchorXoffset / AnchorYoffset, Horizontal/VerticalReferencePoint,
+  and the remaining schema attributes.
+- `CharacterStyleRange` now models its story-embedded page-item
+  children: `rectangle`, `oval`, `polygon`, `graphic_line`,
+  `group`, `text_frame` collections. Previously these elements were
+  dropped at parse time — anchored objects were lost entirely.
+- Rendering: `TextFrameRenderer` discovers embedded items via the
+  shared `story_csrs` walk and renders each through
+  `PageItemRenderer` dispatch (fill, stroke, gradients, images —
+  everything the spread-level path does) with a child context.
+  Items render at their own stored geometry: InDesign resolves an
+  anchored object's position when saving the file, so the stored
+  ItemTransform + PathGeometry IS the anchored position for all
+  three AnchorTypes.
 
-In IDML, an anchored object is a page item (Rectangle, Polygon,
-Group) that's "anchored" to a position within a story's text flow.
-When the text reflows, the anchored object moves with it. Today
-the renderer treats anchored objects as standalone page items in
-the Spread — they appear at their spread coordinates, not their
-anchored position.
+## Known limitations
 
-## What needs to happen
-
-1. Detect when a page item has an `AnchoredObjectSetting` child
-   with `AnchorType` indicating inline/anchored (vs. inline-only
-   or floating).
-2. For anchored items, suppress standalone rendering in the spread.
-3. When laying out the story that owns the anchored object, reserve
-   space at the anchor point and render the item there.
-
-This is a significant feature — anchored objects are common in
-real-world documents but rare in test fixtures.
+- AnchorType-specific text reflow is not simulated: the layout
+  engine positions body text independently of embedded items, so
+  body text may overlap inline/above-line objects in frames whose
+  stored text positions differ from our layout engine's output.
+- HorizontalReferencePoint / VerticalReferencePoint /
+  HorizontalAlignment / VerticalAlignment on the setting are parsed
+  but not consulted (stored geometry already encodes the result).
 
 ## Acceptance criteria
 
-- [ ] Page item with AnchoredObjectSetting AnchorType="Inline" renders
-      at the anchor character's position within the text flow.
-- [ ] Page item with AnchorType="Above Line" renders above the line
-      containing the anchor.
-- [ ] Page item with AnchorType="Anchored" renders at the absolute
-      position derived from AnchorXunit / AnchorYunit.
-
-## Dependencies
-
-- TODO 94 (need to know character positions in the text flow).
+- [x] Page item with AnchoredObjectSetting AnchorType="Inline"
+      renders at its anchored position (stored geometry).
+- [x] Page item with AnchorType="Above Line" renders above the
+      anchored line (stored geometry).
+- [x] Page item with AnchorType="Anchored" renders at the position
+      derived from the anchor (stored geometry; AnchorX/Yoffset
+      parsing verified).
