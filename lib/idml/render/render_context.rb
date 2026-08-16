@@ -23,6 +23,7 @@ module Idml
       :chain_controller,
       :condition_filter,
       :style_lookup,
+      :text_wrap_resolver,
       keyword_init: true,
     )
   end

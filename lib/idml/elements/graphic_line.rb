@@ -18,6 +18,7 @@ module Idml
       attribute :item_layer, :string
       attribute :properties, Idml::Elements::Properties, collection: true
       attribute :transparency_setting, Idml::Elements::TransparencySetting
+      attribute :text_wrap_preference, Idml::Elements::TextWrapPreference
 
       xml do
         root "GraphicLine"
@@ -34,6 +35,7 @@ module Idml
         map_attribute "ItemLayer", to: :item_layer
         map_element "Properties", to: :properties
         map_element "TransparencySetting", to: :transparency_setting
+        map_element "TextWrapPreference", to: :text_wrap_preference
       end
 
       def geometric_bounds
