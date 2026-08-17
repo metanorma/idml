@@ -104,6 +104,32 @@ RSpec.describe Idml::TextEngine::Justifier do
   let(:font_path) { "/System/Library/Fonts/Supplemental/Arial.ttf" }
   let(:font) { pdfrb_metrics(font_path) }
 
+  it "stretches inter-word spaces under :justified" do
+    shaper = Idml::TextEngine::Shaper.new(font, 12)
+    glyphs = shaper.shape("aa bb cc")
+    line = Idml::TextEngine::Line.new(glyphs, shaper.measure(glyphs), 0)
+    space_widths = glyphs.select(&:is_space).map(&:width)
+
+    described_class.justify(line: line, frame_width: line.width + 20,
+                            alignment: :justified)
+    stretched = line.glyphs.select(&:is_space).map(&:width)
+    expect(stretched).to all(be > 0)
+    expect(stretched.sum - space_widths.sum).to be > 15
+  end
+
+  it "keeps the last line ragged under :justified" do
+    shaper = Idml::TextEngine::Shaper.new(font, 12)
+    glyphs = shaper.shape("aa bb cc")
+    line = Idml::TextEngine::Line.new(glyphs, shaper.measure(glyphs), 0)
+    total = line.width
+
+    described_class.justify(line: line, frame_width: total + 20,
+                            alignment: :justified, last_line: true)
+    expect(line.x_offset).to eq(0)
+    expect(line.glyphs.select(&:is_space).sum(&:width))
+      .to be < total + 20
+  end
+
   it "left-aligns by default (x_offset = 0)" do
     shaper = Idml::TextEngine::Shaper.new(font, 12)
     glyphs = shaper.shape("Hello")

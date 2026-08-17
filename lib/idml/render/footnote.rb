@@ -128,10 +128,11 @@ module Idml
                                             size: size)
           lines = TextEngine::LineBreaker.break(glyphs: glyphs,
                                                 frame_width: wrap_width)
-          lines.each do |line|
+          lines.each_with_index do |line, index|
             TextEngine::Justifier.justify(
               line: line, frame_width: wrap_width,
-              alignment: paragraph.alignment || :left
+              alignment: paragraph.alignment || :left,
+              last_line: last_line?(paragraph, run, index, lines)
             )
           end
           leading = TextEngine::VerticalLayout.leading_for(
@@ -149,6 +150,13 @@ module Idml
         cursor
       end
       private_class_method :layout_paragraph
+
+      # True for the final line of the footnote paragraph's final
+      # run — kept ragged under full justification.
+      def self.last_line?(paragraph, run, index, lines)
+        run.equal?(paragraph.runs.last) && index == lines.length - 1
+      end
+      private_class_method :last_line?
 
       # Height to reserve at the frame bottom for the entries:
       # separator gap + the measured paragraph stack.
