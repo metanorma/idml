@@ -6,7 +6,8 @@ module Idml
   # .ttf/.otf files. IDML-agnostic — works on any styled text.
   module TextEngine
     autoload :PdfrbFontMetrics, "#{__dir__}/text_engine/pdfrb_font_metrics"
-    autoload :Shaper,          "#{__dir__}/text_engine/shaper"
+    autoload :Shaper, "#{__dir__}/text_engine/shaper"
+    autoload :Measurement, "#{__dir__}/text_engine/measurement"
     autoload :ShapedGlyph,     "#{__dir__}/text_engine/shaper"
     autoload :LineBreaker,     "#{__dir__}/text_engine/line_breaker"
     autoload :Line,            "#{__dir__}/text_engine/line_breaker"

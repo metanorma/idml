@@ -1,47 +1,44 @@
 # TODO PDF 101: Paragraph borders and rules (RuleAbove, RuleBelow, ParagraphBorder)
 
-## Status: PARTIAL — RuleAbove and RuleBelow implemented via new
-`Render::ParagraphRules` helper; TextFrameRenderer emits them at
-paragraph top/bottom. Rule color comes from PSR#stroke_color (IDML's
-PSR doesn't have a dedicated RuleAboveColor attribute). RuleAboveWidth
-"Text" vs "Column" honored. Tint scaling + line weight + offset honored.
+## Status: COMPLETE — implemented 2026-08-17
 
-ParagraphBorder and ParagraphShading remain open — they need the
-paragraph's bounding rect, which the renderer doesn't currently
-expose to ParagraphRules. Will add when a real document fixture
-exercises them.
+## What was built
 
-## Problem
+- RuleAbove / RuleBelow (earlier milestone): horizontal rules at
+  paragraph top/bottom with weight / tint / offset / indent /
+  TextWidth-ColumnWidth modes, via `Render::ParagraphRules`.
+- Rule colors now resolve from `Properties > RuleAboveColor` /
+  `RuleBelowColor` (typed value elements) with StrokeColor fallback —
+  modeled via `Elements::TypedValue` + Properties mapping, PSR/CSR
+  now carry `properties` collections.
+- ParagraphShading: fill rect behind the paragraph block. Color from
+  `Properties > ParagraphShadingColor`, tint scaling, ParagraphShading
+  width mode (ColumnWidth default / TextWidth), four outward offsets.
+  `TextEngine::Measurement` pre-measures the paragraph's height so
+  the rect is known before the lines are laid out (clamped to the
+  frame's bottom limit when the paragraph splits).
+- ParagraphBorder: per-side strokes around the same block rect, each
+  side with its own line weight and the border offsets/tint/color
+  (Properties > ParagraphBorderColor). Shading and border share one
+  extent so they always agree.
 
-`ParagraphStyleRange` carries:
+## Known limitations
 
-- `RuleAbove`, `RuleAboveLineWeight`, `RuleAboveTint`, `RuleAboveOffset`,
-  `RuleAboveLeftIndent`, `RuleAboveRightIndent`, `RuleAboveWidth`
-- `RuleBelow`, `RuleBelowLineWeight`, `RuleBelowTint`, `RuleBelowOffset`,
-  `RuleBelowLeftIndent`, `RuleBelowRightIndent`, `RuleBelowWidth`
-- `ParagraphBorderOn`, `ParagraphBorderTopLineWeight`,
-  `ParagraphBorderLeftLineWeight`, etc.
-- `ParagraphShadingOn`, `ParagraphShadingTint`, `ParagraphShadingColor`
-
-None of these are rendered today. Real-world documents use RuleAbove
-heavily for headings ("section divider line"), and ParagraphShading
-for callouts.
-
-## What needs to happen
-
-1. After laying out a paragraph, emit RuleAbove as a horizontal line
-   above the first line, with the rule's weight/tint/color/offset/indent.
-2. Emit RuleBelow similarly below the last line.
-3. Optionally emit ParagraphBorder as a rectangle around the paragraph.
-4. Optionally emit ParagraphShading as a fill behind the paragraph.
+- Border corner radii and gap colors are parsed on the model but not
+  rendered; MergeConsecutiveParaBorders (merged rects across like-
+  bordered paragraphs) is not modeled.
+- DisplayIfSplits: when a paragraph splits across frames, both
+  shading and border are drawn around the rendered portion only.
 
 ## Acceptance criteria
 
-- [ ] PSR with RuleAbove=true and RuleAboveLineWeight=2 draws a 2pt
-      horizontal line above the paragraph.
-- [ ] PSR with RuleAboveOffset=4 leaves 4pt gap between rule and text.
-- [ ] PSR with ParagraphShadingOn=true and tint fills the paragraph rect.
+- [x] PSR with RuleAbove=true and RuleAboveLineWeight=2 draws the
+      rule above the paragraph.
+- [x] PSR with RuleAboveOffset=4 leaves a 4pt gap.
+- [x] PSR with ParagraphShadingOn=true and tint fills the paragraph
+      rect.
+- [x] ParagraphBorderOn draws per-side strokes.
 
 ## Dependencies
 
-- TODO 94 (VerticalLayout knows the paragraph's rect).
+- TODO 94 (VerticalLayout knows the paragraph's rect) — satisfied.

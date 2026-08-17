@@ -82,6 +82,28 @@ module Idml
         :rule_below_left_indent,
         :rule_below_right_indent,
         :rule_below_width,
+        # ParagraphShading — fill rect behind the paragraph block.
+        # Color comes from Properties > ParagraphShadingColor.
+        :paragraph_shading_on,
+        :paragraph_shading_color,
+        :paragraph_shading_tint,
+        :paragraph_shading_width,
+        :paragraph_shading_left_offset,
+        :paragraph_shading_right_offset,
+        :paragraph_shading_top_offset,
+        :paragraph_shading_bottom_offset,
+        # ParagraphBorder — per-side strokes around the paragraph.
+        :paragraph_border_on,
+        :paragraph_border_color,
+        :paragraph_border_tint,
+        :paragraph_border_top_line_weight,
+        :paragraph_border_left_line_weight,
+        :paragraph_border_right_line_weight,
+        :paragraph_border_bottom_line_weight,
+        :paragraph_border_top_offset,
+        :paragraph_border_left_offset,
+        :paragraph_border_right_offset,
+        :paragraph_border_bottom_offset,
         keyword_init: true,
       )
 
@@ -171,7 +193,8 @@ module Idml
             rule_above: resolve_attr(style_lookup, psr, :rule_above),
             rule_above_line_weight: resolve_attr(style_lookup, psr,
                                                  :rule_above_line_weight),
-            rule_above_color: resolve_attr(style_lookup, psr, :stroke_color),
+            rule_above_color: properties_color(psr, :rule_above_color) ||
+                             resolve_attr(style_lookup, psr, :stroke_color),
             rule_above_tint: resolve_attr(style_lookup, psr,
                                           :rule_above_tint),
             rule_above_offset: resolve_attr(style_lookup, psr,
@@ -185,7 +208,8 @@ module Idml
             rule_below: resolve_attr(style_lookup, psr, :rule_below),
             rule_below_line_weight: resolve_attr(style_lookup, psr,
                                                  :rule_below_line_weight),
-            rule_below_color: resolve_attr(style_lookup, psr, :stroke_color),
+            rule_below_color: properties_color(psr, :rule_below_color) ||
+                             resolve_attr(style_lookup, psr, :stroke_color),
             rule_below_tint: resolve_attr(style_lookup, psr,
                                           :rule_below_tint),
             rule_below_offset: resolve_attr(style_lookup, psr,
@@ -196,11 +220,69 @@ module Idml
                                                   :rule_below_right_indent),
             rule_below_width: resolve_attr(style_lookup, psr,
                                            :rule_below_width),
+            paragraph_shading_on: resolve_attr(style_lookup, psr,
+                                               :paragraph_shading_on),
+            paragraph_shading_color: properties_color(psr,
+                                                      :paragraph_shading_color),
+            paragraph_shading_tint: resolve_attr(style_lookup, psr,
+                                                 :paragraph_shading_tint),
+            paragraph_shading_width: resolve_attr(style_lookup, psr,
+                                                  :paragraph_shading_width),
+            paragraph_shading_left_offset: resolve_attr(
+              style_lookup, psr, :paragraph_shading_left_offset
+            ),
+            paragraph_shading_right_offset: resolve_attr(
+              style_lookup, psr, :paragraph_shading_right_offset
+            ),
+            paragraph_shading_top_offset: resolve_attr(
+              style_lookup, psr, :paragraph_shading_top_offset
+            ),
+            paragraph_shading_bottom_offset: resolve_attr(
+              style_lookup, psr, :paragraph_shading_bottom_offset
+            ),
+            paragraph_border_on: resolve_attr(style_lookup, psr,
+                                              :paragraph_border_on),
+            paragraph_border_color: properties_color(psr,
+                                                     :paragraph_border_color),
+            paragraph_border_tint: resolve_attr(style_lookup, psr,
+                                                :paragraph_border_tint),
+            paragraph_border_top_line_weight: resolve_attr(
+              style_lookup, psr, :paragraph_border_top_line_weight
+            ),
+            paragraph_border_left_line_weight: resolve_attr(
+              style_lookup, psr, :paragraph_border_left_line_weight
+            ),
+            paragraph_border_right_line_weight: resolve_attr(
+              style_lookup, psr, :paragraph_border_right_line_weight
+            ),
+            paragraph_border_bottom_line_weight: resolve_attr(
+              style_lookup, psr, :paragraph_border_bottom_line_weight
+            ),
+            paragraph_border_top_offset: resolve_attr(
+              style_lookup, psr, :paragraph_border_top_offset
+            ),
+            paragraph_border_left_offset: resolve_attr(
+              style_lookup, psr, :paragraph_border_left_offset
+            ),
+            paragraph_border_right_offset: resolve_attr(
+              style_lookup, psr, :paragraph_border_right_offset
+            ),
+            paragraph_border_bottom_offset: resolve_attr(
+              style_lookup, psr, :paragraph_border_bottom_offset
+            ),
           )
           prepend_list_marker(paragraph)
           paragraph
         end
       end
+
+      # Reads a color value element from the PSR's Properties (e.g.
+      # Properties > ParagraphShadingColor). Returns the color name
+      # string, or nil when the element is absent.
+      def self.properties_color(psr, element_attr)
+        psr.properties.first&.public_send(element_attr)&.value
+      end
+      private_class_method :properties_color
 
       def self.csr_runs(psr, condition_filter: nil, style_lookup: nil,
                         footnote_counter: nil, footnote_option: nil)
