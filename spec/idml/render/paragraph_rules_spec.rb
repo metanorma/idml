@@ -85,4 +85,86 @@ RSpec.describe Idml::Render::ParagraphRules do
       end
     end
   end
+
+  describe ".emit_shading" do
+    it "does nothing when paragraph_shading_on is falsy" do
+      described_class.emit_shading(canvas, paragraph(paragraph_shading_on: nil),
+                                   context_without_color, 300, 200, 50, 350)
+      write_to_temp_pdf(writer, "shade-off") do |path|
+        expect(File.binread(path)).not_to include(" re")
+      end
+    end
+
+    it "fills the paragraph rect when shading is on" do
+      para = paragraph(paragraph_shading_on: true,
+                       paragraph_shading_color: "Color/Red")
+      described_class.emit_shading(canvas, para, context_without_color,
+                                   300, 200, 50, 350)
+      write_to_temp_pdf(writer, "shade-on") do |path|
+        raw = File.binread(path)
+        expect(raw).to include(" re")
+        expect(raw).to match(/\b f\b/)
+      end
+    end
+
+    it "fills black by default when no color element resolved" do
+      para = paragraph(paragraph_shading_on: true)
+      described_class.emit_shading(canvas, para, context_without_color,
+                                   300, 200, 50, 350)
+      write_to_temp_pdf(writer, "shade-default") do |path|
+        expect(File.binread(path)).to include(" re")
+      end
+    end
+
+    it "does nothing when tint is zero" do
+      para = paragraph(paragraph_shading_on: true, paragraph_shading_tint: 0)
+      described_class.emit_shading(canvas, para, context_without_color,
+                                   300, 200, 50, 350)
+      write_to_temp_pdf(writer, "shade-zero-tint") do |path|
+        expect(File.binread(path)).not_to include(" re")
+      end
+    end
+  end
+
+  describe ".emit_border" do
+    it "does nothing when paragraph_border_on is falsy" do
+      described_class.emit_border(canvas, paragraph(paragraph_border_on: nil),
+                                  context_without_color, 300, 200, 50, 350)
+      write_to_temp_pdf(writer, "border-off") do |path|
+        expect(File.binread(path).scan(/\bS\b/).length).to eq(0)
+      end
+    end
+
+    it "strokes each side with a positive weight" do
+      para = paragraph(
+        paragraph_border_on: true,
+        paragraph_border_top_line_weight: 1,
+        paragraph_border_bottom_line_weight: 2,
+        paragraph_border_left_line_weight: 1,
+        paragraph_border_right_line_weight: 1,
+      )
+      described_class.emit_border(canvas, para, context_without_color,
+                                  300, 200, 50, 350)
+      write_to_temp_pdf(writer, "border-sides") do |path|
+        raw = File.binread(path)
+        expect(raw.scan(/\bS\b/).length).to eq(4)
+        expect(raw.scan(/\b2 w\b/).length).to eq(1)
+      end
+    end
+
+    it "skips sides with zero weight" do
+      para = paragraph(
+        paragraph_border_on: true,
+        paragraph_border_top_line_weight: 1,
+        paragraph_border_bottom_line_weight: 0,
+        paragraph_border_left_line_weight: 0,
+        paragraph_border_right_line_weight: 0,
+      )
+      described_class.emit_border(canvas, para, context_without_color,
+                                  300, 200, 50, 350)
+      write_to_temp_pdf(writer, "border-partial") do |path|
+        expect(File.binread(path).scan(/\bS\b/).length).to eq(1)
+      end
+    end
+  end
 end

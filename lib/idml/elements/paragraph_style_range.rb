@@ -298,6 +298,7 @@ module Idml
                 collection: true
       attribute :content, Idml::Elements::Content, collection: true
       attribute :xml_element, Idml::Elements::XmlElement, collection: true
+      attribute :properties, Idml::Elements::Properties, collection: true
 
       xml do
         root "ParagraphStyleRange"
@@ -651,6 +652,7 @@ module Idml
         map_element "ParagraphStyleRange", to: :paragraph_style_range
         map_element "Content", to: :content
         map_element "XMLElement", to: :xml_element
+        map_element "Properties", to: :properties
       end
 
       def text_content

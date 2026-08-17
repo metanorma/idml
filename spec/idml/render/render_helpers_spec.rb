@@ -127,6 +127,51 @@ RSpec.describe Idml::Render do
         expect(para).to respond_to(:right_indent)
         expect(para).to respond_to(:auto_leading)
       end
+
+      it "carries shading and border attrs from a declaring PSR" do
+        story = Idml::Parts::Story.from_xml(<<~XML)
+          <idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="21.5">
+            <Story Self="u1">
+              <ParagraphStyleRange ParagraphShadingOn="true" ParagraphShadingTint="50"
+                                   ParagraphBorderOn="true" ParagraphBorderTopLineWeight="1">
+                <Properties>
+                  <ParagraphShadingColor type="string">Color/Red</ParagraphShadingColor>
+                  <ParagraphBorderColor type="string">Color/Blue</ParagraphBorderColor>
+                </Properties>
+                <CharacterStyleRange>
+                  <Content>Shaded callout.</Content>
+                </CharacterStyleRange>
+              </ParagraphStyleRange>
+            </Story>
+          </idPkg:Story>
+        XML
+        para = described_class.extract_paragraphs(story).first
+        expect(para.paragraph_shading_on).to be(true)
+        expect(para.paragraph_shading_color).to eq("Color/Red")
+        expect(para.paragraph_shading_tint).to eq(50.0)
+        expect(para.paragraph_border_on).to be(true)
+        expect(para.paragraph_border_color).to eq("Color/Blue")
+        expect(para.paragraph_border_top_line_weight).to eq(1.0)
+      end
+
+      it "prefers Properties RuleAboveColor over stroke_color" do
+        story = Idml::Parts::Story.from_xml(<<~XML)
+          <idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="21.5">
+            <Story Self="u1">
+              <ParagraphStyleRange RuleAbove="true" StrokeColor="Color/Red">
+                <Properties>
+                  <RuleAboveColor type="string">Color/Blue</RuleAboveColor>
+                </Properties>
+                <CharacterStyleRange>
+                  <Content>Rule text.</Content>
+                </CharacterStyleRange>
+              </ParagraphStyleRange>
+            </Story>
+          </idPkg:Story>
+        XML
+        para = described_class.extract_paragraphs(story).first
+        expect(para.rule_above_color).to eq("Color/Blue")
+      end
     end
 
     describe "ALIGNMENT_MAP" do

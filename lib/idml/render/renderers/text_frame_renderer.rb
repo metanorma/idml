@@ -445,6 +445,12 @@ module Idml
 
           emit_paragraph_top_rule(canvas, paragraph, context, cursor_y,
                                   frame_left, frame_right, first_paragraph)
+          block_top, block_bottom = paragraph_block_extent(
+            paragraph, font, wrap_width, cursor_y, bottom_limit
+          )
+          ParagraphRules.emit_shading(canvas, paragraph, context,
+                                      block_top, block_bottom,
+                                      frame_left, frame_right)
           drop_cap = emit_drop_cap(canvas, paragraph, context, frame_left,
                                    cursor_y, first_paragraph)
 
@@ -463,9 +469,27 @@ module Idml
                                                 cursor_y, frame_left,
                                                 frame_right, para_attrs,
                                                 remaining_runs)
+          ParagraphRules.emit_border(canvas, paragraph, context,
+                                     block_top, block_bottom,
+                                     frame_left, frame_right)
           [remaining_runs, cursor_y, char_cursor]
         end
         private_class_method :render_runs_for_paragraph
+
+        # The paragraph's block extent: top at the current cursor,
+        # bottom at the pre-measured height clamped to the frame's
+        # bottom limit. Shading and border both use this one rect so
+        # they agree even when the paragraph splits across frames
+        # (the split case shades only the rendered part).
+        def self.paragraph_block_extent(paragraph, font, wrap_width,
+                                        cursor_y, bottom_limit)
+          height = TextEngine::Measurement.paragraph_height(
+            paragraph, font, wrap_width
+          )
+          block_bottom = [cursor_y - height, bottom_limit].max
+          [cursor_y, block_bottom]
+        end
+        private_class_method :paragraph_block_extent
 
         def self.iterate_paragraph_runs(canvas, paragraph, runs, context,
                                         layout_frame, font, wrap_width,

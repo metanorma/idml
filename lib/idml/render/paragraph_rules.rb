@@ -82,6 +82,131 @@ module Idml
       end
       private_class_method :emit_rule
 
+      # Emits the paragraph's shading: a fill rect behind the
+      # paragraph block (top_y..bottom_y within the column). The
+      # ParagraphShading* offsets expand the rect outward; tint
+      # scales the color. Color comes from Properties >
+      # ParagraphShadingColor (black when absent, per InDesign's
+      # default shading color).
+      def self.emit_shading(canvas, paragraph, context, top_y, bottom_y,
+                            frame_left, frame_right)
+        return unless paragraph.paragraph_shading_on
+        return unless top_y > bottom_y
+
+        tint_value = decoration_tint(paragraph.paragraph_shading_tint)
+        return unless tint_value
+
+        color = resolve_color(paragraph.paragraph_shading_color,
+                              tint_value, context)
+        return unless color
+
+        left, right, top, bottom = decoration_rect(
+          paragraph, top_y, bottom_y, frame_left, frame_right,
+          left_offset: paragraph.paragraph_shading_left_offset,
+          right_offset: paragraph.paragraph_shading_right_offset,
+          top_offset: paragraph.paragraph_shading_top_offset,
+          bottom_offset: paragraph.paragraph_shading_bottom_offset
+        )
+        canvas.fill_color(color)
+        canvas.rectangle(left, bottom, right - left, top - bottom)
+        canvas.fill
+      end
+
+      # Emits the paragraph's border: per-side strokes around the
+      # paragraph block, each side with its own line weight, drawn
+      # at the block rect expanded by the border offsets.
+      def self.emit_border(canvas, paragraph, context, top_y, bottom_y,
+                           frame_left, frame_right)
+        return unless paragraph.paragraph_border_on
+        return unless top_y > bottom_y
+
+        tint_value = decoration_tint(paragraph.paragraph_border_tint)
+        return unless tint_value
+
+        color = resolve_color(paragraph.paragraph_border_color,
+                              tint_value, context)
+        return unless color
+
+        left, right, top, bottom = decoration_rect(
+          paragraph, top_y, bottom_y, frame_left, frame_right,
+          left_offset: paragraph.paragraph_border_left_offset,
+          right_offset: paragraph.paragraph_border_right_offset,
+          top_offset: paragraph.paragraph_border_top_offset,
+          bottom_offset: paragraph.paragraph_border_bottom_offset
+        )
+        apply_rule_color(canvas, paragraph.paragraph_border_color,
+                         tint_value, context)
+        stroke_border_sides(canvas, paragraph, left, right, top, bottom)
+      end
+
+      # Tint value for a decoration, or nil when zero/absent.
+      def self.decoration_tint(tint)
+        value = (tint || DEFAULT_TINT).to_f
+        value.positive? ? value : nil
+      end
+      private_class_method :decoration_tint
+
+      # The decoration rect [left, right, top, bottom]: the column
+      # (or text) extents expanded outward by the given offsets.
+      def self.decoration_rect(paragraph, top_y, bottom_y, frame_left,
+                               frame_right, left_offset:, right_offset:,
+                               top_offset:, bottom_offset:)
+        left, right = decoration_extents(paragraph, frame_left, frame_right)
+        [left - (left_offset || 0).to_f,
+         right + (right_offset || 0).to_f,
+         top_y + (top_offset || 0).to_f,
+         bottom_y - (bottom_offset || 0).to_f]
+      end
+      private_class_method :decoration_rect
+
+      def self.stroke_border_sides(canvas, paragraph, left, right,
+                                   top, bottom)
+        stroke_horizontal(canvas, left, right, top,
+                          paragraph.paragraph_border_top_line_weight)
+        stroke_horizontal(canvas, left, right, bottom,
+                          paragraph.paragraph_border_bottom_line_weight)
+        stroke_vertical(canvas, bottom, top, left,
+                        paragraph.paragraph_border_left_line_weight)
+        stroke_vertical(canvas, bottom, top, right,
+                        paragraph.paragraph_border_right_line_weight)
+      end
+      private_class_method :stroke_border_sides
+
+      def self.stroke_horizontal(canvas, x1, x2, y, weight)
+        thickness = weight.to_f
+        return unless thickness.positive?
+
+        canvas.line_width = thickness
+        canvas.move_to(x1, y)
+        canvas.line_to(x2, y)
+        canvas.stroke
+      end
+      private_class_method :stroke_horizontal
+
+      def self.stroke_vertical(canvas, y1, y2, x, weight)
+        thickness = weight.to_f
+        return unless thickness.positive?
+
+        canvas.line_width = thickness
+        canvas.move_to(x, y1)
+        canvas.line_to(x, y2)
+        canvas.stroke
+      end
+      private_class_method :stroke_vertical
+
+      # Horizontal extents for shading/border: the column width, or
+      # the text width (indented by the paragraph's indents) when
+      # the shading width mode is "TextWidth".
+      def self.decoration_extents(paragraph, frame_left, frame_right)
+        if paragraph.paragraph_shading_width == "TextWidth"
+          [frame_left + (paragraph.left_indent || 0).to_f,
+           frame_right - (paragraph.right_indent || 0).to_f]
+        else
+          [frame_left, frame_right]
+        end
+      end
+      private_class_method :decoration_extents
+
       # Returns `[x1, x2]` for the rule. Width mode "Text" indents
       # the rule by the paragraph's left/right indent (matches the
       # text bounds); "Column" (default) spans the full column.

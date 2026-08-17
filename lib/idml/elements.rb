@@ -147,6 +147,7 @@ module Idml
     autoload :TOCStyle, "idml/elements/toc_style"
     autoload :TOCStyleEntry, "idml/elements/toc_style_entry"
     autoload :Table, "idml/elements/table"
+    autoload :TypedValue, "idml/elements/typed_value"
     autoload :TableCell, "idml/elements/table_cell"
     autoload :TableRow, "idml/elements/table_row"
     autoload :TableStyle, "idml/elements/table_style"
