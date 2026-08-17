@@ -43,6 +43,8 @@ module Idml
     autoload :DocumentPreference, "idml/elements/pref_document_preference"
     autoload :DottedStrokeStyle, "idml/elements/dotted_stroke_style"
     autoload :DropShadowSetting, "idml/elements/drop_shadow_setting"
+    autoload :Endnote, "idml/elements/endnote"
+    autoload :EndnoteRange, "idml/elements/endnote_range"
     autoload :EPubExportPreference, "idml/elements/pref_e_pub_export_preference"
     autoload :EPubFixedLayoutExportPreference,
              "idml/elements/pref_e_pub_fixed_layout_export_preference"

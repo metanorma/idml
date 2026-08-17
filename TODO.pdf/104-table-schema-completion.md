@@ -1,11 +1,21 @@
 # TODO PDF 104: Schema-faithful Table model completion
 
-## Status: PARTIAL — added the rendering-relevant subset (column_count,
-single_column_width, header/body/footer row counts, table_direction,
-outer-border strokes). The remaining ~150 schema attributes (alternating
-stroke rows, column rules, table-flavor bits) aren't needed for
-rendering and would be pure model bloat. Add incrementally as use
-cases demand.
+## Status: COMPLETE — implemented 2026-08-18
+
+All 171 Table_Object attributes from
+`reference-docs/schemas/package/Stories/Story.rnc` are declared on
+`Elements::Table` (the prior rendering-relevant subset plus the 155
+remaining: border tints/gaps/overprints, default row/column strokes,
+alternating fills, cell insets, diagonal lines, caption settings,
+…), generated with `scripts/rnc_to_lutaml.rb` in schema order.
+
+Drift defense: `spec/idml/elements/table_spec.rb` reads the RNC at
+spec time and asserts a Table built with every schema attribute
+round-trips every attribute — any attribute dropped from the model
+fails the spec.
+
+The renderer still consults only the rendering-relevant subset; the
+rest are carried for round-trip and downstream-tool fidelity.
 
 ## Problem
 

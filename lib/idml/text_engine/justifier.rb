@@ -4,19 +4,22 @@ module Idml
   module TextEngine
     # Distributes slack space within a line per the paragraph's
     # alignment. Adjusts x_offset and optionally scales inter-word
-    # spaces for justified text.
+    # spaces for justified text. `last_line:` (the paragraph's final
+    # line) keeps ragged right under :justified, as InDesign does.
     class Justifier
-      def self.justify(line:, frame_width:, alignment: :left)
-        new(frame_width, alignment).justify(line)
+      def self.justify(line:, frame_width:, alignment: :left,
+                       last_line: false)
+        new(frame_width, alignment, last_line).justify(line)
       end
 
-      def initialize(frame_width, alignment)
+      def initialize(frame_width, alignment, last_line)
         @frame_width = frame_width
         @alignment = alignment
+        @last_line = last_line
       end
 
       def justify(line)
-        case @alignment
+        case effective_alignment
         when :left, :start then line.x_offset = 0
         when :center, :middle
           line.x_offset = (@frame_width - line.width) / 2
@@ -28,6 +31,14 @@ module Idml
       end
 
       private
+
+      # The paragraph's last line stays ragged under full
+      # justification.
+      def effective_alignment
+        return :left if @alignment == :justified && @last_line
+
+        @alignment
+      end
 
       def justify_line(line)
         spaces = line.glyphs.count(&:is_space)

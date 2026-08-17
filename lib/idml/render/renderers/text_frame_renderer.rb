@@ -511,7 +511,8 @@ module Idml
               canvas, run, paragraph, context, layout_frame, font,
               run_wrap, cursor_y, space_before,
               para_attrs[:first_line_indent], para_attrs[:left_indent],
-              char_cursor, bottom_limit
+              char_cursor, bottom_limit,
+              paragraph_last: run.equal?(runs.last)
             )
             char_cursor += positioned.length
             cursor_y = next_y
@@ -712,7 +713,7 @@ module Idml
         def self.layout_run(canvas, run, paragraph, context, layout_frame,
                             font, wrap_width, cursor_y, space_before,
                             first_line_indent, left_indent,
-                            char_cursor, bottom_limit)
+                            char_cursor, bottom_limit, paragraph_last: false)
           size = run.point_size || DEFAULT_SIZE
           glyphs = TextEngine::Shaper.shape(
             text: run.text, font: font, size: size,
@@ -720,12 +721,7 @@ module Idml
           lines = TextEngine::LineBreaker.break(
             glyphs: glyphs, frame_width: wrap_width,
           )
-          lines.each do |line|
-            TextEngine::Justifier.justify(
-              line: line, frame_width: wrap_width,
-              alignment: paragraph.alignment || :left
-            )
-          end
+          justify_lines(lines, paragraph, wrap_width, paragraph_last)
           leading = leading_for(paragraph, size)
 
           positioned, next_y = TextEngine::VerticalLayout.layout_block(
@@ -744,6 +740,21 @@ module Idml
           [positioned, next_y]
         end
         private_class_method :layout_run
+
+        # Justifies the run's lines; only the final line of the
+        # paragraph's final run stays ragged under full
+        # justification.
+        def self.justify_lines(lines, paragraph, wrap_width,
+                               paragraph_last)
+          lines.each_with_index do |line, index|
+            TextEngine::Justifier.justify(
+              line: line, frame_width: wrap_width,
+              alignment: paragraph.alignment || :left,
+              last_line: paragraph_last && index == lines.length - 1
+            )
+          end
+        end
+        private_class_method :justify_lines
 
         # Emits the run's positioned lines (clipped at the bottom
         # limit), recording positions and annotating the first line

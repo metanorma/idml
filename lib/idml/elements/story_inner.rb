@@ -313,6 +313,9 @@ module Idml
       attribute :content, Idml::Elements::Content, collection: true
       attribute :xml_element, Idml::Elements::XmlElement, collection: true
       attribute :footnote, Idml::Elements::Footnote, collection: true
+      attribute :endnote, Idml::Elements::Endnote, collection: true
+      attribute :endnote_range, Idml::Elements::EndnoteRange,
+                collection: true
 
       xml do
         root "Story"
@@ -678,6 +681,8 @@ module Idml
         map_element "Content", to: :content
         map_element "XMLElement", to: :xml_element
         map_element "Footnote", to: :footnote
+        map_element "Endnote", to: :endnote
+        map_element "EndnoteRange", to: :endnote_range
       end
 
       def text_content
