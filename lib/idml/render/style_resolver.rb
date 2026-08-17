@@ -43,6 +43,11 @@ module Idml
         :baseline_shift,
         :footnote_number,
         :footnote_paragraphs,
+        # Ruby (phonetic annotation) — from the CSR's Ruby*
+        # attributes. Present only on runs with a RubyString.
+        :ruby_string,
+        :ruby_font_size,
+        :ruby_position,
         keyword_init: true,
       )
 
@@ -348,6 +353,9 @@ module Idml
                                         :horizontal_scale),
           vertical_scale: resolve_csr(style_lookup, csr, :vertical_scale),
           baseline_shift: resolve_csr(style_lookup, csr, :baseline_shift),
+          ruby_string: resolve_csr(style_lookup, csr, :ruby_string),
+          ruby_font_size: resolve_csr(style_lookup, csr, :ruby_font_size),
+          ruby_position: resolve_csr(style_lookup, csr, :ruby_position),
         )
       end
       private_class_method :text_run

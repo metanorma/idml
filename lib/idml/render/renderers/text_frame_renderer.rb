@@ -25,6 +25,7 @@ module Idml
       # FontMetrics is available (no shaper → no wrap → rough output).
       class TextFrameRenderer
         DEFAULT_SIZE = 12.0
+        RUBY_SIZE_FACTOR = 0.5
 
         def self.render(canvas, context)
           frame = context.item
@@ -738,15 +739,26 @@ module Idml
             left_indent: left_indent,
           )
 
-          positioned.each do |line|
+          emit_run_lines(canvas, positioned, run, context, size, font,
+                         bottom_limit, char_cursor)
+          [positioned, next_y]
+        end
+        private_class_method :layout_run
+
+        # Emits the run's positioned lines (clipped at the bottom
+        # limit), recording positions and annotating the first line
+        # with the run's ruby when present.
+        def self.emit_run_lines(canvas, positioned, run, context, size,
+                                font, bottom_limit, char_cursor)
+          positioned.each_with_index do |line, index|
             break if line.y < bottom_limit
 
             emit_line(canvas, line, run, context, size)
             record_position(context, line, size, char_cursor)
+            emit_ruby(canvas, run, line, size, font, context) if index.zero?
           end
-          [positioned, next_y]
         end
-        private_class_method :layout_run
+        private_class_method :emit_run_lines
 
         # Emits one positioned line: applies character-level styling
         # (fill color + tint, capitalization, position, tracking,
@@ -778,6 +790,36 @@ module Idml
           end
         end
         private_class_method :emit_line
+
+        # Emits the run's ruby (phonetic annotation) above the first
+        # line of the annotated run, centered over the line's width.
+        # RubyFontSize defaults to half the base size; RubyPosition
+        # values containing "Below" place it under the base text.
+        # Approximation: IDML attaches ruby to a character range;
+        # we annotate the whole first line.
+        def self.emit_ruby(canvas, run, line, base_size, font, context)
+          ruby_text = run.ruby_string
+          return if ruby_text.nil? || ruby_text.empty?
+
+          ruby_size = run.ruby_font_size || (base_size * RUBY_SIZE_FACTOR)
+          glyphs = TextEngine::Shaper.shape(text: ruby_text, font: font,
+                                            size: ruby_size)
+          ruby_width = glyphs.sum(&:width)
+          x = line.x + ((line.width - ruby_width) / 2)
+          y = ruby_y(run, line, base_size, ruby_size)
+          canvas.text(ruby_text, at: [x, y],
+                                 font: font_for_run(run, context), size: ruby_size)
+        end
+        private_class_method :emit_ruby
+
+        def self.ruby_y(run, line, base_size, ruby_size)
+          if run.ruby_position.to_s.include?("Below")
+            line.y - (base_size * 0.25) - ruby_size
+          else
+            line.y + (base_size * 0.45) + ruby_size
+          end
+        end
+        private_class_method :ruby_y
 
         def self.leading_for(paragraph, size)
           TextEngine::VerticalLayout.leading_for(paragraph.auto_leading, size)

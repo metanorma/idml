@@ -7,10 +7,20 @@ module Idml
 
     # Greedy word-wrap line breaker. Accumulates glyphs until
     # exceeding the frame width, then breaks at the last space.
+    # CJK runs get a kinsoku shori post-pass (no line starts or
+    # ends with a forbidden character).
     class LineBreaker
       def self.break(glyphs:, frame_width:)
-        new(frame_width).break(glyphs)
+        lines = new(frame_width).break(glyphs)
+        return lines unless cjk_run?(glyphs)
+
+        CjkLayout.apply_kinsoku(lines)
       end
+
+      def self.cjk_run?(glyphs)
+        glyphs.any? { |glyph| CjkLayout.cjk?(glyph.codepoint) }
+      end
+      private_class_method :cjk_run?
 
       def initialize(frame_width)
         @frame_width = frame_width
