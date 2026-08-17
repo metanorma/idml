@@ -6,6 +6,7 @@ FakeShape = Struct.new(
   :visible, :fill_color, :geometric_bounds, :item_transform,
   :stroke_color, :stroke_weight, :end_cap, :end_join,
   :miter_limit, :stroke_dash_and_gap, :transparency_setting,
+  :properties,
   keyword_init: true
 )
 
@@ -31,6 +32,7 @@ RSpec.describe Idml::Render::Renderers::PolygonRenderer do
       stroke_color: nil,
       stroke_weight: nil,
       transparency_setting: nil,
+      properties: [],
     }.merge(overrides))
   end
 

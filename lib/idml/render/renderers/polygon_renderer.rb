@@ -3,46 +3,15 @@
 module Idml
   module Render
     module Renderers
+      # Renders an IDML Polygon on a Pdfrb::Content::Canvas as its
+      # actual Bézier contours from PathGeometry (control handles
+      # default to the anchors, so plain polygons render straight
+      # edges). Falls back to the bounding-box rectangle when the
+      # item carries no geometry.
       class PolygonRenderer
         def self.render(canvas, context)
-          poly = context.item
-          return if poly.visible == false
-
-          box = Placement.box(poly, context.page_height)
-          return unless box
-
-          Blending.wrap(canvas, poly.transparency_setting) do
-            render_fill(canvas, poly, context, box)
-            render_stroke(canvas, poly, context, box)
-          end
+          Contour.render(canvas, context)
         end
-
-        def self.render_fill(canvas, poly, context, box)
-          return unless poly.fill_color && poly.fill_color != "Color/None"
-
-          color = context.color_resolver&.resolve(poly.fill_color)
-          return unless color
-
-          canvas.fill_color(ColorHelper.to_canvas(color))
-          canvas.rectangle(box[:x], box[:y], box[:width], box[:height])
-          canvas.fill
-        end
-        private_class_method :render_fill
-
-        def self.render_stroke(canvas, poly, context, box)
-          return unless StrokeStyle.strokeable?(poly)
-
-          color = context.color_resolver&.resolve(poly.stroke_color)
-          return unless color
-
-          StrokeStyle.apply(canvas, poly) do
-            canvas.stroke_color(ColorHelper.to_canvas(color))
-            canvas.line_width = poly.stroke_weight
-            canvas.rectangle(box[:x], box[:y], box[:width], box[:height])
-            canvas.stroke
-          end
-        end
-        private_class_method :render_stroke
       end
     end
   end

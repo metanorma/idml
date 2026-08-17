@@ -1,12 +1,42 @@
 # TODO PDF 106: Page-item type coverage — Ellipse, Path, EPS, WMF, PICT, HtmlItem
 
-## Status: PARTIAL — Oval and Path elements modeled and rendered
-(registered in RENDERER_MAP, delegate to RectangleRenderer which draws
-the bounding box with fill/stroke). Documents containing Oval or Path
-page items no longer silently skip them. True elliptical rendering
-(bezier anchor/control points) and compound-path drawing are
-refinements. EPS / WMF / PICT / HtmlItem remain out of scope (foreign
-formats).
+## Status: COMPLETE (rendering scope) — implemented 2026-08-17
+
+## What was built (2026-08-17 refinement: true contours)
+
+- `Render::Contour` — draws an item's PathGeometry as true Bézier
+  contours: PathPointType anchors, LeftDirection / RightDirection
+  control handles, ItemTransform applied per point, y flipped into
+  PDF space. One subpath per GeometryPathType (compound paths);
+  closed unless PathOpen="true"; degenerate handles fall back to the
+  anchor. OvalRenderer, PathRenderer, and PolygonRenderer all
+  delegate here — ovals render as real ellipses (rotation preserved
+  through the transform), polygons as their actual outlines, Paths
+  as compound contours. Bounding-box rectangle fallback when an
+  item has no PathGeometry but has geometric_bounds.
+- `Render::ShapePaint` — the single owner of the IDML → PDF paint
+  mapping (solid fill, gradient shading fill, stroke styling, and
+  the PDF paint-op sequencing including fill_stroke on one path).
+  RectangleRenderer now delegates to it; the fill/stroke/gradient
+  logic it previously duplicated across shape renderers lives in
+  one place.
+- Oval/Path modeled + registered in RENDERER_MAP (earlier
+  milestone); Polygon renders contours instead of its bounding box.
+
+## Out of scope (unchanged)
+
+- EPS / WMF / PICT / HtmlItem / Movie / Sound / FormField — foreign
+  or interactive formats, not modeled. Image placement goes through
+  ImageCollector (separate, model-driven path).
+
+## Acceptance criteria
+
+- [x] SpreadObject has `oval` + `path` collections (Ellipse is the
+      Oval element in the schema's naming).
+- [x] OvalRenderer / PathRenderer registered in RENDERER_MAP.
+- [x] True Bézier rendering from PathGeometry anchors + control
+      points (TODO 106 refinement complete).
+- [x] Compound Path objects render with multiple sub-paths.
 
 ## Problem
 

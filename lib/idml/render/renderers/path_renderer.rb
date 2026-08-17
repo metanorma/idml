@@ -4,14 +4,13 @@ module Idml
   module Render
     module Renderers
       # Renders an IDML Path (standalone compound path) on a
-      # Pdfrb::Content::Canvas. Delegates to RectangleRenderer which
-      # draws the bounding box with fill/stroke. Approximation: a true
-      # compound path would draw each sub-path from the EntirePath
-      # list or PathPoint children; the bounding box renders the
-      # correct extent and colors. See TODO 106 for refinement.
+      # Pdfrb::Content::Canvas as its actual Bézier contours — one
+      # subpath per GeometryPathType, closed or open per PathOpen.
+      # Falls back to the bounding-box rectangle when the item
+      # carries no geometry.
       class PathRenderer
         def self.render(canvas, context)
-          RectangleRenderer.render(canvas, context)
+          Contour.render(canvas, context)
         end
       end
     end
