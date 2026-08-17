@@ -67,6 +67,37 @@ RSpec.describe Idml::TextEngine::LineBreaker do
     lines = described_class.break(glyphs: glyphs, frame_width: wide)
     expect(lines.length).to eq(1)
   end
+
+  describe "kinsoku shori for CJK runs" do
+    def glyph(char, width = 10.0)
+      Idml::TextEngine::ShapedGlyph.new(char.ord, width, char == " ")
+    end
+
+    it "moves a forbidden line-start character to the previous line" do
+      glyphs = "一二三四五六。七八".each_char.map { |c| glyph(c) }
+      lines = described_class.break(glyphs: glyphs, frame_width: 50)
+
+      expect(lines.first.glyphs.last.codepoint).to eq("。".ord)
+      expect(lines.last.glyphs.first.codepoint).to eq("七".ord)
+    end
+
+    it "moves a forbidden line-end character to the next line" do
+      glyphs = "一二三四「五六七八".each_char.map { |c| glyph(c) }
+      lines = described_class.break(glyphs: glyphs, frame_width: 45)
+
+      expect(lines.first.glyphs.last.codepoint).to eq("四".ord)
+      expect(lines.last.glyphs.first.codepoint).to eq("「".ord)
+    end
+
+    it "leaves non-CJK runs untouched" do
+      glyphs = "abcdefgh".each_char.map { |c| glyph(c) }
+      lines = described_class.break(glyphs: glyphs, frame_width: 50)
+
+      expect(lines.first.glyphs.length).to eq(6)
+      expect(lines.last.glyphs.map { |g| g.codepoint.chr }.join)
+        .to eq("gh")
+    end
+  end
 end
 
 RSpec.describe Idml::TextEngine::Justifier do

@@ -1,9 +1,25 @@
 # TODO PDF 13: CJK text layout
 
-## Status: PARTIAL — `Idml::TextEngine::CjkLayout` handles CJK glyph
-measurement and basic horizontal layout. Vertical writing mode,
-kinsoku shori, tate-chu-yoko, and ruby remain stretch goals as
-flagged in the original TODO. See `lib/idml/text_engine/cjk_layout.rb`.
+## Status: PARTIAL — horizontal-mode CJK complete (2026-08-17):
+CJK glyph measurement, kinsoku shori, and ruby annotations render.
+Vertical writing mode, tate-chu-yoko, and mojikumi remain OPEN
+stretch goals — they need a vertical (rotated) layout engine and
+real vertical-mode fixtures to build against. See
+`lib/idml/text_engine/cjk_layout.rb`.
+
+## Progress 2026-08-17
+
+- Kinsoku shori is now LIVE in the pipeline: LineBreaker.break
+  post-processes any run containing CJK glyphs through
+  CjkLayout.apply_kinsoku, so no rendered line starts with
+  、。，」etc. or ends with 「 etc. (previously the logic existed
+  but was never called).
+- Ruby (phonetic annotations) render: CSR RubyString /
+  RubyFontSize / RubyPosition extract onto the run; the renderer
+  emits the annotation centered above the run's first line (half
+  the base size by default; Below* positions place it under).
+  Approximation: IDML attaches ruby to a character range; we
+  annotate the whole first line.
 
 ## Goal
 
