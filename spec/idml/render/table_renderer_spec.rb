@@ -288,5 +288,102 @@ RSpec.describe Idml::Render::Renderers::TableRenderer do
       end
     end
   end
+
+  describe "table-level alternating band fills" do
+    def band_table_xml(table_attrs, cell_fill: nil)
+      <<~XML
+        <Table Self="t1" ItemTransform="1 0 0 1 0 0" #{table_attrs}>
+          <Properties>
+            <PathGeometry>
+              <GeometryPathType PathOpen="false">
+                <PathPointArray>
+                  <PathPointType Anchor="-10 -10" LeftDirection="-10 -10" RightDirection="-10 -10"/>
+                  <PathPointType Anchor="110 -10" LeftDirection="110 -10" RightDirection="110 -10"/>
+                  <PathPointType Anchor="110 110" LeftDirection="110 110" RightDirection="110 110"/>
+                  <PathPointType Anchor="-10 110" LeftDirection="-10 110" RightDirection="-10 110"/>
+                </PathPointArray>
+              </GeometryPathType>
+            </PathGeometry>
+          </Properties>
+          <Row Self="r0" Name="0" SingleRowHeight="60"/>
+          <Row Self="r1" Name="1" SingleRowHeight="60"/>
+          <Cell Self="c00" Name="0:0"#{%( FillColor="#{cell_fill}") if cell_fill}/>
+          <Cell Self="c10" Name="1:0"#{%( FillColor="#{cell_fill}") if cell_fill}/>
+          <Cell Self="c01" Name="0:1"#{%( FillColor="#{cell_fill}") if cell_fill}/>
+          <Cell Self="c11" Name="1:1"#{%( FillColor="#{cell_fill}") if cell_fill}/>
+        </Table>
+      XML
+    end
+
+    def band_context(table)
+      Idml::Render::RenderContext.new(
+        item: table,
+        color_resolver: TableColorResolver.new(
+          table: {
+            "Color/Red" => { model: :rgb, r: 1, g: 0, b: 0 },
+            "Color/Blue" => { model: :rgb, r: 0, g: 0, b: 1 },
+          },
+        ),
+        page_height: 400,
+      )
+    end
+
+    def render_banded(table_attrs, cell_fill: nil)
+      table = table_from_xml(band_table_xml(table_attrs, cell_fill: cell_fill))
+      described_class.render(canvas, band_context(table))
+      write_to_temp_pdf(writer, "table-band") do |pdf_path|
+        yield File.binread(pdf_path)
+      end
+    end
+
+    it "alternates start and end colors across rows" do
+      attrs = 'StartRowFillColor="Color/Red" StartRowFillCount="1" ' \
+              'EndRowFillColor="Color/Blue" EndRowFillCount="1"'
+      render_banded(attrs) do |raw|
+        expect(raw.scan("1 0 0 rg").length).to eq(2)
+        expect(raw.scan("0 0 1 rg").length).to eq(2)
+      end
+    end
+
+    it "lets an explicit cell fill override the band" do
+      attrs = 'StartRowFillColor="Color/Red" StartRowFillCount="1" ' \
+              'EndRowFillColor="Color/Blue" EndRowFillCount="1"'
+      render_banded(attrs, cell_fill: "Color/Blue") do |raw|
+        expect(raw.scan("1 0 0 rg").length).to eq(0)
+      end
+    end
+
+    it "prefers column banding when ColumnFillsPriority is true" do
+      attrs = 'StartRowFillColor="Color/Red" StartRowFillCount="1" ' \
+              'EndRowFillColor="Color/Blue" EndRowFillCount="1" ' \
+              'StartColumnFillColor="Color/Blue" StartColumnFillCount="1" ' \
+              'ColumnFillsPriority="true"'
+      render_banded(attrs) do |raw|
+        # Column banding wins: col 0 = blue band, col 1 = no end
+        # color = unfilled; the row pattern (row 0 = red) never runs.
+        expect(raw.scan("1 0 0 rg").length).to eq(0)
+        expect(raw.scan("0 0 1 rg").length).to eq(2)
+      end
+    end
+
+    it "suppresses leading bands with SkipFirstAlternatingFillRows" do
+      attrs = 'StartRowFillColor="Color/Red" StartRowFillCount="1" ' \
+              'EndRowFillColor="Color/Blue" EndRowFillCount="1" ' \
+              'SkipFirstAlternatingFillRows="1"'
+      render_banded(attrs) do |raw|
+        # Row 0 is skipped; the band cycle restarts at row 1 with
+        # the start color.
+        expect(raw.scan("1 0 0 rg").length).to eq(2)
+        expect(raw.scan("0 0 1 rg").length).to eq(0)
+      end
+    end
+
+    it "renders no bands when none are declared" do
+      render_banded("") do |raw|
+        expect(raw.scan(" rg").length).to eq(0)
+      end
+    end
+  end
 end
+
 # rubocop:enable RSpec/SpecFilePathFormat

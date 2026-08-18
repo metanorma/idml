@@ -70,7 +70,10 @@ module Idml
         # derived from `column_count` attribute or max col + 1.
         def self.render_schema_faithful(canvas, table, box, context)
           layout = SchemaLayout.new(table: table, box: box)
-          layout.each_cell do |cell_x, cell_y, cell_w, cell_h, cell|
+          layout.each_cell do |cell_x, cell_y, cell_w, cell_h, cell,
+                               col_idx, row_idx|
+            render_band_background(canvas, cell, layout, col_idx, row_idx,
+                                   cell_x, cell_y, cell_w, cell_h, context)
             render_cell_background(canvas, cell, cell_x, cell_y, cell_w, cell_h,
                                    context)
             render_cell_border(canvas, cell_x, cell_y, cell_w, cell_h)
@@ -78,6 +81,27 @@ module Idml
           end
         end
         private_class_method :render_schema_faithful
+
+        # Table-level alternating band fill behind a cell. An
+        # explicit Cell FillColor wins; Color/None bands and zero
+        # tints render nothing.
+        def self.render_band_background(canvas, cell, layout, col_idx,
+                                        row_idx, x, y, w, h, context)
+          return if cell_fill_color(cell, context)
+
+          name, tint = layout.band_fill(col_idx, row_idx)
+          return unless name
+          return if name == "Color/None"
+
+          color = context.color_resolver&.resolve(name)
+          return unless color
+
+          color = ColorHelper.apply_tint(color, tint)
+          canvas.fill_color(ColorHelper.to_canvas(color))
+          canvas.rectangle(x, y, w, h)
+          canvas.fill
+        end
+        private_class_method :render_band_background
 
         def self.render_cell_background(canvas, cell, x, y, w, h, context)
           color = cell_fill_color(cell, context)
@@ -244,7 +268,7 @@ module Idml
 
                 yield cell_x(col_idx), cell_y(row_idx, col_span, row_span),
                       cell_w(col_idx, col_span), cell_h(row_idx, row_span),
-                      cell
+                      cell, col_idx, row_idx
               end
             end
           end
@@ -268,6 +292,79 @@ module Idml
           def rows
             table.row
           end
+
+          # Table-level alternating band fill for a cell position:
+          # [color_name, tint] or nil. Row banding by default; column
+          # banding when ColumnFillsPriority is true or rows are
+          # unconfigured.
+          def band_fill(col, row)
+            column_band = column_band_fill(col)
+            return column_band if column_band &&
+              (table.column_fills_priority || row_band_fill(row).nil?)
+
+            row_band_fill(row)
+          end
+
+          def row_band_fill(row)
+            band_pair(table.start_row_fill_color, table.start_row_fill_count,
+                      table.end_row_fill_color, table.end_row_fill_count,
+                      table.start_row_fill_tint, table.end_row_fill_tint,
+                      row, row_count,
+                      table.skip_first_alternating_fill_rows,
+                      table.skip_last_alternating_fill_rows)
+          end
+          private :row_band_fill
+
+          def column_band_fill(col)
+            band_pair(table.start_column_fill_color,
+                      table.start_column_fill_count,
+                      table.end_column_fill_color,
+                      table.end_column_fill_count,
+                      table.start_column_fill_tint,
+                      table.end_column_fill_tint,
+                      col, col_count,
+                      table.skip_first_alternating_fill_columns,
+                      table.skip_last_alternating_fill_columns)
+          end
+          private :column_band_fill
+
+          # Alternating band for one axis: the first `start_count`
+          # positions take the start color, the next `end_count` the
+          # end color, repeating from after the skipped edge rows.
+          # Zero-count cycles band nothing.
+          def band_pair(start_color, start_count, end_color, end_count,
+                        start_tint, end_tint, index, total,
+                        skip_first, skip_last)
+            return nil unless start_color
+            return nil if suppressed?(index, total, skip_first, skip_last)
+
+            cycle = band_cycle(start_count, end_count)
+            return nil unless cycle.positive?
+
+            if in_start_band?(index, skip_first, cycle, start_count)
+              [start_color, start_tint]
+            else
+              [end_color, end_tint]
+            end
+          end
+          private :band_pair
+
+          def band_cycle(start_count, end_count)
+            (start_count || 1) + (end_count || 1)
+          end
+          private :band_cycle
+
+          def in_start_band?(index, skip_first, cycle, start_count)
+            ((index - (skip_first || 0)) % cycle) < (start_count || 1)
+          end
+          private :in_start_band?
+
+          # Banding suppressed at the leading/trailing edges.
+          def suppressed?(index, total, skip_first, skip_last)
+            index < (skip_first || 0) ||
+              index >= total - (skip_last || 0)
+          end
+          private :suppressed?
 
           def cells
             table.cell
