@@ -32,12 +32,12 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
           <Story Self="u1">
             <ParagraphStyleRange>
               <CharacterStyleRange PointSize="12">
-                <Content>First paragraph stays.</Content>
+                <Content>One.</Content>
               </CharacterStyleRange>
             </ParagraphStyleRange>
             <ParagraphStyleRange #{second_psr_attrs}>
               <CharacterStyleRange PointSize="12">
-                <Content>Second paragraph breaks.</Content>
+                <Content>Two.</Content>
               </CharacterStyleRange>
             </ParagraphStyleRange>
           </Story>
