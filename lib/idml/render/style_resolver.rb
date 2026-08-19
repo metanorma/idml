@@ -64,6 +64,12 @@ module Idml
         :right_indent,
         :auto_leading,
         :drop_cap_lines,
+        # Justification distribution caps (percent; from PSR).
+        :maximum_word_spacing,
+        :maximum_letter_spacing,
+        # Forced paragraph break (StartParagraph: NextPage /
+        # NextColumn / NextFrame / NextOddPage / NextEvenPage).
+        :start_paragraph,
         :bullets_and_numbering_list_type,
         :bullet_character_value,
         :bullets_text_after,
@@ -183,6 +189,14 @@ module Idml
             left_indent: resolve_attr(style_lookup, psr, :left_indent),
             right_indent: resolve_attr(style_lookup, psr, :right_indent),
             auto_leading: resolve_attr(style_lookup, psr, :auto_leading),
+            maximum_word_spacing: resolve_attr(
+              style_lookup, psr, :maximum_word_spacing
+            ),
+            maximum_letter_spacing: resolve_attr(
+              style_lookup, psr, :maximum_letter_spacing
+            ),
+            start_paragraph: resolve_attr(style_lookup, psr,
+                                          :start_paragraph),
             drop_cap_lines: resolve_attr(style_lookup, psr, :drop_cap_lines),
             drop_cap_characters: resolve_attr(style_lookup, psr,
                                               :drop_cap_characters),

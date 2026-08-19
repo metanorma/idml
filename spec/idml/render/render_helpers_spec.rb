@@ -128,6 +128,24 @@ RSpec.describe Idml::Render do
         expect(para).to respond_to(:auto_leading)
       end
 
+      it "carries start_paragraph and justification caps from the PSR" do
+        story = Idml::Parts::Story.from_xml(<<~XML)
+          <idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="21.5">
+            <Story Self="u1">
+              <ParagraphStyleRange StartParagraph="NextPage" MaximumWordSpacing="150" MaximumLetterSpacing="25">
+                <CharacterStyleRange>
+                  <Content>Heading.</Content>
+                </CharacterStyleRange>
+              </ParagraphStyleRange>
+            </Story>
+          </idPkg:Story>
+        XML
+        para = described_class.extract_paragraphs(story).first
+        expect(para.start_paragraph).to eq("NextPage")
+        expect(para.maximum_word_spacing).to eq(150.0)
+        expect(para.maximum_letter_spacing).to eq(25.0)
+      end
+
       it "carries shading and border attrs from a declaring PSR" do
         story = Idml::Parts::Story.from_xml(<<~XML)
           <idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="21.5">

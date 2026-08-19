@@ -7,15 +7,25 @@ module Idml
     # spaces for justified text. `last_line:` (the paragraph's final
     # line) keeps ragged right under :justified, as InDesign does.
     class Justifier
+      # Justification distribution caps, in percent (100 = natural).
+      # InDesign defaults: word spacing max 133%, letter spacing 0%.
+      SpacingLimits = Struct.new(
+        :max_word_spacing, :max_letter_spacing, keyword_init: true
+      )
+
+      DEFAULT_MAX_WORD_SPACING = 133.0
+      DEFAULT_MAX_LETTER_SPACING = 0.0
+
       def self.justify(line:, frame_width:, alignment: :left,
-                       last_line: false)
-        new(frame_width, alignment, last_line).justify(line)
+                       last_line: false, limits: nil)
+        new(frame_width, alignment, last_line, limits).justify(line)
       end
 
-      def initialize(frame_width, alignment, last_line)
+      def initialize(frame_width, alignment, last_line, limits)
         @frame_width = frame_width
         @alignment = alignment
         @last_line = last_line
+        @limits = limits
       end
 
       def justify(line)
@@ -45,13 +55,42 @@ module Idml
         slack = @frame_width - line.width
         return if spaces.zero? || slack <= 0
 
-        extra = slack / spaces
+        word_share = [slack, word_capacity(line, spaces)].min
+        extra = word_share / spaces
         line.glyphs.each do |glyph|
           next unless glyph.is_space
 
           glyph.width += extra
         end
+        residual = slack - word_share
+        distribute_letter_spacing(line, residual) if residual.positive?
       end
+
+      # Total room the word spaces may grow within the max-word-
+      # spacing cap (percent of each space's natural width).
+      def word_capacity(line, _spaces)
+        max_pct = @limits&.max_word_spacing || DEFAULT_MAX_WORD_SPACING
+        grow = [(max_pct - 100) / 100.0, 0].max
+        line.glyphs.sum { |g| g.is_space ? g.width * grow : 0.0 } * 1.0
+      end
+      private :word_capacity
+
+      # Even per-glyph letter spacing for residual slack, capped at
+      # max_letter_spacing percent of the natural space width. With
+      # the default 0% cap nothing is added — the line ends short,
+      # as InDesign does when limits bind.
+      def distribute_letter_spacing(line, residual)
+        max_pct = @limits&.max_letter_spacing || DEFAULT_MAX_LETTER_SPACING
+        return unless max_pct.positive?
+
+        space_ref = line.glyphs.find(&:is_space)&.width || 0
+        return unless space_ref.positive?
+
+        cap = (max_pct / 100.0) * space_ref * line.glyphs.length
+        add = [residual, cap].min / line.glyphs.length
+        line.glyphs.each { |glyph| glyph.width += add }
+      end
+      private :distribute_letter_spacing
     end
   end
 end

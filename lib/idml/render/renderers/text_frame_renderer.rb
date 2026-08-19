@@ -410,6 +410,7 @@ module Idml
           pending = 0
           state.paragraphs.each do |paragraph|
             break if cursor_y < bottom_limit
+            break if paragraph_break?(paragraph) && pending.positive?
 
             remaining_runs, cursor_y, char_cursor = render_runs_for_paragraph(
               canvas, paragraph, paragraph.runs, context,
@@ -741,16 +742,30 @@ module Idml
         end
         private_class_method :layout_run
 
+        # True when the paragraph requests a forced break to the
+        # next frame/column (StartParagraph). All break flavors act
+        # at frame/column granularity.
+        def self.paragraph_break?(paragraph)
+          %w[NextPage NextColumn NextFrame NextOddPage NextEvenPage]
+            .include?(paragraph.start_paragraph)
+        end
+        private_class_method :paragraph_break?
+
         # Justifies the run's lines; only the final line of the
         # paragraph's final run stays ragged under full
         # justification.
         def self.justify_lines(lines, paragraph, wrap_width,
                                paragraph_last)
+          limits = TextEngine::Justifier::SpacingLimits.new(
+            max_word_spacing: paragraph.maximum_word_spacing,
+            max_letter_spacing: paragraph.maximum_letter_spacing,
+          )
           lines.each_with_index do |line, index|
             TextEngine::Justifier.justify(
               line: line, frame_width: wrap_width,
               alignment: paragraph.alignment || :left,
-              last_line: paragraph_last && index == lines.length - 1
+              last_line: paragraph_last && index == lines.length - 1,
+              limits: limits
             )
           end
         end

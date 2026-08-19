@@ -109,12 +109,60 @@ RSpec.describe Idml::TextEngine::Justifier do
     glyphs = shaper.shape("aa bb cc")
     line = Idml::TextEngine::Line.new(glyphs, shaper.measure(glyphs), 0)
     space_widths = glyphs.select(&:is_space).map(&:width)
+    limits = described_class::SpacingLimits.new(
+      max_word_spacing: 500, max_letter_spacing: 0,
+    )
 
     described_class.justify(line: line, frame_width: line.width + 20,
-                            alignment: :justified)
+                            alignment: :justified, limits: limits)
     stretched = line.glyphs.select(&:is_space).map(&:width)
     expect(stretched).to all(be > 0)
     expect(stretched.sum - space_widths.sum).to be > 15
+  end
+
+  it "caps word-space stretching at MaximumWordSpacing" do
+    shaper = Idml::TextEngine::Shaper.new(font, 12)
+    glyphs = shaper.shape("aa bb")
+    natural_space = glyphs.find(&:is_space).width
+    line = Idml::TextEngine::Line.new(glyphs, shaper.measure(glyphs), 0)
+    slack = 40.0
+    limits = described_class::SpacingLimits.new(
+      max_word_spacing: 120, max_letter_spacing: 0,
+    )
+
+    described_class.justify(line: line, frame_width: line.width + slack,
+                            alignment: :justified, limits: limits)
+
+    stretched = line.glyphs.find(&:is_space).width
+    expect(stretched).to be <= natural_space * 1.201
+    expect(line.glyphs.sum(&:width)).to be < line.width + slack
+  end
+
+  it "distributes residual slack as letter spacing when allowed" do
+    shaper = Idml::TextEngine::Shaper.new(font, 12)
+    glyphs = shaper.shape("aa bb")
+    line = Idml::TextEngine::Line.new(glyphs, shaper.measure(glyphs), 0)
+    slack = 6.0
+    limits = described_class::SpacingLimits.new(
+      max_word_spacing: 100, max_letter_spacing: 100,
+    )
+
+    natural_widths = line.glyphs.map(&:width)
+    natural_total = line.width
+
+    described_class.justify(line: line, frame_width: line.width + slack,
+                            alignment: :justified, limits: limits)
+
+    # Word cap of 100% = no space growth; the whole slack is
+    # letter-spaced uniformly across every glyph (tracking applies
+    # to spaces too).
+    per_glyph = slack / line.glyphs.length
+    line.glyphs.each_with_index do |glyph, index|
+      expect(glyph.width).to be_within(0.01)
+        .of(natural_widths[index] + per_glyph)
+    end
+    expect(line.glyphs.sum(&:width)).to be_within(0.01)
+      .of(natural_total + slack)
   end
 
   it "keeps the last line ragged under :justified" do

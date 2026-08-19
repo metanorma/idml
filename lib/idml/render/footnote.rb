@@ -128,11 +128,16 @@ module Idml
                                             size: size)
           lines = TextEngine::LineBreaker.break(glyphs: glyphs,
                                                 frame_width: wrap_width)
+          limits = TextEngine::Justifier::SpacingLimits.new(
+            max_word_spacing: paragraph.maximum_word_spacing,
+            max_letter_spacing: paragraph.maximum_letter_spacing,
+          )
           lines.each_with_index do |line, index|
             TextEngine::Justifier.justify(
               line: line, frame_width: wrap_width,
               alignment: paragraph.alignment || :left,
-              last_line: last_line?(paragraph, run, index, lines)
+              last_line: last_line?(paragraph, run, index, lines),
+              limits: limits
             )
           end
           leading = TextEngine::VerticalLayout.leading_for(
