@@ -83,7 +83,7 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
       )
 
       write_to_temp_pdf(writer, "start-paragraph") do |pdf_path|
-        File.binread(pdf_path).scan(/\nBT\n/).length
+        File.binread(pdf_path).scan("\nBT\n").length
       end
     end
 
