@@ -76,7 +76,8 @@ module Idml
                                    cell_x, cell_y, cell_w, cell_h, context)
             render_cell_background(canvas, cell, cell_x, cell_y, cell_w, cell_h,
                                    context)
-            render_cell_border(canvas, cell_x, cell_y, cell_w, cell_h)
+            render_cell_border(canvas, cell, table, cell_x, cell_y,
+                               cell_w, cell_h, context)
             render_cell_text(canvas, cell, cell_x, cell_y, cell_h, context)
           end
         end
@@ -113,11 +114,101 @@ module Idml
         end
         private_class_method :render_cell_background
 
-        def self.render_cell_border(canvas, x, y, w, h)
-          canvas.rectangle(x, y, w, h)
-          canvas.stroke
+        # Cell borders: per-side strokes when the cell or table
+        # declare edge weights (legacy single rect otherwise, so
+        # undeclared tables keep their existing look). Top/bottom
+        # fall back to the table's default row stroke, left/right
+        # to the default column stroke; zero-weight sides draw
+        # nothing.
+        def self.render_cell_border(canvas, cell, table, x, y, w, h, context)
+          sides = cell_edge_weights(cell, table)
+          if sides.nil?
+            canvas.rectangle(x, y, w, h)
+            canvas.stroke
+            return
+          end
+
+          top, right, bottom, left = sides
+          stroke_cell_side(canvas, context,
+                           cell.top_edge_stroke_color,
+                           table.default_row_stroke_color, top) do
+            canvas.move_to(x, y + h)
+            canvas.line_to(x + w, y + h)
+          end
+          stroke_cell_side(canvas, context,
+                           cell.bottom_edge_stroke_color,
+                           table.default_row_stroke_color, bottom) do
+            canvas.move_to(x, y)
+            canvas.line_to(x + w, y)
+          end
+          stroke_cell_side(canvas, context,
+                           cell.left_edge_stroke_color,
+                           table.default_column_stroke_color, left) do
+            canvas.move_to(x, y)
+            canvas.line_to(x, y + h)
+          end
+          stroke_cell_side(canvas, context,
+                           cell.right_edge_stroke_color,
+                           table.default_column_stroke_color, right) do
+            canvas.move_to(x + w, y)
+            canvas.line_to(x + w, y + h)
+          end
         end
         private_class_method :render_cell_border
+
+        # [top, right, bottom, left] effective weights, or nil when
+        # neither cell edges nor table defaults declare any stroke
+        # (the legacy uniform-rect case).
+        def self.cell_edge_weights(cell, table)
+          return nil unless stroke_declared?(cell, table)
+
+          [
+            side_weight(cell.top_edge_stroke_weight,
+                        table.default_row_stroke_weight),
+            side_weight(cell.right_edge_stroke_weight,
+                        table.default_column_stroke_weight),
+            side_weight(cell.bottom_edge_stroke_weight,
+                        table.default_row_stroke_weight),
+            side_weight(cell.left_edge_stroke_weight,
+                        table.default_column_stroke_weight),
+          ]
+        end
+        private_class_method :cell_edge_weights
+
+        def self.stroke_declared?(cell, table)
+          [
+            cell.top_edge_stroke_weight, cell.right_edge_stroke_weight,
+            cell.bottom_edge_stroke_weight, cell.left_edge_stroke_weight,
+            table.default_row_stroke_weight,
+            table.default_column_stroke_weight
+          ].compact.any?
+        end
+        private_class_method :stroke_declared?
+
+        def self.side_weight(cell_weight, default_weight)
+          cell_weight || default_weight || 0
+        end
+        private_class_method :side_weight
+
+        def self.stroke_cell_side(canvas, context, cell_color,
+                                  table_color, weight)
+          thickness = weight.to_f
+          return unless thickness.positive?
+
+          apply_cell_stroke_color(canvas, context, cell_color, table_color)
+          canvas.line_width = thickness
+          yield
+          canvas.stroke
+        end
+        private_class_method :stroke_cell_side
+
+        def self.apply_cell_stroke_color(canvas, context, cell_color,
+                                         table_color)
+          name = cell_color || table_color
+          color = name && context.color_resolver&.resolve(name)
+          canvas.stroke_color(color ? ColorHelper.to_canvas(color) : [:gray, 1.0])
+        end
+        private_class_method :apply_cell_stroke_color
 
         def self.cell_fill_color(cell, context)
           return nil unless cell.fill_color
