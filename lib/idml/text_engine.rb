@@ -8,6 +8,8 @@ module Idml
     autoload :PdfrbFontMetrics, "#{__dir__}/text_engine/pdfrb_font_metrics"
     autoload :Shaper, "#{__dir__}/text_engine/shaper"
     autoload :Measurement, "#{__dir__}/text_engine/measurement"
+    autoload :VerticalTextLayout,
+             "#{__dir__}/text_engine/vertical_text_layout"
     autoload :ShapedGlyph,     "#{__dir__}/text_engine/shaper"
     autoload :LineBreaker,     "#{__dir__}/text_engine/line_breaker"
     autoload :Line,            "#{__dir__}/text_engine/line_breaker"

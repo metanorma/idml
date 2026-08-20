@@ -140,8 +140,9 @@ module Idml
         return [] unless story&.inner
 
         counter = Footnote.counter_for(nil)
+        endnotes = Footnote.counter_for(nil)
         story.inner.paragraph_style_range.flat_map do |psr|
-          csr_runs(psr, footnote_counter: counter)
+          csr_runs(psr, footnote_counter: counter, endnote_counter: endnotes)
         end
       end
 
@@ -170,13 +171,15 @@ module Idml
                                             style_lookup: nil,
                                             footnote_option: nil)
         counter = Footnote.counter_for(footnote_option)
+        endnotes = Footnote.counter_for(nil)
         container.paragraph_style_range.filter_map do |psr|
           next unless condition_visible?(psr, condition_filter)
 
           runs = csr_runs(psr, condition_filter: condition_filter,
                                style_lookup: style_lookup,
                                footnote_counter: counter,
-                               footnote_option: footnote_option)
+                               footnote_option: footnote_option,
+                               endnote_counter: endnotes)
           next if runs.empty?
 
           paragraph = Paragraph.new(
@@ -304,15 +307,18 @@ module Idml
       private_class_method :properties_color
 
       def self.csr_runs(psr, condition_filter: nil, style_lookup: nil,
-                        footnote_counter: nil, footnote_option: nil)
+                        footnote_counter: nil, footnote_option: nil,
+                        endnote_counter: nil)
         counter = footnote_counter || Footnote.counter_for(footnote_option)
+        endnotes = endnote_counter || Footnote.counter_for(nil)
         psr.character_style_range.flat_map do |csr|
           next [] unless condition_visible?(csr, condition_filter)
 
           csr_content_runs(csr, condition_filter: condition_filter,
                                 style_lookup: style_lookup,
                                 footnote_counter: counter,
-                                footnote_option: footnote_option)
+                                footnote_option: footnote_option,
+                                endnote_counter: endnotes)
         end
       end
 
@@ -320,7 +326,8 @@ module Idml
       # plus one superscript marker run per anchored Footnote. A CSR
       # holding only a footnote still emits its marker.
       def self.csr_content_runs(csr, condition_filter:, style_lookup:,
-                                footnote_counter:, footnote_option:)
+                                footnote_counter:, footnote_option:,
+                                endnote_counter:)
         text = csr.text_content
         runs = []
         unless text.nil? || text.empty?
@@ -336,8 +343,21 @@ module Idml
           runs << Footnote.marker_run(number, runs.last, paragraphs,
                                       footnote_option)
         end
+        runs.concat(endnote_marker_runs(csr, endnote_counter, runs.last))
         runs
       end
+
+      # Endnote reference markers (CSR > EndnoteRange): superscript,
+      # numbered by a counter SEPARATE from footnotes. The endnote
+      # text lives in another story (IsEndnoteStory) and is not yet
+      # rendered — see TODO 117.
+      def self.endnote_marker_runs(csr, endnote_counter, base_run)
+        csr.endnote_range.map do |_range|
+          Footnote.marker_run(endnote_counter.next_number, base_run,
+                              nil, nil)
+        end
+      end
+      private_class_method :endnote_marker_runs
       private_class_method :csr_content_runs
 
       def self.text_run(csr, style_lookup:)

@@ -1,7 +1,7 @@
 # TODO PDF 117: Endnote support
 
-## Status: OPEN (modeling COMPLETE 2026-08-18; rendering OPEN pending
-a real fixture)
+## Status: PARTIAL (modeling + reference markers COMPLETE
+2026-08-18/19; endnote TEXT rendering OPEN pending a real fixture)
 
 ## Problem
 
@@ -20,14 +20,19 @@ story flagged `IsEndnoteStory="true"`. Documents with endnotes
   collections). Round-trip + parse specs.
 - `StoryInner#is_endnote_story` already parsed, so endnote stories
   are identifiable.
+- Reference markers render (2026-08-19): CSR-level `EndnoteRange`
+  elements (verified against CharacterStyleRange_Object in
+  Story.rnc) emit superscript marker runs numbered by a counter
+  SEPARATE from footnotes — endnoted text now shows visible numbered
+  references instead of dropping them. `StoryInner` also parses
+  `StoryPreference` (vertical writing support).
 
 ## Design for rendering (needs a real InDesign fixture to validate)
 
-1. Marker: story-level `Endnote`/`EndnoteRange` pairs delimit the
-   anchor range; marker position requires story text-offset
-   bookkeeping the extraction layer doesn't currently track (unlike
-   footnotes, which sit inside a CSR). A range-aware extraction is
-   the prerequisite.
+1. ~~Marker~~ DONE 2026-08-19: CSR-level EndnoteRange emits a
+   superscript marker run at the CSR's position (same pattern as
+   footnotes). Story-level Endnote/EndnoteRange pairs (no CSR
+   anchor) remain unplaced.
 2. Endnote text: resolve `EndnoteTextRange` → the endnote story
    (IsEndnoteStory) → its paragraphs.
 3. Placement: per EndnoteOption Scope — end of story / end of

@@ -1,11 +1,29 @@
 # TODO PDF 13: CJK text layout
 
-## Status: PARTIAL — horizontal-mode CJK complete (2026-08-17):
-CJK glyph measurement, kinsoku shori, and ruby annotations render.
-Vertical writing mode, tate-chu-yoko, and mojikumi remain OPEN
-stretch goals — they need a vertical (rotated) layout engine and
-real vertical-mode fixtures to build against. See
-`lib/idml/text_engine/cjk_layout.rb`.
+## Status: PARTIAL — vertical writing mode implemented 2026-08-19
+(horizontal-mode CJK was complete 2026-08-17: glyph measurement,
+kinsoku shori, ruby annotations).
+
+## Vertical mode (2026-08-19)
+
+- `StoryInner` now parses `StoryPreference` (StoryOrientation).
+- `TextEngine::VerticalTextLayout` stacks glyphs UPRIGHT in
+  columns flowing right-to-left (CJK ideographs render correctly;
+  Latin glyphs are not rotated — documented approximation), reusing
+  LineBreaker (so kinsoku applies) against the column height.
+- `TextFrameRenderer` takes the vertical path when the story
+  declares Vertical: paragraphs flow as glyph columns, runs start
+  fresh columns, overflow chains to the next frame. Paragraph
+  spacing/rules/decorations and ruby repositioning are not applied
+  in vertical mode.
+- LineBreaker now breaks unspaced CJK runs PER CHARACTER at the
+  frame width (previously they overflowed as one long line) — this
+  also fixes horizontal CJK wrapping.
+
+Remaining stretch goals: tate-chu-yoko, mojikumi, Latin rotation in
+vertical mode, vertical ruby placement. See
+`lib/idml/text_engine/cjk_layout.rb` and
+`lib/idml/text_engine/vertical_text_layout.rb`.
 
 ## Progress 2026-08-17
 
