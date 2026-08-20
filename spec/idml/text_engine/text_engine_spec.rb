@@ -74,19 +74,32 @@ RSpec.describe Idml::TextEngine::LineBreaker do
     end
 
     it "moves a forbidden line-start character to the previous line" do
-      glyphs = "一二三四五六。七八".each_char.map { |c| glyph(c) }
+      # Per-character CJK break lands before 。 (glyph 6 at width 55
+      # overflows a 50pt line); kinsoku then pulls 。 up.
+      glyphs = "一二三四五。六七八".each_char.map { |c| glyph(c) }
       lines = described_class.break(glyphs: glyphs, frame_width: 50)
 
       expect(lines.first.glyphs.last.codepoint).to eq("。".ord)
-      expect(lines.last.glyphs.first.codepoint).to eq("七".ord)
+      expect(lines.last.glyphs.first.codepoint).to eq("六".ord)
     end
 
     it "moves a forbidden line-end character to the next line" do
-      glyphs = "一二三四「五六七八".each_char.map { |c| glyph(c) }
-      lines = described_class.break(glyphs: glyphs, frame_width: 45)
+      # Break before glyph 6 leaves 「 as line 1's last glyph;
+      # kinsoku pushes it to line 2.
+      glyphs = "一二三四「五六七".each_char.map { |c| glyph(c) }
+      lines = described_class.break(glyphs: glyphs, frame_width: 55)
 
       expect(lines.first.glyphs.last.codepoint).to eq("四".ord)
       expect(lines.last.glyphs.first.codepoint).to eq("「".ord)
+    end
+
+    it "breaks unspaced CJK runs per character at the frame width" do
+      glyphs = "一二三四五六".each_char.map { |c| glyph(c) }
+      lines = described_class.break(glyphs: glyphs, frame_width: 50)
+
+      expect(lines.length).to eq(2)
+      expect(lines.first.glyphs.map { |g| [g.codepoint].pack("U") }.join)
+        .to eq("一二三四五")
     end
 
     it "leaves non-CJK runs untouched" do

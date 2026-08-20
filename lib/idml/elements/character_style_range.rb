@@ -302,6 +302,8 @@ module Idml
       attribute :table, Idml::Elements::Table, collection: true
       attribute :xml_element, Idml::Elements::XmlElement, collection: true
       attribute :footnote, Idml::Elements::Footnote, collection: true
+      attribute :endnote_range, Idml::Elements::EndnoteRange,
+                collection: true
       # Anchored page items embedded in the story flow. Their
       # AnchoredObjectSetting (child of each item) declares how the
       # item anchors to the surrounding text.
@@ -669,6 +671,7 @@ module Idml
         map_element "Table", to: :table
         map_element "XMLElement", to: :xml_element
         map_element "Footnote", to: :footnote
+        map_element "EndnoteRange", to: :endnote_range
         map_element "Rectangle", to: :rectangle
         map_element "Oval", to: :oval
         map_element "Polygon", to: :polygon

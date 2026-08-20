@@ -146,6 +146,52 @@ RSpec.describe Idml::Render do
         expect(para.maximum_letter_spacing).to eq(25.0)
       end
 
+      it "emits superscript endnote markers for CSR EndnoteRange elements" do
+        story = Idml::Parts::Story.from_xml(<<~XML)
+          <idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="21.5">
+            <Story Self="u1">
+              <ParagraphStyleRange>
+                <CharacterStyleRange PointSize="12">
+                  <Content>See note</Content>
+                  <EndnoteRange Self="r1" SourceEndnote="e1"/>
+                </CharacterStyleRange>
+              </ParagraphStyleRange>
+            </Story>
+          </idPkg:Story>
+        XML
+        runs = described_class.extract_paragraphs(story).first.runs
+        expect(runs.length).to eq(2)
+        expect(runs.last.text).to eq("1")
+        expect(runs.last.position).to eq("Superscript")
+        expect(runs.last.footnote_paragraphs).to be_nil
+      end
+
+      it "numbers endnotes separately from footnotes" do
+        story = Idml::Parts::Story.from_xml(<<~XML)
+          <idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="21.5">
+            <Story Self="u1">
+              <ParagraphStyleRange>
+                <CharacterStyleRange PointSize="12">
+                  <Content>A</Content>
+                  <Footnote>
+                    <ParagraphStyleRange>
+                      <CharacterStyleRange PointSize="9"><Content>fn</Content></CharacterStyleRange>
+                    </ParagraphStyleRange>
+                  </Footnote>
+                  <EndnoteRange Self="r1" SourceEndnote="e1"/>
+                  <EndnoteRange Self="r2" SourceEndnote="e2"/>
+                </CharacterStyleRange>
+              </ParagraphStyleRange>
+            </Story>
+          </idPkg:Story>
+        XML
+        runs = described_class.extract_paragraphs(story).first.runs
+        markers = runs.select { |r| r.position == "Superscript" }
+        expect(markers.map(&:text)).to eq(["1", "1", "2"])
+        expect(markers.first.footnote_paragraphs).not_to be_nil
+        expect(markers.last.footnote_paragraphs).to be_nil
+      end
+
       it "carries shading and border attrs from a declaring PSR" do
         story = Idml::Parts::Story.from_xml(<<~XML)
           <idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="21.5">

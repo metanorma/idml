@@ -22,9 +22,21 @@ module Idml
       end
       private_class_method :cjk_run?
 
+      # CJK text wraps per character (no word boundaries): an
+      # overflow whose trailing glyph is CJK breaks before it
+      # instead of emitting an overlong line.
+
       def initialize(frame_width)
         @frame_width = frame_width
       end
+
+      # CJK text wraps per character (no word boundaries): an
+      # overflow whose trailing glyph is CJK breaks before it
+      # instead of emitting an overlong line.
+      def cjk_break?(current)
+        current.length > 1 && CjkLayout.cjk?(current.last.codepoint)
+      end
+      private :cjk_break?
 
       def break(glyphs)
         lines = []
@@ -50,6 +62,10 @@ module Idml
             current = current[(last_space_idx + 1)..]
             current_width = current.sum(&:width)
             last_space_idx = -1
+          elsif cjk_break?(current)
+            lines << Line.new(current[0..-2], current_width - glyph.width, 0)
+            current = [glyph]
+            current_width = glyph.width
           else
             lines << Line.new(current, current_width, 0)
             current = []

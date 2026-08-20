@@ -41,7 +41,8 @@ module Idml
           state = initial_chain_state(frame, story, context)
           return unless state
 
-          render_text(canvas, state, context, box)
+          vertical = vertical_story?(story)
+          render_text(canvas, state, context, box, vertical: vertical)
           store_chain_state(frame, state, context)
         end
 
@@ -146,15 +147,119 @@ module Idml
         end
         private_class_method :context_for_item
 
-        def self.render_text(canvas, state, context, box)
+        def self.render_text(canvas, state, context, box, vertical: false)
           font = context.font_metrics
-          if font
+          if font && vertical
+            vertical_render(canvas, state, context, box, font)
+          elsif font
             engine_render(canvas, state, context, box, font)
           else
             simple_render(canvas, state, context, box)
           end
         end
         private_class_method :render_text
+
+        # True when the story's StoryPreference declares vertical
+        # writing (StoryOrientation="Vertical").
+        def self.vertical_story?(story)
+          story.inner&.story_preference&.story_orientation == "Vertical"
+        end
+        private_class_method :vertical_story?
+
+        # Vertical writing path (StoryOrientation="Vertical", CJK):
+        # paragraphs flow as upright glyph columns advancing
+        # right-to-left; each run starts a fresh column (run-mixing
+        # within a column is not modeled). Runs whose columns would
+        # cross the frame's left inset overflow to the next frame in
+        # the chain. Paragraph spacing, rules, and decorations are
+        # not applied in vertical mode.
+        def self.vertical_render(canvas, state, context, box, font)
+          layout_frame = layout_frame(context.item, box)
+          left_limit = layout_frame.x + (layout_frame.inset_left || 0)
+          resume_vertical_paragraph(state)
+          pending = 0
+
+          state.paragraphs.each do |paragraph|
+            remaining_runs = vertical_paragraph(
+              canvas, paragraph, context, layout_frame, font, left_limit
+            )
+            if remaining_runs.empty?
+              pending += 1
+            else
+              state.current_paragraph = paragraph
+              state.runs_remaining = remaining_runs
+              break
+            end
+          end
+
+          state.paragraphs = state.paragraphs[pending..]
+        end
+        private_class_method :vertical_render
+
+        # Folds a chain-resumed paragraph (runs_remaining) back to
+        # the head of the paragraph list so the vertical path sees a
+        # uniform sequence.
+        def self.resume_vertical_paragraph(state)
+          return unless state.current_paragraph
+
+          state.current_paragraph.runs = state.runs_remaining
+          state.paragraphs.unshift(state.current_paragraph)
+          state.current_paragraph = nil
+          state.runs_remaining = []
+        end
+        private_class_method :resume_vertical_paragraph
+
+        # Renders one paragraph's runs as vertical columns. Returns
+        # the runs that did not fit (empty when all placed).
+        def self.vertical_paragraph(canvas, paragraph, context,
+                                    layout_frame, font, left_limit)
+          paragraph.runs.each_with_index do |run, index|
+            size = run.point_size || DEFAULT_SIZE
+            leading = TextEngine::VerticalLayout.leading_for(
+              paragraph.auto_leading, size
+            )
+            glyphs = TextEngine::Shaper.shape(text: run.text, font: font,
+                                              size: size)
+            positioned, columns = TextEngine::VerticalTextLayout.layout(
+              glyphs: glyphs, frame: layout_frame, leading: leading,
+              size: size
+            )
+            unless vertical_fits?(layout_frame, leading, columns,
+                                  left_limit)
+              return paragraph.runs[index..]
+            end
+
+            positioned.each do |glyph|
+              emit_vertical_glyph(canvas, glyph, run, context, size)
+            end
+          end
+          []
+        end
+        private_class_method :vertical_paragraph
+
+        def self.vertical_fits?(layout_frame, leading, columns, left_limit)
+          right = layout_frame.x + layout_frame.width -
+            (layout_frame.inset_right || 0)
+          (right - (columns * leading)) >= left_limit
+        end
+        private_class_method :vertical_fits?
+
+        # Emits one upright glyph at its vertical position with the
+        # run's character styling.
+        def self.emit_vertical_glyph(canvas, positioned, run, context,
+                                     size)
+          text = [positioned.codepoint].pack("U")
+          text_kwargs = CharacterStyle.text_kwargs(
+            run,
+            {
+              at: [positioned.x, positioned.y],
+              font: font_for_run(run, context),
+              size: size,
+            },
+          )
+          canvas.text(text, **text_kwargs)
+        end
+        private_class_method :emit_vertical_glyph
 
         def self.chain_head?(frame)
           frame.previous_text_frame.nil? || frame.previous_text_frame == "n"

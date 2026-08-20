@@ -316,6 +316,7 @@ module Idml
       attribute :endnote, Idml::Elements::Endnote, collection: true
       attribute :endnote_range, Idml::Elements::EndnoteRange,
                 collection: true
+      attribute :story_preference, Idml::Elements::StoryPreference
 
       xml do
         root "Story"
@@ -683,6 +684,7 @@ module Idml
         map_element "Footnote", to: :footnote
         map_element "Endnote", to: :endnote
         map_element "EndnoteRange", to: :endnote_range
+        map_element "StoryPreference", to: :story_preference
       end
 
       def text_content
