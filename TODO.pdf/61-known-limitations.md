@@ -22,13 +22,14 @@ this list reflects the current state.
   (TODO 128); CapHeight / XHeight approximate as leading.
 - **StartParagraph** breaks act at frame/column granularity — no
   odd/even page parity.
-- **Text wrap**: BoundingBoxTextWrap and Contour modes render
-  (TODO 130); JumpObject/NextColumn approximate as the box;
-  Inverse mode is not implemented.
+- **Text wrap**: BoundingBoxTextWrap, Contour, and Inverse modes
+  render (TODOs 130-131); JumpObject/NextColumn approximate as
+  the box; side-aware narrowing is not implemented.
 
 ### CJK
-- **Mojikumi**: CJK/Latin auto script spacing is applied (TODO
-  125); full class-based punctuation compression tables are not.
+- **Mojikumi**: CJK/Latin auto script spacing (TODO 125) and
+  line-end punctuation compression (TODO 132) are applied; full
+  class-based compression tables are not.
 - **Vertical mode**: Latin rotation is per glyph (not run-grouped);
   ruby placement is beside-column; keep options do not apply.
 

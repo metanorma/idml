@@ -12,8 +12,10 @@ module Idml
       FLATTEN_STEPS = 8
 
       # A wrap shape: flattened polygons (one per subpath) plus the
-      # TextWrapOffset bounds.
-      Shape = Struct.new(:polygons, :offset, keyword_init: true)
+      # TextWrapOffset bounds. `inverse` flips the wrap region:
+      # text may only flow INSIDE the shape.
+      Shape = Struct.new(:polygons, :offset, :inverse,
+                         keyword_init: true)
 
       # Builds the wrap shape for an item's PathGeometry and wrap
       # preference. Returns nil when the item has no geometry.
@@ -21,7 +23,8 @@ module Idml
         polygons = polygons_for(item, page_height)
         return nil if polygons.empty?
 
-        Shape.new(polygons: polygons, offset: wrap_offset(pref))
+        Shape.new(polygons: polygons, offset: wrap_offset(pref),
+                  inverse: pref.inverse)
       end
 
       def self.polygons_for(item, page_height)
@@ -118,6 +121,7 @@ module Idml
 
       # Total horizontal overlap of the text line's band with the
       # shape, expanded by the offsets and clipped to the frame.
+      # The caller (TextWrapResolver) owns inverse flipping.
       def self.overlap_width(shape, line_y, line_height, frame_x,
                              frame_right)
         mid_y = line_y + (line_height / 2.0)

@@ -14,7 +14,7 @@ module Idml
     class TextWrapResolver
       # A wrap contour: a PDF-coordinate rectangle the text avoids.
       Contour = Struct.new(
-        :x, :y, :width, :height,
+        :x, :y, :width, :height, :inverse,
         keyword_init: true
       )
 
@@ -40,16 +40,22 @@ module Idml
       # Returns the total horizontal overlap of all contours with a
       # text line at the given y range within the given x range.
       # Sum, not max — multiple overlapping contours compound.
-      # Returns 0.0 when there's no overlap.
+      # Returns 0.0 when there's no overlap. Inverse contours
+      # reduce by the frame width minus their own width (text may
+      # only flow inside).
       def overlap_width(line_y, line_height, frame_x, frame_right)
         @contours.sum do |contour|
-          if contour.is_a?(WrapContour::Shape)
-            WrapContour.overlap_width(contour, line_y, line_height,
-                                      frame_x, frame_right)
-          else
-            line_overlap(contour, line_y, line_height,
-                         frame_x, frame_right)[:width]
-          end
+          width = if contour.is_a?(WrapContour::Shape)
+                    WrapContour.overlap_width(contour, line_y,
+                                              line_height, frame_x,
+                                              frame_right)
+                  else
+                    line_overlap(contour, line_y, line_height,
+                                 frame_x, frame_right)[:width]
+                  end
+          next width unless contour.inverse
+
+          (frame_right - frame_x) - width
         end
       end
 
