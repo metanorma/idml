@@ -11,12 +11,15 @@ this list reflects the current state.
 ### Text layout
 - **Hyphenation** is not implemented (Hyphenation* attributes are
   parsed but unused); a hyphenation dictionary would be required.
-- **Justification**: word/letter spacing caps apply (TODO 119);
-  glyph scaling (Min/Max/DesiredGlyphScaling) is not applied;
-  ToBinding / RTL binding alignment maps to left.
-- **Keep options**: whole-paragraph KeepAllLinesTogether and
-  KeepWithNext(first-line) are honored; partial keep windows
-  (KeepFirstLines / KeepLastLines) are not.
+- **Justification**: word/letter spacing caps apply (TODO 119) and
+  MaximumGlyphScaling stretches as the last resort (TODO 129);
+  MinimumGlyphScaling compression and ToBinding / RTL binding
+  alignment are not applied.
+- **Keep options**: whole-paragraph KeepAllLinesTogether (TODO
+  123) and KeepWithNext (TODO 127) are honored; partial keep
+  windows (KeepFirstLines / KeepLastLines) are not.
+- **First baseline**: AscentOffset and FixedHeight are honored
+  (TODO 128); CapHeight / XHeight approximate as leading.
 - **StartParagraph** breaks act at frame/column granularity — no
   odd/even page parity.
 - **Text wrap** (TODO 114): BoundingBox mode only; Shape contour

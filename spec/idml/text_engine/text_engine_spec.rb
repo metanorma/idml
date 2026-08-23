@@ -178,6 +178,43 @@ RSpec.describe Idml::TextEngine::Justifier do
       .of(natural_total + slack)
   end
 
+  it "scales glyphs up to MaximumGlyphScaling as the last resort" do
+    shaper = Idml::TextEngine::Shaper.new(font, 12)
+    glyphs = shaper.shape("aa bb")
+    natural_widths = glyphs.map(&:width)
+    line = Idml::TextEngine::Line.new(glyphs, shaper.measure(glyphs), 0)
+    slack = 6.0
+    limits = described_class::SpacingLimits.new(
+      max_word_spacing: 100, max_letter_spacing: 0, max_glyph_scaling: 150,
+    )
+
+    described_class.justify(line: line, frame_width: line.width + slack,
+                            alignment: :justified, limits: limits)
+
+    line.glyphs.each_with_index do |glyph, index|
+      expect(glyph.width).to be > natural_widths[index]
+    end
+    expect(line.glyphs.sum(&:width)).to be_within(0.01)
+      .of(natural_widths.sum + slack)
+  end
+
+  it "does not scale glyphs under the default 100% cap" do
+    shaper = Idml::TextEngine::Shaper.new(font, 12)
+    glyphs = shaper.shape("aa bb")
+    natural_widths = glyphs.map(&:width)
+    line = Idml::TextEngine::Line.new(glyphs, shaper.measure(glyphs), 0)
+    limits = described_class::SpacingLimits.new(
+      max_word_spacing: 100, max_letter_spacing: 0,
+    )
+
+    described_class.justify(line: line, frame_width: line.width + 6,
+                            alignment: :justified, limits: limits)
+
+    line.glyphs.each_with_index do |glyph, index|
+      expect(glyph.width).to eq(natural_widths[index])
+    end
+  end
+
   it "keeps the last line ragged under :justified" do
     shaper = Idml::TextEngine::Shaper.new(font, 12)
     glyphs = shaper.shape("aa bb cc")

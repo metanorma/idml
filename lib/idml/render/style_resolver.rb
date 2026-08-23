@@ -68,6 +68,7 @@ module Idml
         # Justification distribution caps (percent; from PSR).
         :maximum_word_spacing,
         :maximum_letter_spacing,
+        :maximum_glyph_scaling,
         # Forced paragraph break (StartParagraph: NextPage /
         # NextColumn / NextFrame / NextOddPage / NextEvenPage).
         :start_paragraph,
@@ -204,6 +205,9 @@ module Idml
             ),
             maximum_letter_spacing: resolve_attr(
               style_lookup, psr, :maximum_letter_spacing
+            ),
+            maximum_glyph_scaling: resolve_attr(
+              style_lookup, psr, :maximum_glyph_scaling
             ),
             start_paragraph: resolve_attr(style_lookup, psr,
                                           :start_paragraph),

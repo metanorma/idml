@@ -433,6 +433,7 @@ module Idml
           bottom_limit = TextEngine::VerticalLayout.bottom_limit(layout_frame)
           footnotes = []
           cursor_y = vertical_justify_top(top_y, bottom_limit, state, context)
+          cursor_y -= first_baseline_offset(context, state, font)
           char_cursor = state.char_cursor
 
           if state.current_paragraph
@@ -473,7 +474,7 @@ module Idml
           top_y = col_frame.y + col_frame.height - (col_frame.inset_top || 0)
           bottom_limit = TextEngine::VerticalLayout.bottom_limit(col_frame)
           footnotes = []
-          cursor_y = top_y
+          cursor_y = top_y - first_baseline_offset(context, state, font)
           char_cursor = state.char_cursor
 
           if state.current_paragraph
@@ -563,6 +564,53 @@ module Idml
           end
         end
         private_class_method :vertical_justify_top
+
+        # FirstBaselineOffset: how far below the frame's top inset
+        # the first line's baseline sits. The layout's default is
+        # leading-based; AscentOffset shifts by (ascent − leading)
+        # and FixedHeight by (MinimumFirstBaselineOffset − leading).
+        # CapHeight / XHeight / EmboxHeight approximate as leading.
+        # Returns the extra shift to subtract from the cursor.
+        def self.first_baseline_offset(context, state, font)
+          pref = context.item&.text_frame_preference&.first
+          mode = pref&.first_baseline_offset
+          return 0.0 unless %w[AscentOffset FixedHeight].include?(mode)
+
+          baseline_target(pref, mode, state, font) -
+            first_paragraph_leading(state)
+        end
+        private_class_method :first_baseline_offset
+
+        # Distance from the top inset to the first baseline under
+        # the given mode.
+        def self.baseline_target(pref, mode, state, font)
+          if mode == "AscentOffset"
+            ascent_scaled(font) * first_paragraph_leading(state)
+          else
+            pref.minimum_first_baseline_offset ||
+              first_paragraph_leading(state)
+          end
+        end
+        private_class_method :baseline_target
+
+        def self.ascent_scaled(font)
+          upem = font.units_per_em.zero? ? 1 : font.units_per_em
+          font.ascent / upem
+        end
+        private_class_method :ascent_scaled
+
+        def self.first_paragraph_leading(state)
+          paragraph = state.current_paragraph || state.paragraphs.first
+          unless paragraph
+            return DEFAULT_SIZE *
+                TextEngine::VerticalLayout::DEFAULT_LEADING_FACTOR
+          end
+
+          size = paragraph.runs.first&.point_size || DEFAULT_SIZE
+          TextEngine::VerticalLayout.leading_for(paragraph.auto_leading,
+                                                 size)
+        end
+        private_class_method :first_paragraph_leading
 
         def self.text_frame_vertical_justification(context)
           pref = context.item&.text_frame_preference&.first
@@ -1051,6 +1099,7 @@ module Idml
           limits = TextEngine::Justifier::SpacingLimits.new(
             max_word_spacing: paragraph.maximum_word_spacing,
             max_letter_spacing: paragraph.maximum_letter_spacing,
+            max_glyph_scaling: paragraph.maximum_glyph_scaling,
           )
           lines.each_with_index do |line, index|
             TextEngine::Justifier.justify(
