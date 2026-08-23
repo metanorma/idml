@@ -7,6 +7,38 @@ module Idml
     module CjkLayout
       module_function
 
+      # Mojikumi subset: automatic inter-script spacing — an eighth
+      # em is inserted between adjacent CJK and ASCII alphanumeric
+      # glyphs (widenning the leading glyph of each pair), matching
+      # InDesign's default CJK/Latin auto spacing.
+      SCRIPT_SPACING_EM = 0.125
+
+      def apply_script_spacing(glyphs, size)
+        spacing = size * SCRIPT_SPACING_EM
+        (0...(glyphs.length - 1)).each do |index|
+          leading = glyphs[index]
+          following = glyphs[index + 1]
+          next unless script_boundary?(leading.codepoint,
+                                       following.codepoint)
+
+          leading.width += spacing
+        end
+        glyphs
+      end
+
+      # True when exactly one of the pair is CJK and the other is
+      # an ASCII letter or digit.
+      def script_boundary?(left, right)
+        (cjk?(left) && ascii_alnum?(right)) ||
+          (ascii_alnum?(left) && cjk?(right))
+      end
+
+      def ascii_alnum?(codepoint)
+        (0x30..0x39).cover?(codepoint) ||
+          (0x41..0x5A).cover?(codepoint) ||
+          (0x61..0x7A).cover?(codepoint)
+      end
+
       CJK_RANGES = [
         0x3000..0x303F, # CJK Symbols and Punctuation
         0x3040..0x309F, # Hiragana
