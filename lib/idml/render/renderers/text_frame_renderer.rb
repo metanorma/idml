@@ -629,11 +629,13 @@ module Idml
                                     cursor_y, bottom_limit, char_cursor,
                                     footnotes)
           pending = 0
-          state.paragraphs.each do |paragraph|
+          state.paragraphs.each_with_index do |paragraph, index|
             break if cursor_y < bottom_limit
-            break if paragraph_deferred?(paragraph, layout_frame, font,
-                                         cursor_y, bottom_limit,
-                                         pending.positive?)
+
+            next_paragraph = state.paragraphs[index + 1]
+            break if paragraph_deferred?(paragraph, next_paragraph,
+                                         layout_frame, font, cursor_y,
+                                         bottom_limit, pending.positive?)
 
             remaining_runs, cursor_y, char_cursor = render_runs_for_paragraph(
               canvas, paragraph, paragraph.runs, context,
@@ -969,11 +971,25 @@ module Idml
         # frame: a StartParagraph forced break, or KeepAllLines-
         # Together with insufficient remaining space (never for the
         # frame's first paragraph, so progress is always made).
-        def self.paragraph_deferred?(paragraph, layout_frame, font,
-                                     cursor_y, bottom_limit, placed_any)
+        def self.paragraph_deferred?(paragraph, next_paragraph,
+                                     layout_frame, font, cursor_y,
+                                     bottom_limit, placed_any)
           return true if paragraph_break?(paragraph) && placed_any
-          return false unless paragraph.keep_all_lines_together
           return false unless placed_any
+          return true if keep_with_next_break?(paragraph, next_paragraph,
+                                               layout_frame, font,
+                                               cursor_y, bottom_limit)
+
+          keep_all_lines_break?(paragraph, layout_frame, font,
+                                cursor_y, bottom_limit)
+        end
+        private_class_method :paragraph_deferred?
+
+        # KeepAllLinesTogether: defer when the paragraph cannot
+        # fully fit the remaining space.
+        def self.keep_all_lines_break?(paragraph, layout_frame, font,
+                                       cursor_y, bottom_limit)
+          return false unless paragraph.keep_all_lines_together
 
           wrap_width = TextEngine::VerticalLayout.wrap_width(
             layout_frame, paragraph.right_indent || 0
@@ -983,7 +999,40 @@ module Idml
           )
           (cursor_y - height) < bottom_limit
         end
-        private_class_method :paragraph_deferred?
+        private_class_method :keep_all_lines_break?
+
+        # KeepWithNext: this paragraph defers when the next
+        # paragraph is forced to the next frame, or when the next
+        # paragraph's first line would not fit after this one.
+        def self.keep_with_next_break?(paragraph, next_paragraph,
+                                       layout_frame, font, cursor_y,
+                                       bottom_limit)
+          return false unless keepable_pair?(paragraph, next_paragraph)
+          return true if paragraph_break?(next_paragraph)
+
+          wrap_width = TextEngine::VerticalLayout.wrap_width(
+            layout_frame, paragraph.right_indent || 0
+          )
+          height = TextEngine::Measurement.paragraph_height(
+            paragraph, font, wrap_width
+          )
+          (cursor_y - height - follower_leading(next_paragraph)) <
+            bottom_limit
+        end
+        private_class_method :keep_with_next_break?
+
+        def self.keepable_pair?(paragraph, next_paragraph)
+          !paragraph.keep_with_next.nil? && !next_paragraph.nil?
+        end
+        private_class_method :keepable_pair?
+
+        def self.follower_leading(next_paragraph)
+          size = next_paragraph.runs.first&.point_size || DEFAULT_SIZE
+          TextEngine::VerticalLayout.leading_for(
+            next_paragraph.auto_leading, size
+          )
+        end
+        private_class_method :follower_leading
 
         # True when the paragraph requests a forced break to the
         # next frame/column (StartParagraph). All break flavors act

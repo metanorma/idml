@@ -1,35 +1,51 @@
 # TODO PDF 61: Known limitations and future work
 
-## Status: DOCUMENTED
+## Status: DOCUMENTED — refreshed 2026-08-20
+
+Previously listed limitations (font embedding, tagged PDF, per-run
+styling, dead code) were resolved by TODOs 52/53/55/67/76 long ago;
+this list reflects the current state.
 
 ## Known limitations
 
-1. **Font embedding**: pdfrb 0.3.0 registers fonts by name but does
-   not embed FontFile2 binary data in the PDF. Text renders correctly
-   on systems with the font installed but may not render on other
-   systems. Requires pdfrb font subsetting support (TODO 52).
+### Text layout
+- **Hyphenation** is not implemented (Hyphenation* attributes are
+  parsed but unused); a hyphenation dictionary would be required.
+- **Justification**: word/letter spacing caps apply (TODO 119);
+  glyph scaling (Min/Max/DesiredGlyphScaling) is not applied;
+  ToBinding / RTL binding alignment maps to left.
+- **Keep options**: whole-paragraph KeepAllLinesTogether and
+  KeepWithNext(first-line) are honored; partial keep windows
+  (KeepFirstLines / KeepLastLines) are not.
+- **StartParagraph** breaks act at frame/column granularity — no
+  odd/even page parity.
+- **Text wrap** (TODO 114): BoundingBox mode only; Shape contour
+  following and Inverse mode are not implemented.
 
-2. **Image fixture tests**: The fixture IDML references an external
-   JPEG at a macOS-specific path. Tests that check image embedding
-   are skipped on CI. A self-contained fixture with an embedded image
-   would fix this.
+### CJK
+- **Mojikumi**: CJK/Latin auto script spacing is applied (TODO
+  125); full class-based punctuation compression tables are not.
+- **Vertical mode**: Latin rotation is per glyph (not run-grouped);
+  ruby placement is beside-column; keep options do not apply.
 
-3. **Text engine integration**: TextFrameRenderer uses the text engine
-   for line breaking when FontMetrics is available (Helvetica as .ttf).
-   On macOS, Helvetica is a .ttc collection, so the fallback simple
-   renderer is used (no line breaking). Per-run styling (different
-   fonts/sizes in one frame) is simplified to use the first run's style.
-
-4. **Dead code**: Old modules (PdfWriter, FontEmbedder, Color, Path,
-   Text) are marked DEPRECATED but cannot be deleted per the project's
-   "never delete source files" policy. They are not used by any active
-   code path.
+### Structural features
+- **Endnotes** (TODO 117): reference markers render; endnote TEXT
+  rendering is gated on a real fixture (the EndnoteTextRange
+  reference chain is opaque without one).
+- **Footnotes** number per story; overflow balancing (NoSplitting)
+  is not modeled; the simple-render fallback shows markers without
+  footnote text.
+- **Anchored objects** render at stored geometry; AnchorType
+  text-reflow is not simulated.
+- **Tables** do not span frames (no repeated header rows); diagonal
+  cell strokes are modeled but not drawn.
+- **Inline anchored objects / footnotes inside table cells** are
+  not handled.
 
 ## Future enhancements
 
-- Font subsetting (TODO 52) — requires pdfrb enhancement
-- Tagged PDF / PDF/UA (TODO 53) — requires pdfrb StructTreeRoot
-- Dead code removal (TODO 51) — when policy allows
-- Self-contained test fixture with embedded image
-- Per-run text styling with cursor tracking
+- Hyphenation dictionary integration
+- Shape-mode text wrap contours
+- Frame-spanning tables with header repeats
+- Class-based mojikumi tables
 - Performance benchmark for 100+ page documents

@@ -72,8 +72,11 @@ module Idml
         # NextColumn / NextFrame / NextOddPage / NextEvenPage).
         :start_paragraph,
         # Widow/orphan control: KeepAllLinesTogether pushes the whole
-        # paragraph to the next frame when it cannot fully fit.
+        # paragraph to the next frame when it cannot fully fit;
+        # KeepWithNext binds this paragraph to the next paragraph's
+        # first line.
         :keep_all_lines_together,
+        :keep_with_next,
         :bullets_and_numbering_list_type,
         :bullet_character_value,
         :bullets_text_after,
@@ -207,6 +210,8 @@ module Idml
             keep_all_lines_together: resolve_attr(
               style_lookup, psr, :keep_all_lines_together
             ),
+            keep_with_next: resolve_attr(style_lookup, psr,
+                                         :keep_with_next),
             drop_cap_lines: resolve_attr(style_lookup, psr, :drop_cap_lines),
             drop_cap_characters: resolve_attr(style_lookup, psr,
                                               :drop_cap_characters),
