@@ -53,6 +53,18 @@ RSpec.describe Idml::TextEngine::VerticalTextLayout do
       expect(positioned.map(&:y).max).to be <= 270
     end
 
+    it "continues after already-used columns via start_column" do
+      glyphs = "日".each_char.map { |c| glyph(c.ord) }
+      positioned, next_column = described_class.layout(
+        glyphs: glyphs, frame: frame, leading: 14.4, size: 12.0,
+        start_column: 3
+      )
+
+      # Column 3 slot: [200 - 4*14.4, 200 - 3*14.4]; glyph centered.
+      expect(positioned.first.x).to eq(200 - (4 * 14.4) + 1.2)
+      expect(next_column).to eq(4)
+    end
+
     it "breaks long unspaced runs at the column height" do
       glyphs = (0...10).map { |i| glyph(0x6587 + i, 40.0) }
       positioned, columns = described_class.layout(

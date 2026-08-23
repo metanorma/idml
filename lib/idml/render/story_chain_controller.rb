@@ -25,6 +25,9 @@ module Idml
         :current_paragraph,
         :runs_remaining,
         :char_cursor,
+        # Vertical-writing path: columns already consumed when the
+        # paragraph chain continues into the next frame.
+        :column_offset,
         keyword_init: true,
       )
 
