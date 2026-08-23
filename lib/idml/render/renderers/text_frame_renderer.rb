@@ -232,6 +232,8 @@ module Idml
             positioned.each do |glyph|
               emit_vertical_glyph(canvas, glyph, run, context, size)
             end
+            emit_vertical_ruby(canvas, run, positioned, layout_frame,
+                               size, context)
           end
           []
         end
@@ -246,20 +248,79 @@ module Idml
 
         # Emits one upright glyph at its vertical position with the
         # run's character styling.
+        # Emits one glyph in vertical mode: CJK upright; Latin
+        # (non-CJK) rotated 90° clockwise per the vertical-writing
+        # convention, via a graphics-state transform.
         def self.emit_vertical_glyph(canvas, positioned, run, context,
                                      size)
           text = [positioned.codepoint].pack("U")
-          text_kwargs = CharacterStyle.text_kwargs(
-            run,
-            {
-              at: [positioned.x, positioned.y],
-              font: font_for_run(run, context),
-              size: size,
-            },
-          )
-          canvas.text(text, **text_kwargs)
+          if TextEngine::CjkLayout.cjk?(positioned.codepoint)
+            text_kwargs = CharacterStyle.text_kwargs(
+              run,
+              {
+                at: [positioned.x, positioned.y],
+                font: font_for_run(run, context),
+                size: size,
+              },
+            )
+            canvas.text(text, **text_kwargs)
+          else
+            canvas.save_graphics_state do
+              # 90° clockwise: exact matrix (rotate would emit
+              # cos/sin float noise like 6.1e-17).
+              canvas.concat(0, -1, 1, 0, positioned.x, positioned.y)
+              text_kwargs = CharacterStyle.text_kwargs(
+                run,
+                {
+                  at: [0, 0],
+                  font: font_for_run(run, context),
+                  size: size,
+                },
+              )
+              canvas.text(text, **text_kwargs)
+            end
+          end
         end
         private_class_method :emit_vertical_glyph
+
+        # Emits the run's ruby alongside its vertical glyphs:
+        # stacked top-to-bottom beside the column — right side by
+        # default, left for Below* RubyPosition values (the
+        # horizontal above/below convention mirrored under
+        # rotation).
+        def self.emit_vertical_ruby(canvas, run, positioned, frame,
+                                    base_size, context)
+          ruby_text = run.ruby_string
+          return if ruby_text.nil? || ruby_text.empty?
+
+          ruby_size = run.ruby_font_size ||
+            (base_size * RUBY_SIZE_FACTOR)
+          x = ruby_vertical_x(positioned.first, run, base_size)
+          y = frame.y + frame.height - (frame.inset_top || 0)
+          ruby_text.each_codepoint do |codepoint|
+            text_kwargs = CharacterStyle.text_kwargs(
+              run,
+              {
+                at: [x, y - ruby_size],
+                font: font_for_run(run, context),
+                size: ruby_size,
+              },
+            )
+            canvas.text([codepoint].pack("U"), **text_kwargs)
+            y -= ruby_size
+          end
+        end
+        private_class_method :emit_vertical_ruby
+
+        def self.ruby_vertical_x(positioned, run, base_size)
+          offset = base_size * 0.9
+          if run.ruby_position.to_s.include?("Below")
+            positioned.x - offset
+          else
+            positioned.x + offset
+          end
+        end
+        private_class_method :ruby_vertical_x
 
         def self.chain_head?(frame)
           frame.previous_text_frame.nil? || frame.previous_text_frame == "n"
