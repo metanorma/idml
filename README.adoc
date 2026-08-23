@@ -1,4 +1,64 @@
-= Ruby parser for Adobe IDML
+= idml
 
-IDML is the InDesign Markup Language from Adobe used by InDesign.
+A pure-Ruby toolkit for Adobe InDesign IDML files: parse, validate,
+round-trip, compose, and render to PDF.
 
+== What it does
+
+* **Parse & round-trip** — every IDML part is a typed
+  `Lutaml::Model` class generated from Adobe's RelaxNG schemas
+  (`reference-docs/schemas/`): byte-faithful re-serialization with
+  `ZIP_STORED` mimetype ordering preserved.
+* **Validate** — RelaxNG validation against the committed InDesign
+  2026 (DOMVersion 21.5) schemas.
+* **Compose** — `insert_idml`, `add_page_from_idml`, `prefix`,
+  `import_xml`/`export_xml` (ported from SimpleIDML).
+* **Render to PDF** — a full pure-Ruby layout + paint pipeline
+  (pdfrb): multi-frame threaded stories, justification with
+  word/letter/glyph limits, footnotes (bottom-of-frame with
+  separator rules), anchored objects, tables (row/column banding,
+  per-side cell strokes, merged cells), Bézier shape contours,
+  gradients, text wrap (bounding-box, contour, and inverse modes),
+  paragraph shading/borders/rules, drop caps, bullets & numbering,
+  CJK layout (kinsoku shori, ruby, vertical writing with
+  tate-chu-yoko and rotated Latin, script spacing, line-end
+  punctuation compression), tagged PDF, hyperlinks, bookmarks,
+  PDF/A, and font subsetting.
+
+== Install
+
+....
+gem install idml
+....
+
+`.indd` files are a proprietary binary format — export them to
+`.idml` from InDesign first (File → Export), or use InDesign Server
+for headless automation.
+
+== Quick start
+
+....
+require "idml"
+
+# Round-trip a package
+pkg  = Idml::Package.new("doc.idml")
+spec = pkg.spreads.first
+
+# Render to PDF
+Idml.render(package: pkg, to: "doc.pdf")
+....
+
+== Requirements
+
+* Ruby >= 3.3 (tested through 4.0 on macOS/Linux/Windows)
+
+== Reference material
+
+The `reference-docs/` tree carries Adobe's IDML specification, the
+Plug-in SDK's idmltools (behavioral ground truth), and the
+generated RelaxNG schemas — the attribute authority for every
+model class.
+
+== License
+
+BSD-2-Clause.

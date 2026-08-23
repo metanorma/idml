@@ -24,7 +24,8 @@ kinsoku shori, ruby annotations).
 and vertical ruby (TODO 122), CJK/Latin automatic script spacing
 (TODO 125, a mojikumi subset wired into Shaper). The remaining
 stretch goal is full class-based mojikumi (per-pair punctuation
-compression tables). See `lib/idml/text_engine/cjk_layout.rb` and
+compression tables); line-end punctuation compression landed
+2026-08-23 as TODO 132. See `lib/idml/text_engine/cjk_layout.rb` and
 `lib/idml/text_engine/vertical_text_layout.rb`.
 
 ## Progress 2026-08-17

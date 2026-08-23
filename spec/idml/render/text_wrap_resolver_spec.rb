@@ -65,6 +65,56 @@ RSpec.describe Idml::Render::TextWrapResolver do
     end
   end
 
+  describe "inverse wrap" do
+    it "flips the region for a box contour: text stays inside" do
+      inverse_box = described_class::Contour.new(
+        x: 0, y: 300, width: 200, height: 100, inverse: true,
+      )
+      resolver = described_class.new([inverse_box])
+      # Band inside the contour: avoid-region is the 200pt outside.
+      expect(resolver.overlap_width(350, 12, 0, 400)).to eq(200)
+    end
+
+    it "blocks text entirely where the shape is absent" do
+      inverse_box = described_class::Contour.new(
+        x: 0, y: 300, width: 200, height: 100, inverse: true,
+      )
+      resolver = described_class.new([inverse_box])
+      # Band outside the contour's y range: inside width 0 → the
+      # whole frame is avoid-region.
+      expect(resolver.overlap_width(100, 12, 0, 400)).to eq(400)
+    end
+
+    it "inverts a contour shape via the XML Inverse attribute" do
+      item = Idml::Elements::Oval.from_xml(<<~XML)
+        <Oval Self="o1">
+          <Properties>
+            <PathGeometry>
+              <GeometryPathType PathOpen="false">
+                <PathPointArray>
+                  <PathPointType Anchor="40 60" LeftDirection="40 60" RightDirection="40 60"/>
+                  <PathPointType Anchor="40 140" LeftDirection="40 140" RightDirection="40 140"/>
+                  <PathPointType Anchor="160 140" LeftDirection="160 140" RightDirection="160 140"/>
+                  <PathPointType Anchor="160 60" LeftDirection="160 60" RightDirection="160 60"/>
+                </PathPointArray>
+              </GeometryPathType>
+            </PathGeometry>
+          </Properties>
+          <TextWrapPreference TextWrapMode="Contour" Inverse="true"/>
+        </Oval>
+      XML
+      spread = Struct.new(:page_items) do
+        def each_page_item(&)
+          page_items.each(&)
+        end
+      end.new([item])
+      resolver = described_class.build(spread, page_height: 400)
+
+      # Inside width 120 → avoid-region 280.
+      expect(resolver.overlap_width(300, 12, 0, 400)).to eq(280)
+    end
+  end
+
   describe "#overlap_width" do
     let(:contour) do
       described_class::Contour.new(x: 100, y: 300, width: 50, height: 100)

@@ -150,4 +150,32 @@ RSpec.describe Idml::TextEngine::CjkLayout do
       expect(glyphs.map(&:width)).to eq([10.0, 10.0])
     end
   end
+
+  describe ".apply_line_end_compression" do
+    def line_of(text, width = 10.0)
+      glyphs = text.each_char.map { |c| Idml::TextEngine::ShapedGlyph.new(c.ord, width, false) }
+      Idml::TextEngine::Line.new(glyphs, glyphs.sum(&:width), 0)
+    end
+
+    it "halves trailing full-width punctuation advance" do
+      lines = [line_of("日本語。")]
+      described_class.apply_line_end_compression(lines)
+
+      expect(lines.first.glyphs.last.width).to eq(5.0)
+      expect(lines.first.width).to eq(35.0)
+    end
+
+    it "leaves lines whose last glyph is not compressible" do
+      lines = [line_of("日本語")]
+      described_class.apply_line_end_compression(lines)
+      expect(lines.first.glyphs.map(&:width)).to all(eq(10.0))
+    end
+
+    it "compresses only the line-final glyph" do
+      lines = [line_of("。日。本。")]
+      described_class.apply_line_end_compression(lines)
+      widths = lines.first.glyphs.map(&:width)
+      expect(widths).to eq([10.0, 10.0, 10.0, 10.0, 5.0])
+    end
+  end
 end

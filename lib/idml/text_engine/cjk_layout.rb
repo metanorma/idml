@@ -39,6 +39,41 @@ module Idml
           (0x61..0x7A).cover?(codepoint)
       end
 
+      # Mojikumi subset 2: line-end punctuation compression —
+      # full-width closing punctuation occupying a line's final
+      # position renders at half advance (行末約物半角詰め),
+      # tightening the line as InDesign's default mojikumi does.
+      TRAILING_COMPRESSION_CODEPOINTS = [
+        0x3001, # 、 ideographic comma
+        0x3002, # 。 ideographic full stop
+        0x3009, # 〉
+        0x300B, # 》
+        0x300D, # 」
+        0x300F, # 』
+        0x3011, # 】
+        0x3015, # 〕
+        0xFF09, # ）fullwidth right paren
+        0xFF3D, # ］
+        0xFF5D, # ｝
+        0x30FC, # ー prolonged sound mark
+      ].freeze
+
+      def apply_line_end_compression(lines)
+        lines.each do |line|
+          last = line.glyphs.last
+          next unless last
+          next unless compressible?(last.codepoint)
+
+          last.width /= 2.0
+          line.width = line.glyphs.sum(&:width)
+        end
+        lines
+      end
+
+      def compressible?(codepoint)
+        TRAILING_COMPRESSION_CODEPOINTS.include?(codepoint)
+      end
+
       CJK_RANGES = [
         0x3000..0x303F, # CJK Symbols and Punctuation
         0x3040..0x309F, # Hiragana

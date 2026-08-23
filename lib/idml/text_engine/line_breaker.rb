@@ -14,7 +14,8 @@ module Idml
         lines = new(frame_width).break(glyphs)
         return lines unless cjk_run?(glyphs)
 
-        CjkLayout.apply_kinsoku(lines)
+        lines = CjkLayout.apply_kinsoku(lines)
+        CjkLayout.apply_line_end_compression(lines)
       end
 
       def self.cjk_run?(glyphs)
