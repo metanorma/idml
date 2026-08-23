@@ -25,6 +25,7 @@ module Idml
     autoload :Footnote,            "#{__dir__}/render/footnote"
     autoload :ShapePaint,          "#{__dir__}/render/shape_paint"
     autoload :Contour,             "#{__dir__}/render/contour"
+    autoload :WrapContour,         "#{__dir__}/render/wrap_contour"
     autoload :Placement,           "#{__dir__}/render/placement"
     autoload :ImageCollector,      "#{__dir__}/render/image_collector"
     autoload :StructureTracker,    "#{__dir__}/render/structure_tracker"

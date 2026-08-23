@@ -16,6 +16,7 @@ module Idml
       attribute :rule_below_color, Idml::Elements::TypedValue
       attribute :paragraph_shading_color, Idml::Elements::TypedValue
       attribute :paragraph_border_color, Idml::Elements::TypedValue
+      attribute :text_wrap_offset, Idml::Elements::TypedValue
       attribute :paragraph_border_gap_color, Idml::Elements::TypedValue
 
       xml do
@@ -26,6 +27,7 @@ module Idml
         map_element "RuleBelowColor", to: :rule_below_color
         map_element "ParagraphShadingColor", to: :paragraph_shading_color
         map_element "ParagraphBorderColor", to: :paragraph_border_color
+        map_element "TextWrapOffset", to: :text_wrap_offset
         map_element "ParagraphBorderGapColor", to: :paragraph_border_gap_color
       end
 

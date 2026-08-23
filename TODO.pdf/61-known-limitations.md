@@ -22,8 +22,9 @@ this list reflects the current state.
   (TODO 128); CapHeight / XHeight approximate as leading.
 - **StartParagraph** breaks act at frame/column granularity — no
   odd/even page parity.
-- **Text wrap** (TODO 114): BoundingBox mode only; Shape contour
-  following and Inverse mode are not implemented.
+- **Text wrap**: BoundingBoxTextWrap and Contour modes render
+  (TODO 130); JumpObject/NextColumn approximate as the box;
+  Inverse mode is not implemented.
 
 ### CJK
 - **Mojikumi**: CJK/Latin auto script spacing is applied (TODO
