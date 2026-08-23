@@ -10,11 +10,13 @@ module Idml
       # Justification distribution caps, in percent (100 = natural).
       # InDesign defaults: word spacing max 133%, letter spacing 0%.
       SpacingLimits = Struct.new(
-        :max_word_spacing, :max_letter_spacing, keyword_init: true
+        :max_word_spacing, :max_letter_spacing, :max_glyph_scaling,
+        keyword_init: true
       )
 
       DEFAULT_MAX_WORD_SPACING = 133.0
       DEFAULT_MAX_LETTER_SPACING = 0.0
+      DEFAULT_MAX_GLYPH_SCALING = 100.0
 
       def self.justify(line:, frame_width:, alignment: :left,
                        last_line: false, limits: nil)
@@ -63,7 +65,12 @@ module Idml
           glyph.width += extra
         end
         residual = slack - word_share
-        distribute_letter_spacing(line, residual) if residual.positive?
+        return unless residual.positive?
+
+        before = line.glyphs.sum(&:width)
+        distribute_letter_spacing(line, residual)
+        residual -= (line.glyphs.sum(&:width) - before)
+        distribute_glyph_scaling(line, residual) if residual.positive?
       end
 
       # Total room the word spaces may grow within the max-word-
@@ -91,6 +98,23 @@ module Idml
         line.glyphs.each { |glyph| glyph.width += add }
       end
       private :distribute_letter_spacing
+
+      # Last resort: uniform glyph scaling for any remaining slack,
+      # capped at max_glyph_scaling percent. InDesign's default cap
+      # (100%) disables it; only documents that relax the cap get
+      # stretched glyphs.
+      def distribute_glyph_scaling(line, residual)
+        max_pct = @limits&.max_glyph_scaling || DEFAULT_MAX_GLYPH_SCALING
+        grow = (max_pct - 100) / 100.0
+        return unless grow.positive?
+
+        total = line.glyphs.sum(&:width)
+        return unless total.positive?
+
+        factor = [residual / total, grow].min
+        line.glyphs.each { |glyph| glyph.width *= (1 + factor) }
+      end
+      private :distribute_glyph_scaling
     end
   end
 end
