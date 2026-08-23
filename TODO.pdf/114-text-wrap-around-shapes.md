@@ -1,6 +1,8 @@
 # TODO PDF 114: Text wrap around shapes (TextWrapPreference)
 
-## Status: DONE for BoundingBox mode — `Render::TextWrapResolver` computes
+## Status: COMPLETE for BoundingBoxTextWrap + Contour (Contour and
+the schema-spelling enum fix landed 2026-08-23 as TODO 130; Inverse
+mode remains open) — `Render::TextWrapResolver` computes
 wrap contours from page items declaring TextWrapPreference with
 TextWrapMode != "None". SpreadRenderer builds the resolver and passes
 it via RenderContext. TextFrameRenderer's `text_wrap_overlap` queries

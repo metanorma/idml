@@ -43,17 +43,36 @@ module Idml
       # Returns 0.0 when there's no overlap.
       def overlap_width(line_y, line_height, frame_x, frame_right)
         @contours.sum do |contour|
-          overlap = line_overlap(contour, line_y, line_height,
-                                 frame_x, frame_right)
-          overlap[:width]
+          if contour.is_a?(WrapContour::Shape)
+            WrapContour.overlap_width(contour, line_y, line_height,
+                                      frame_x, frame_right)
+          else
+            line_overlap(contour, line_y, line_height,
+                         frame_x, frame_right)[:width]
+          end
         end
       end
 
+      # The wrap shape for an item: a bounding-box rectangle
+      # (BoundingBoxTextWrap — the legacy "BoundingBox" spelling is
+      # also accepted from early synthetic fixtures) or a flattened
+      # PathGeometry polygon (Contour mode). JumpObject /
+      # NextColumn modes approximate as the bounding box (the
+      # per-run width reduction already pushes text past the
+      # object).
       def self.contour_for(item, page_height)
         pref = wrap_preference(item)
         return nil unless pref
-        return nil unless bounding_box_mode?(pref)
 
+        if contour_mode?(pref)
+          WrapContour.shape(item, pref, page_height)
+        else
+          box_contour(item, page_height)
+        end
+      end
+      private_class_method :contour_for
+
+      def self.box_contour(item, page_height)
         bounds = item.geometric_bounds
         return nil unless bounds
 
@@ -64,7 +83,7 @@ module Idml
           width: rect[:width], height: rect[:height]
         )
       end
-      private_class_method :contour_for
+      private_class_method :box_contour
 
       # Page item types that can declare TextWrapPreference per the
       # Spread schema. Used to guard the attribute read — querying
@@ -95,10 +114,10 @@ module Idml
       end
       private_class_method :wrappable?
 
-      def self.bounding_box_mode?(pref)
-        pref.text_wrap_mode == "BoundingBox"
+      def self.contour_mode?(pref)
+        pref.text_wrap_mode == "Contour"
       end
-      private_class_method :bounding_box_mode?
+      private_class_method :contour_mode?
 
       def line_overlap(contour, line_y, line_height, frame_x, frame_right)
         return { width: 0.0 } unless y_overlap?(contour, line_y, line_height)

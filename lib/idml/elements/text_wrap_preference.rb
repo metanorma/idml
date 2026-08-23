@@ -11,6 +11,7 @@ module Idml
       attribute :apply_to_master_page_only, :boolean
       attribute :text_wrap_side, :string
       attribute :text_wrap_mode, :string
+      attribute :properties, Idml::Elements::Properties, collection: true
 
       xml do
         root "TextWrapPreference"
@@ -18,6 +19,7 @@ module Idml
         map_attribute "ApplyToMasterPageOnly", to: :apply_to_master_page_only
         map_attribute "TextWrapSide", to: :text_wrap_side
         map_attribute "TextWrapMode", to: :text_wrap_mode
+        map_element "Properties", to: :properties
       end
     end
   end
