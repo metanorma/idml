@@ -235,6 +235,69 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
       expect(kept).to eq(1)
     end
   end
+
+  describe "KeepWithNext" do
+    def kwn_story_xml(second_attrs)
+      <<~XML
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="21.5">
+          <Story Self="u1">
+            <ParagraphStyleRange>
+              <CharacterStyleRange PointSize="12">
+                <Content>First paragraph.</Content>
+              </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <ParagraphStyleRange #{second_attrs}>
+              <CharacterStyleRange PointSize="12">
+                <Content>Kept heading.</Content>
+              </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <ParagraphStyleRange StartParagraph="NextFrame">
+              <CharacterStyleRange PointSize="12">
+                <Content>Next frame body.</Content>
+              </CharacterStyleRange>
+            </ParagraphStyleRange>
+          </Story>
+        </idPkg:Story>
+      XML
+    end
+
+    def kwn_package(second_attrs)
+      dir = Dir.mktmpdir
+      path = File.join(dir, "kwn.idml")
+      Idml::Package.write(
+        parts: {
+          "mimetype" => "application/vnd.adobe.indesign-idml-package",
+          "Stories/Story_u1.xml" => kwn_story_xml(second_attrs),
+        },
+        to: path,
+      )
+      Idml::Package.new(path)
+    end
+
+    def kwn_text_op_count(second_attrs)
+      skip "no system font available" unless font_path
+
+      writer = Idml::Render::PdfrbWriter.new
+      canvas = writer.add_page(width: 400, height: 400)
+      described_class.render(
+        canvas, break_render_context(kwn_package(second_attrs), writer)
+      )
+
+      write_to_temp_pdf(writer, "keep-with-next") do |pdf_path|
+        File.binread(pdf_path).scan("\nBT\n").length
+      end
+    end
+
+    it "keeps a heading with its forced-broken body" do
+      kept = kwn_text_op_count('KeepWithNext="1"')
+      flowed = kwn_text_op_count("")
+      # Without keep: first + heading render here. With keep: the
+      # heading joins its body in the next frame.
+      expect(kept).to eq(1)
+      expect(flowed).to eq(2)
+    end
+  end
 end
 
 # rubocop:enable RSpec/SpecFilePathFormat
