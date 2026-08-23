@@ -18,7 +18,7 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     VERTICAL_FONT_CANDIDATES.find { |p| File.exist?(p) }
   end
 
-  def story_xml(orientation)
+  def story_xml(orientation, content = "日本語", ruby_attrs = "")
     preference = orientation ? %(<StoryPreference StoryOrientation="#{orientation}"/>) : ""
     <<~XML
       <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -26,8 +26,8 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
         <Story Self="u1">
           #{preference}
           <ParagraphStyleRange>
-            <CharacterStyleRange PointSize="12">
-              <Content>日本語</Content>
+            <CharacterStyleRange PointSize="12" #{ruby_attrs}>
+              <Content>#{content}</Content>
             </CharacterStyleRange>
           </ParagraphStyleRange>
         </Story>
@@ -35,13 +35,31 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     XML
   end
 
-  def vertical_package(orientation)
+  def bt_count(raw)
+    raw.scan("\nBT\n").length
+  end
+
+  def vertical_raw(content, ruby: "")
+    package = vertical_package("Vertical", content, ruby)
+    writer = Idml::Render::PdfrbWriter.new
+    canvas = writer.add_page(width: 400, height: 400)
+    described_class.render(canvas, vertical_context(writer, package))
+
+    raw = ""
+    write_to_temp_pdf(writer, "vertical-raw") do |pdf_path|
+      raw = File.binread(pdf_path)
+    end
+    raw
+  end
+
+  def vertical_package(orientation, content = "日本語", ruby_attrs = "")
     dir = Dir.mktmpdir
     path = File.join(dir, "vertical.idml")
     Idml::Package.write(
       parts: {
         "mimetype" => "application/vnd.adobe.indesign-idml-package",
-        "Stories/Story_u1.xml" => story_xml(orientation),
+        "Stories/Story_u1.xml" => story_xml(orientation, content,
+                                            ruby_attrs),
       },
       to: path,
     )
@@ -82,6 +100,24 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
 
   it "keeps the horizontal single text op for the same content" do
     expect(text_op_count("Horizontal")).to eq(1)
+  end
+
+  it "rotates Latin glyphs clockwise and keeps CJK upright" do
+    skip "no system font available" unless font_path
+
+    raw = vertical_raw("Ab")
+    expect(raw.scan("0 -1 1 0").length).to eq(2)
+
+    cjk_raw = vertical_raw("日本")
+    expect(cjk_raw.scan("0 -1 1 0").length).to eq(0)
+  end
+
+  it "emits vertical ruby beside the base glyphs" do
+    skip "no system font available" unless font_path
+
+    with_ruby = vertical_raw("漢", ruby: 'RubyString="かな"')
+    without_ruby = vertical_raw("漢")
+    expect(bt_count(with_ruby)).to eq(bt_count(without_ruby) + 2)
   end
 end
 # rubocop:enable RSpec/SpecFilePathFormat
