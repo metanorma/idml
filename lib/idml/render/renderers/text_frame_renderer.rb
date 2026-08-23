@@ -177,17 +177,20 @@ module Idml
           layout_frame = layout_frame(context.item, box)
           left_limit = layout_frame.x + (layout_frame.inset_left || 0)
           resume_vertical_paragraph(state)
+          next_column = state.column_offset || 0
           pending = 0
 
           state.paragraphs.each do |paragraph|
-            remaining_runs = vertical_paragraph(
-              canvas, paragraph, context, layout_frame, font, left_limit
+            remaining_runs, next_column = vertical_paragraph(
+              canvas, paragraph, context, layout_frame, font,
+              left_limit, next_column
             )
             if remaining_runs.empty?
               pending += 1
             else
               state.current_paragraph = paragraph
               state.runs_remaining = remaining_runs
+              state.column_offset = next_column
               break
             end
           end
@@ -198,7 +201,9 @@ module Idml
 
         # Folds a chain-resumed paragraph (runs_remaining) back to
         # the head of the paragraph list so the vertical path sees a
-        # uniform sequence.
+        # uniform sequence. The consumed column offset persists in
+        # the state so the next frame continues right where this
+        # frame's columns ended.
         def self.resume_vertical_paragraph(state)
           return unless state.current_paragraph
 
@@ -209,10 +214,13 @@ module Idml
         end
         private_class_method :resume_vertical_paragraph
 
-        # Renders one paragraph's runs as vertical columns. Returns
-        # the runs that did not fit (empty when all placed).
+        # Renders one paragraph's runs as vertical columns starting
+        # at `start_column`. Returns [runs that did not fit (empty
+        # when all placed), the next unused column index].
         def self.vertical_paragraph(canvas, paragraph, context,
-                                    layout_frame, font, left_limit)
+                                    layout_frame, font, left_limit,
+                                    start_column)
+          next_column = start_column
           paragraph.runs.each_with_index do |run, index|
             size = run.point_size || DEFAULT_SIZE
             leading = TextEngine::VerticalLayout.leading_for(
@@ -220,24 +228,71 @@ module Idml
             )
             glyphs = TextEngine::Shaper.shape(text: run.text, font: font,
                                               size: size)
-            positioned, columns = TextEngine::VerticalTextLayout.layout(
-              glyphs: glyphs, frame: layout_frame, leading: leading,
-              size: size
-            )
-            unless vertical_fits?(layout_frame, leading, columns,
+            grouped = tatechuyoko_group(run, glyphs, layout_frame,
+                                        leading, size, next_column)
+            positioned, next_column = grouped ||
+              TextEngine::VerticalTextLayout.layout(
+                glyphs: glyphs, frame: layout_frame, leading: leading,
+                size: size, start_column: next_column
+              )
+            unless vertical_fits?(layout_frame, leading, next_column,
                                   left_limit)
-              return paragraph.runs[index..]
+              return [paragraph.runs[index..], start_column]
             end
 
-            positioned.each do |glyph|
-              emit_vertical_glyph(canvas, glyph, run, context, size)
-            end
+            emit_vertical_run(canvas, positioned, grouped, run, context,
+                              size)
             emit_vertical_ruby(canvas, run, positioned, layout_frame,
                                size, context)
           end
-          []
+          [[], next_column]
         end
         private_class_method :vertical_paragraph
+
+        # A tate-chu-yoko group for runs that declare it (and whose
+        # glyphs fit horizontally in a column slot); nil otherwise.
+        def self.tatechuyoko_group(run, glyphs, layout_frame, leading,
+                                   size, start_column)
+          return nil unless run.tatechuyoko
+
+          TextEngine::VerticalTextLayout.tatechuyoko_group(
+            glyphs: glyphs, frame: layout_frame, leading: leading,
+            size: size, start_column: start_column
+          )
+        end
+        private_class_method :tatechuyoko_group
+
+        # Emits a vertical run's glyphs: rotated/normal vertical
+        # handling for stacked columns, plain upright emission for
+        # tate-chu-yoko groups.
+        def self.emit_vertical_run(canvas, positioned, grouped, run,
+                                   context, size)
+          if grouped
+            positioned.each do |glyph|
+              emit_upright_glyph(canvas, glyph, run, context, size)
+            end
+          else
+            positioned.each do |glyph|
+              emit_vertical_glyph(canvas, glyph, run, context, size)
+            end
+          end
+        end
+        private_class_method :emit_vertical_run
+
+        def self.emit_upright_glyph(canvas, positioned, run, context,
+                                    size)
+          text = [positioned.codepoint].pack("U")
+          text_kwargs = CharacterStyle.text_kwargs(
+            run,
+            {
+              at: [positioned.x, positioned.y],
+              font: font_for_run(run, context),
+              size: size,
+            },
+          )
+          canvas.text(text, **text_kwargs)
+        end
+        private_class_method :emit_upright_glyph
 
         def self.vertical_fits?(layout_frame, leading, columns, left_limit)
           right = layout_frame.x + layout_frame.width -
@@ -576,7 +631,9 @@ module Idml
           pending = 0
           state.paragraphs.each do |paragraph|
             break if cursor_y < bottom_limit
-            break if paragraph_break?(paragraph) && pending.positive?
+            break if paragraph_deferred?(paragraph, layout_frame, font,
+                                         cursor_y, bottom_limit,
+                                         pending.positive?)
 
             remaining_runs, cursor_y, char_cursor = render_runs_for_paragraph(
               canvas, paragraph, paragraph.runs, context,
@@ -907,6 +964,26 @@ module Idml
           [positioned, next_y]
         end
         private_class_method :layout_run
+
+        # True when the paragraph should move wholly to the next
+        # frame: a StartParagraph forced break, or KeepAllLines-
+        # Together with insufficient remaining space (never for the
+        # frame's first paragraph, so progress is always made).
+        def self.paragraph_deferred?(paragraph, layout_frame, font,
+                                     cursor_y, bottom_limit, placed_any)
+          return true if paragraph_break?(paragraph) && placed_any
+          return false unless paragraph.keep_all_lines_together
+          return false unless placed_any
+
+          wrap_width = TextEngine::VerticalLayout.wrap_width(
+            layout_frame, paragraph.right_indent || 0
+          )
+          height = TextEngine::Measurement.paragraph_height(
+            paragraph, font, wrap_width
+          )
+          (cursor_y - height) < bottom_limit
+        end
+        private_class_method :paragraph_deferred?
 
         # True when the paragraph requests a forced break to the
         # next frame/column (StartParagraph). All break flavors act

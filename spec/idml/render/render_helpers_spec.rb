@@ -192,6 +192,22 @@ RSpec.describe Idml::Render do
         expect(markers.last.footnote_paragraphs).to be_nil
       end
 
+      it "carries keep_all_lines_together from the PSR" do
+        story = Idml::Parts::Story.from_xml(<<~XML)
+          <idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="21.5">
+            <Story Self="u1">
+              <ParagraphStyleRange KeepAllLinesTogether="true">
+                <CharacterStyleRange>
+                  <Content>Heading.</Content>
+                </CharacterStyleRange>
+              </ParagraphStyleRange>
+            </Story>
+          </idPkg:Story>
+        XML
+        para = described_class.extract_paragraphs(story).first
+        expect(para.keep_all_lines_together).to be(true)
+      end
+
       it "carries shading and border attrs from a declaring PSR" do
         story = Idml::Parts::Story.from_xml(<<~XML)
           <idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="21.5">

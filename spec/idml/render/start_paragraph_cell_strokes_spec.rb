@@ -18,10 +18,26 @@ BreakStrokeColorResolver = Struct.new(:table, keyword_init: true) do
   end
 end
 
+KEEP_LONG_TEXT = ("word " * 600).freeze
+
 # rubocop:disable RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   def font_path
     BREAK_FONT_CANDIDATES.find { |p| File.exist?(p) }
+  end
+
+  def break_render_context(package, writer)
+    font_resource = writer.register_font(font_path)
+    metrics = Idml::TextEngine::PdfrbFontMetrics.new(
+      writer.document.fonts, font_resource
+    )
+    frame = Idml::Elements::TextFrame.from_xml(
+      '<TextFrame Self="tf1" ParentStory="u1"/>',
+    )
+    Idml::Render::RenderContext.new(
+      item: frame, package: package, font_metrics: metrics,
+      font_ps_name: font_resource, page_height: 400
+    )
   end
 
   describe "StartParagraph breaks" do
@@ -43,20 +59,6 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
           </Story>
         </idPkg:Story>
       XML
-    end
-
-    def break_render_context(package, writer)
-      font_resource = writer.register_font(font_path)
-      metrics = Idml::TextEngine::PdfrbFontMetrics.new(
-        writer.document.fonts, font_resource
-      )
-      frame = Idml::Elements::TextFrame.from_xml(
-        '<TextFrame Self="tf1" ParentStory="u1"/>',
-      )
-      Idml::Render::RenderContext.new(
-        item: frame, package: package, font_metrics: metrics,
-        font_ps_name: font_resource, page_height: 400
-      )
     end
 
     def break_package(second_psr_attrs)
@@ -175,5 +177,64 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
       end
     end
   end
+
+  describe "KeepAllLinesTogether" do
+    def keep_story_xml(second_attrs)
+      <<~XML
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="21.5">
+          <Story Self="u1">
+            <ParagraphStyleRange>
+              <CharacterStyleRange PointSize="12">
+                <Content>Short first paragraph.</Content>
+              </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <ParagraphStyleRange #{second_attrs}>
+              <CharacterStyleRange PointSize="12">
+                <Content>#{KEEP_LONG_TEXT}</Content>
+              </CharacterStyleRange>
+            </ParagraphStyleRange>
+          </Story>
+        </idPkg:Story>
+      XML
+    end
+
+    def keep_package(second_attrs)
+      dir = Dir.mktmpdir
+      path = File.join(dir, "keep.idml")
+      Idml::Package.write(
+        parts: {
+          "mimetype" => "application/vnd.adobe.indesign-idml-package",
+          "Stories/Story_u1.xml" => keep_story_xml(second_attrs),
+        },
+        to: path,
+      )
+      Idml::Package.new(path)
+    end
+
+    def rendered_text_op_count(second_attrs)
+      skip "no system font available" unless font_path
+
+      writer = Idml::Render::PdfrbWriter.new
+      canvas = writer.add_page(width: 400, height: 400)
+      described_class.render(
+        canvas, break_render_context(keep_package(second_attrs), writer)
+      )
+
+      write_to_temp_pdf(writer, "keep-options") do |pdf_path|
+        File.binread(pdf_path).scan("\nBT\n").length
+      end
+    end
+
+    it "pushes a kept-together paragraph wholly to the next frame" do
+      kept = rendered_text_op_count('KeepAllLinesTogether="true"')
+      flowed = rendered_text_op_count("")
+      # Without keep: the long paragraph starts in this frame.
+      # With keep: only the first paragraph renders here.
+      expect(kept).to be < flowed
+      expect(kept).to eq(1)
+    end
+  end
 end
+
 # rubocop:enable RSpec/SpecFilePathFormat

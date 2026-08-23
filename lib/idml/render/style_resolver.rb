@@ -48,6 +48,7 @@ module Idml
         :ruby_string,
         :ruby_font_size,
         :ruby_position,
+        :tatechuyoko,
         keyword_init: true,
       )
 
@@ -70,6 +71,9 @@ module Idml
         # Forced paragraph break (StartParagraph: NextPage /
         # NextColumn / NextFrame / NextOddPage / NextEvenPage).
         :start_paragraph,
+        # Widow/orphan control: KeepAllLinesTogether pushes the whole
+        # paragraph to the next frame when it cannot fully fit.
+        :keep_all_lines_together,
         :bullets_and_numbering_list_type,
         :bullet_character_value,
         :bullets_text_after,
@@ -200,6 +204,9 @@ module Idml
             ),
             start_paragraph: resolve_attr(style_lookup, psr,
                                           :start_paragraph),
+            keep_all_lines_together: resolve_attr(
+              style_lookup, psr, :keep_all_lines_together
+            ),
             drop_cap_lines: resolve_attr(style_lookup, psr, :drop_cap_lines),
             drop_cap_characters: resolve_attr(style_lookup, psr,
                                               :drop_cap_characters),
@@ -390,6 +397,7 @@ module Idml
           ruby_string: resolve_csr(style_lookup, csr, :ruby_string),
           ruby_font_size: resolve_csr(style_lookup, csr, :ruby_font_size),
           ruby_position: resolve_csr(style_lookup, csr, :ruby_position),
+          tatechuyoko: resolve_csr(style_lookup, csr, :tatechuyoko),
         )
       end
       private_class_method :text_run

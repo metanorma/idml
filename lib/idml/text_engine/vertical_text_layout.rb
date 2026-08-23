@@ -13,18 +13,19 @@ module Idml
       PositionedGlyph = Struct.new(:codepoint, :x, :y, keyword_init: true)
 
       # Stacks `glyphs` into columns of at most the frame's text
-      # height; column 0 is the rightmost. Returns
-      # [positioned_glyphs, column_count].
-      def self.layout(glyphs:, frame:, leading:, size:)
+      # height; column 0 is the rightmost. `start_column` places
+      # the first column after already-used columns (multi-run
+      # frames). Returns [positioned_glyphs, next_column_index].
+      def self.layout(glyphs:, frame:, leading:, size:, start_column: 0)
         lines = TextEngine::LineBreaker.break(
           glyphs: glyphs, frame_width: column_height(frame),
         )
         positioned = []
-        lines.each_with_index do |line, column_index|
+        lines.each_with_index do |line, index|
           stack_column(positioned, line.glyphs, frame, leading, size,
-                       column_index)
+                       index + start_column)
         end
-        [positioned, lines.length]
+        [positioned, start_column + lines.length]
       end
 
       # The frame's usable vertical extent for one column of text.
@@ -46,6 +47,32 @@ module Idml
         end
       end
       private_class_method :stack_column
+
+      # Positions a tate-chu-yoko group (e.g. the digits "12" kept
+      # horizontal inside vertical text): glyphs share one baseline
+      # at the top of the given column slot and advance left-to-
+      # right, centered in the slot. Returns
+      # [positioned_glyphs, next_column_index]; nil when the group
+      # is wider than the column height (caller falls back to
+      # stacked layout).
+      def self.tatechuyoko_group(glyphs:, frame:, leading:, size:,
+                                 start_column:)
+        total = glyphs.sum(&:width)
+        return nil if total > column_height(frame)
+
+        right = frame.x + frame.width - (frame.inset_right || 0)
+        slot_center = right - ((start_column + 0.5) * leading)
+        x = slot_center - (total / 2.0)
+        baseline_y = frame.y + frame.height - (frame.inset_top || 0) - size
+        positioned = glyphs.map do |glyph|
+          glyph_position = PositionedGlyph.new(
+            codepoint: glyph.codepoint, x: x, y: baseline_y,
+          )
+          x += glyph.width
+          glyph_position
+        end
+        [positioned, start_column + 1]
+      end
 
       # Vertical advance of one glyph — its measured width (the em
       # for the common square-CJK case).
