@@ -134,13 +134,23 @@ module Idml
     # Returns a typed part instance for `name` when a class is registered
     # for that file pattern (e.g. Designmap for designmap.xml). Falls
     # back to Parts::Raw — a lossless XML wrapper — for unmodeled parts.
+    # Parsed parts are memoized: rendering resolves stories,
+    # preferences, and styles repeatedly (per frame), and each
+    # un-memoized read would re-decompress and re-parse the zip
+    # entry.
     def part(name)
+      @part_cache ||= {}
+      @part_cache[name] ||= parse_part(name)
+    end
+
+    def parse_part(name)
       xml = read_part(name)
       klass = Idml::Parts.class_for(name)
       return Idml::Parts::Raw.from_xml(xml) unless klass
 
       klass.from_xml(xml)
     end
+    private :parse_part
 
     def each_part
       return enum_for(:each_part) unless block_given?

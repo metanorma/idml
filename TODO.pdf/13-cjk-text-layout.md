@@ -20,9 +20,11 @@ kinsoku shori, ruby annotations).
   frame width (previously they overflowed as one long line) — this
   also fixes horizontal CJK wrapping.
 
-Remaining stretch goals: tate-chu-yoko, mojikumi, Latin rotation in
-vertical mode, vertical ruby placement. See
-`lib/idml/text_engine/cjk_layout.rb` and
+2026-08-20 completions: tate-chu-yoko (TODO 124), Latin rotation
+and vertical ruby (TODO 122), CJK/Latin automatic script spacing
+(TODO 125, a mojikumi subset wired into Shaper). The remaining
+stretch goal is full class-based mojikumi (per-pair punctuation
+compression tables). See `lib/idml/text_engine/cjk_layout.rb` and
 `lib/idml/text_engine/vertical_text_layout.rb`.
 
 ## Progress 2026-08-17

@@ -118,4 +118,36 @@ RSpec.describe Idml::TextEngine::CjkLayout do
       expect(described_class.tate_chu_yoko?(0x41)).to be false # 'A'
     end
   end
+
+  describe ".apply_script_spacing" do
+    def glyph(codepoint, width = 10.0)
+      Idml::TextEngine::ShapedGlyph.new(codepoint, width, false)
+    end
+
+    it "widens the leading glyph at each CJK/Latin boundary" do
+      glyphs = "日A1本".each_char.map { |c| glyph(c.ord) }
+      described_class.apply_script_spacing(glyphs, 12.0)
+
+      expect(glyphs[0].width).to eq(10.0 + (12.0 * 0.125))
+      expect(glyphs[1].width).to eq(10.0)
+      expect(glyphs[2].width).to eq(10.0 + (12.0 * 0.125))
+      expect(glyphs[3].width).to eq(10.0)
+    end
+
+    it "leaves uniform-script runs untouched" do
+      glyphs = "日本".each_char.map { |c| glyph(c.ord) }
+      described_class.apply_script_spacing(glyphs, 12.0)
+      expect(glyphs.map(&:width)).to eq([10.0, 10.0])
+
+      latin = "AB".each_char.map { |c| glyph(c.ord) }
+      described_class.apply_script_spacing(latin, 12.0)
+      expect(latin.map(&:width)).to eq([10.0, 10.0])
+    end
+
+    it "ignores punctuation neighbors" do
+      glyphs = "日!".each_char.map { |c| glyph(c.ord) }
+      described_class.apply_script_spacing(glyphs, 12.0)
+      expect(glyphs.map(&:width)).to eq([10.0, 10.0])
+    end
+  end
 end

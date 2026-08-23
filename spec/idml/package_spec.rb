@@ -165,4 +165,21 @@ RSpec.describe Idml::Package do
         .to raise_error(Idml::Errors::InvalidPackage)
     end
   end
+
+  describe "#part memoization" do
+    let(:pkg) { described_class.new(fixture_path) }
+
+    it "returns the same parsed object for repeated reads" do
+      first = pkg.part("designmap.xml")
+      second = pkg.part("designmap.xml")
+      expect(first).to equal(second)
+    end
+
+    it "does not share objects across different parts" do
+      designmap = pkg.part("designmap.xml")
+      story_name = pkg.part_names.find { |n| n.start_with?("Stories/") }
+      story = pkg.part(story_name)
+      expect(designmap).not_to equal(story)
+    end
+  end
 end
