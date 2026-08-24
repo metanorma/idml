@@ -384,6 +384,50 @@ RSpec.describe Idml::Render::Renderers::TableRenderer do
       end
     end
   end
+
+  describe "row flow across frames (TODO 134)" do
+    def flow_table_xml(rows, header_rows: 0)
+      row_xml = Array.new(rows) { |i| %(<Row Self="r#{i}" Name="#{i}" SingleRowHeight="40"/) }.join
+      cell_xml = rows.times.flat_map { |i| [%(<Cell Self="c0#{i}" Name="0:#{i}"/>), %(<Cell Self="c1#{i}" Name="1:#{i}"/>)] }.join
+      %(<Table Self="t1" ItemTransform="1 0 0 1 0 0" HeaderRowCount="#{header_rows}">#{row_xml}#{cell_xml}</Table>)
+    end
+
+    def flow_render(table, start_row: 0, bottom_limit: nil)
+      box = { x: 0, y: 0, width: 100, height: 100 }
+      next_row = Idml::Render::Renderers::TableRenderer.render_in_box(
+        canvas, table, box, build_context(table),
+        start_row: start_row, bottom_limit: bottom_limit
+      )
+      count = nil
+      write_to_temp_pdf(writer, "table-flow") do |pdf_path|
+        count = File.binread(pdf_path).scan(/ re\b/).length
+      end
+      [next_row, count]
+    end
+
+    it "clips rows at the bottom limit and reports the next row" do
+      # Rows anchor from the box's top: bottoms at 120/80/40/0.
+      next_row, count = flow_render(table_from_xml(flow_table_xml(4)),
+                                    bottom_limit: 80)
+      # 2 of 4 rows (2 cells each) fit above the limit.
+      expect(count).to eq(4)
+      expect(next_row).to eq(2)
+    end
+
+    it "returns nil when the table completes" do
+      next_row, count = flow_render(table_from_xml(flow_table_xml(2)))
+      expect(count).to eq(4)
+      expect(next_row).to be_nil
+    end
+
+    it "repeats header rows on continuation frames" do
+      _next_row, count = flow_render(
+        table_from_xml(flow_table_xml(4, header_rows: 1)), start_row: 2
+      )
+      # Header (2 cells) + rows 2 and 3 (4 cells) = 6 cells.
+      expect(count).to eq(6)
+    end
+  end
 end
 
 # rubocop:enable RSpec/SpecFilePathFormat
