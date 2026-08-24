@@ -42,8 +42,9 @@ this list reflects the current state.
   footnote text.
 - **Anchored objects** render at stored geometry; AnchorType
   text-reflow is not simulated.
-- **Tables** do not span frames (no repeated header rows); diagonal
-  cell strokes are modeled but not drawn.
+- **Tables** flow across chained frames with repeated header rows
+  (TODO 134); row-spanning cells break at frame boundaries and
+  diagonal cell strokes are modeled but not drawn.
 - **Inline anchored objects / footnotes inside table cells** are
   not handled.
 

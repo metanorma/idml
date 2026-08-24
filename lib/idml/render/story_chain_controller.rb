@@ -28,6 +28,9 @@ module Idml
         # Vertical-writing path: columns already consumed when the
         # paragraph chain continues into the next frame.
         :column_offset,
+        # Frame-spanning tables: [table, start_row] pairs still to
+        # render (TODO 134).
+        :tables_remaining,
         keyword_init: true,
       )
 
