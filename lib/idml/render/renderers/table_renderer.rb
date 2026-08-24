@@ -48,16 +48,30 @@ module Idml
         # render Tables inlined in a story — real IDML Tables
         # have no own geometry, so the containing TextFrame's
         # bounds stand in for the Table's bounds.
-        def self.render_in_box(canvas, table, box, context)
+        # Renders the table within `box`. When `bottom_limit` is
+        # given, rows stop at the limit and the next unrendered row
+        # index is returned (nil when the table completed) — the
+        # caller threads it into the next frame of the chain via
+        # `start_row`, which also re-emits HeaderRowCount header
+        # rows above the continuation.
+        def self.render_in_box(canvas, table, box, context, start_row: 0,
+                                                     bottom_limit: nil)
           return if table.visible == false
+          return nil if schema_faithful?(table) &&
+            start_row >= table.row.length
 
+          next_row = nil
           canvas.save_graphics_state do
-            if schema_faithful?(table)
-              render_schema_faithful(canvas, table, box, context)
-            else
-              render_legacy(canvas, table, box, context)
-            end
+            next_row = if schema_faithful?(table)
+                         render_schema_faithful(canvas, table, box, context,
+                                                start_row: start_row,
+                                                bottom_limit: bottom_limit)
+                       else
+                         render_legacy(canvas, table, box, context)
+                         nil
+                       end
           end
+          next_row
         end
 
         def self.schema_faithful?(table)
@@ -68,20 +82,70 @@ module Idml
         # Real IDML: Table > {Cell, Row} siblings. Cell Name is
         # "col:row". Row count from `row` collection; column count
         # derived from `column_count` attribute or max col + 1.
-        def self.render_schema_faithful(canvas, table, box, context)
+        def self.render_schema_faithful(canvas, table, box, context,
+                                        start_row: 0, bottom_limit: nil)
           layout = SchemaLayout.new(table: table, box: box)
-          layout.each_cell do |cell_x, cell_y, cell_w, cell_h, cell,
-                               col_idx, row_idx|
+          rendered, next_row = visible_row_range(
+            layout, table, start_row, bottom_limit
+          )
+          rendered.each do |row_idx|
+            render_row(canvas, table, layout, box, row_idx, context)
+          end
+          next_row
+        end
+        private_class_method :render_schema_faithful
+
+        def self.render_row(canvas, table, layout, _box, row_idx, context)
+          layout.each_cell_in_row(row_idx) do |cell_x, cell_y, cell_w,
+                                              cell_h, cell, col_idx|
             render_band_background(canvas, cell, layout, col_idx, row_idx,
                                    cell_x, cell_y, cell_w, cell_h, context)
-            render_cell_background(canvas, cell, cell_x, cell_y, cell_w, cell_h,
-                                   context)
+            render_cell_background(canvas, cell, cell_x, cell_y, cell_w,
+                                   cell_h, context)
             render_cell_border(canvas, cell, table, cell_x, cell_y,
                                cell_w, cell_h, context)
             render_cell_text(canvas, cell, cell_x, cell_y, cell_h, context)
           end
         end
-        private_class_method :render_schema_faithful
+        private_class_method :render_row
+
+        # [rows_to_render, next_unrendered_row]: header rows
+        # re-emit on continuations (start_row > 0) with
+        # HeaderRowCount; body rows run from start_row until the
+        # frame bottom limit clips one.
+        def self.visible_row_range(layout, table, start_row, bottom_limit)
+          rows = continuation_header_rows(table, start_row) +
+            body_rows_within(layout, table, start_row, bottom_limit)
+          [rows, next_unrendered(layout, table, start_row, bottom_limit)]
+        end
+        private_class_method :visible_row_range
+
+        def self.continuation_header_rows(table, start_row)
+          return [] if start_row.zero?
+
+          (table.header_row_count || 0).times.to_a
+        end
+        private_class_method :continuation_header_rows
+
+        def self.body_rows_within(layout, table, start_row, bottom_limit)
+          body_rows = (start_row...table.row.length).to_a
+          return body_rows if bottom_limit.nil?
+
+          body_rows.take_while do |row_idx|
+            layout.row_bottom_y(row_idx) >= bottom_limit
+          end
+        end
+        private_class_method :body_rows_within
+
+        def self.next_unrendered(layout, table, start_row, bottom_limit)
+          last = start_row + body_rows_within(
+            layout, table, start_row, bottom_limit
+          ).length - 1
+          return nil if last >= table.row.length - 1
+
+          last + 1
+        end
+        private_class_method :next_unrendered
 
         # Table-level alternating band fill behind a cell. An
         # explicit Cell FillColor wins; Color/None bands and zero
@@ -382,6 +446,27 @@ module Idml
 
           def rows
             table.row
+          end
+
+          # Cells whose START row is `row` (cells spanning from an
+          # earlier row render there, not here).
+          def each_cell_in_row(row)
+            col_count.times do |col_idx|
+              cell = cell_at(col_idx, row)
+              next unless cell
+              next unless cell.col_row.nil? || cell.col_row.last == row
+
+              col_span = cell.column_span || 1
+              row_span = cell.row_span || 1
+              yield cell_x(col_idx), cell_y(row, col_span, row_span),
+                    cell_w(col_idx, col_span), cell_h(row, row_span),
+                    cell, col_idx
+            end
+          end
+
+          # The bottom y of a row's band (PDF coords).
+          def row_bottom_y(row)
+            box[:y] + total_height - cumulative_height(row + 1)
           end
 
           # Table-level alternating band fill for a cell position:

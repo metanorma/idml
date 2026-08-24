@@ -35,10 +35,10 @@ module Idml
           return unless story
 
           box = frame_box(frame, context.page_height)
-          render_inline_tables(canvas, story, box, context)
+          state = initial_chain_state(frame, story, context)
+          render_inline_tables(canvas, story, box, context, state)
           render_anchored_objects(canvas, story, context)
 
-          state = initial_chain_state(frame, story, context)
           return unless state
 
           vertical = vertical_story?(story)
@@ -77,13 +77,15 @@ module Idml
                    style_lookup: context.style_lookup,
                    footnote_option: Footnote.option(context.package)
           )
-          return nil if paragraphs.empty?
+          tables = tables_in_story(story).map { |table| [table, 0] }
+          return nil if paragraphs.empty? && tables.empty?
 
           StoryChainController::State.new(
             paragraphs: paragraphs,
             current_paragraph: nil,
             runs_remaining: [],
             char_cursor: 0,
+            tables_remaining: tables,
           )
         end
         private_class_method :fresh_state
@@ -94,12 +96,20 @@ module Idml
         # so the containing TextFrame's box stands in. Synthetic
         # spread-level Tables dispatch separately via
         # PageItemRenderer.
-        def self.render_inline_tables(canvas, story, box, context)
-          tables = tables_in_story(story)
-          return if tables.empty?
+        # Renders the story's inline tables — fresh ones for a
+        # chain head, carried-over remainders for continuation
+        # frames — clipped to the frame bottom; unfinished tables
+        # stay in the chain state for the next frame (TODO 134).
+        def self.render_inline_tables(canvas, _story, box, context, state)
+          pairs = state ? state.tables_remaining.to_a : []
+          return if pairs.empty?
 
-          tables.each do |table|
-            TableRenderer.render_in_box(canvas, table, box, context)
+          state.tables_remaining = pairs.filter_map do |table, start_row|
+            next_row = TableRenderer.render_in_box(
+              canvas, table, box, context,
+              start_row: start_row, bottom_limit: box[:y]
+            )
+            next_row ? [table, next_row] : nil
           end
         end
         private_class_method :render_inline_tables

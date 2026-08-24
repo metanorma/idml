@@ -1,6 +1,6 @@
 # TODO PDF 134: Table row flow across chained frames (design)
 
-## Status: OPEN — design 2026-08-24, implementation pending
+## Status: COMPLETE — implemented 2026-08-24
 
 ## Problem
 
@@ -26,10 +26,20 @@ rows never repeat (HeaderRowCount).
    back for the next frame.
 4. Footer rows (FooterRowCount) stay with the table's final chunk.
 
-## Why deferred
+## Implementation notes (2026-08-24)
 
-Row-level flow must coordinate with the text chain state and
-multi-column frames; the schema-faithful SchemaLayout already
-computes per-row heights, so the mechanics are clear, but the
-interaction matrix (chain resume, columns, vertical mode) needs
-its own focused round with dedicated fixtures.
+Delivered per the design above: `render_in_box` takes `start_row:`
+and `bottom_limit:`, renders whole rows while their bottom edge
+stays above the limit, re-emits HeaderRowCount header rows on
+continuations, and returns the next unrendered row (nil when
+complete). `StoryChainController::State` carries `tables_remaining`
+([table, start_row] pairs); `render_inline_tables` renders fresh
+story tables on chain heads plus carried remainders, storing
+unfinished tables back for the next frame. `fresh_state` now keeps
+table-only stories alive (previously a story with no paragraphs
+produced a nil state and its tables never rendered).
+
+Known limitations: row-spanning cells break at frame boundaries
+(a span cell crossing the limit renders at its start frame only);
+footer rows render with their chunk (no forced keep-with-end);
+multi-column frames flow tables across the full box width.
