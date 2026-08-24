@@ -1029,6 +1029,8 @@ module Idml
                                                cursor_y, bottom_limit)
 
           keep_all_lines_break?(paragraph, layout_frame, font,
+                                cursor_y, bottom_limit) ||
+            keep_windows_break?(paragraph, layout_frame, font,
                                 cursor_y, bottom_limit)
         end
         private_class_method :paragraph_deferred?
@@ -1048,6 +1050,52 @@ module Idml
           (cursor_y - height) < bottom_limit
         end
         private_class_method :keep_all_lines_break?
+
+        # Partial keep windows, approximated by measured line
+        # counts: KeepFirstLines defers when fewer than N lines
+        # fit; KeepLastLines defers when the overflow tail for the
+        # next frame would strand fewer than N lines.
+        def self.keep_windows_break?(paragraph, layout_frame, font,
+                                     cursor_y, bottom_limit)
+          return false unless paragraph.keep_first_lines ||
+            paragraph.keep_last_lines
+
+          wrap_width = TextEngine::VerticalLayout.wrap_width(
+            layout_frame, paragraph.right_indent || 0
+          )
+          height = TextEngine::Measurement.paragraph_height(
+            paragraph, font, wrap_width
+          )
+          return false if (cursor_y - height) >= bottom_limit
+
+          leading = first_paragraph_leading_for(paragraph)
+          lines_fit = [((cursor_y - bottom_limit) / leading).floor, 0].max
+          first_window_break?(paragraph, lines_fit) ||
+            last_window_break?(paragraph, lines_fit, height, leading)
+        end
+        private_class_method :keep_windows_break?
+
+        def self.first_window_break?(paragraph, lines_fit)
+          paragraph.keep_first_lines &&
+            lines_fit < paragraph.keep_first_lines
+        end
+        private_class_method :first_window_break?
+
+        def self.last_window_break?(paragraph, lines_fit, height, leading)
+          return false unless paragraph.keep_last_lines
+
+          total_lines = [(height / leading).ceil, 1].max
+          lines_fit.positive? &&
+            (total_lines - lines_fit) < paragraph.keep_last_lines
+        end
+        private_class_method :last_window_break?
+
+        def self.first_paragraph_leading_for(paragraph)
+          size = paragraph.runs.first&.point_size || DEFAULT_SIZE
+          TextEngine::VerticalLayout.leading_for(paragraph.auto_leading,
+                                                 size)
+        end
+        private_class_method :first_paragraph_leading_for
 
         # KeepWithNext: this paragraph defers when the next
         # paragraph is forced to the next frame, or when the next

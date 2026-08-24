@@ -15,9 +15,9 @@ this list reflects the current state.
   MaximumGlyphScaling stretches as the last resort (TODO 129);
   MinimumGlyphScaling compression and ToBinding / RTL binding
   alignment are not applied.
-- **Keep options**: whole-paragraph KeepAllLinesTogether (TODO
-  123) and KeepWithNext (TODO 127) are honored; partial keep
-  windows (KeepFirstLines / KeepLastLines) are not.
+- **Keep options**: KeepAllLinesTogether (TODO 123), KeepWithNext
+  (TODO 127), and the KeepFirstLines / KeepLastLines windows
+  (TODO 133, line-count approximation) are honored.
 - **First baseline**: AscentOffset and FixedHeight are honored
   (TODO 128); CapHeight / XHeight approximate as leading.
 - **StartParagraph** breaks act at frame/column granularity — no

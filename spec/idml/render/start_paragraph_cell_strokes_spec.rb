@@ -20,6 +20,23 @@ end
 
 KEEP_LONG_TEXT = ("word " * 600).freeze
 
+KEEP_WINDOW_FRAME = SHORT_FRAME = <<~XML
+  <TextFrame Self="tf1" ParentStory="u1" ItemTransform="1 0 0 1 72 300">
+    <Properties>
+      <PathGeometry>
+        <GeometryPathType PathOpen="false">
+          <PathPointArray>
+            <PathPointType Anchor="0 0" LeftDirection="0 0" RightDirection="0 0"/>
+            <PathPointType Anchor="0 60" LeftDirection="0 60" RightDirection="0 60"/>
+            <PathPointType Anchor="300 60" LeftDirection="300 60" RightDirection="300 60"/>
+            <PathPointType Anchor="300 0" LeftDirection="300 0" RightDirection="300 0"/>
+          </PathPointArray>
+        </GeometryPathType>
+      </PathGeometry>
+    </Properties>
+  </TextFrame>
+XML
+
 # rubocop:disable RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   def font_path
@@ -296,6 +313,76 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
       # heading joins its body in the next frame.
       expect(kept).to eq(1)
       expect(flowed).to eq(2)
+    end
+  end
+
+  describe "KeepFirstLines / KeepLastLines" do
+    def keep_window_story_xml(second_attrs)
+      <<~XML
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="21.5">
+          <Story Self="u1">
+            <ParagraphStyleRange>
+              <CharacterStyleRange PointSize="12">
+                <Content>First.</Content>
+              </CharacterStyleRange>
+            </ParagraphStyleRange>
+            <ParagraphStyleRange #{second_attrs}>
+              <CharacterStyleRange PointSize="12">
+                <Content>#{KEEP_LONG_TEXT}</Content>
+              </CharacterStyleRange>
+            </ParagraphStyleRange>
+          </Story>
+        </idPkg:Story>
+      XML
+    end
+
+    def keep_window_package(second_attrs)
+      dir = Dir.mktmpdir
+      path = File.join(dir, "kw.idml")
+      Idml::Package.write(
+        parts: {
+          "mimetype" => "application/vnd.adobe.indesign-idml-package",
+          "Stories/Story_u1.xml" => keep_window_story_xml(second_attrs),
+        },
+        to: path,
+      )
+      Idml::Package.new(path)
+    end
+
+    def short_frame_context(writer, package)
+      font_resource = writer.register_font(font_path)
+      metrics = Idml::TextEngine::PdfrbFontMetrics.new(
+        writer.document.fonts, font_resource
+      )
+      frame = Idml::Elements::TextFrame.from_xml(KEEP_WINDOW_FRAME)
+      Idml::Render::RenderContext.new(
+        item: frame, package: package, font_metrics: metrics,
+        font_ps_name: font_resource, page_height: 400
+      )
+    end
+
+    def keep_window_count(second_attrs)
+      skip "no system font available" unless font_path
+
+      writer = Idml::Render::PdfrbWriter.new
+      canvas = writer.add_page(width: 400, height: 400)
+      described_class.render(
+        canvas, short_frame_context(writer,
+                                    keep_window_package(second_attrs))
+      )
+
+      write_to_temp_pdf(writer, "keep-windows") do |pdf_path|
+        File.binread(pdf_path).scan("\nBT\n").length
+      end
+    end
+
+    it "defers a paragraph that cannot fit its KeepFirstLines window" do
+      kept = keep_window_count('KeepFirstLines="4"')
+      flowed = keep_window_count("")
+      # The long first paragraph nearly fills the frame; the second
+      # has room for fewer than 4 lines, so it defers wholly.
+      expect(kept).to be < flowed
     end
   end
 end
