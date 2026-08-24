@@ -12,7 +12,10 @@ without InDesign Server. The pipeline has three layers:
    output together. IDML Package → typed model → render plan →
    pdfrb Document → PDF file.
 
-All entries below are functionally DONE (basic CJK in TODO 13 is
-the only PARTIAL — vertical writing mode, kinsoku, ruby, and
-tate-chu-yoko remain stretch goals). Each file carries a
-`## Status:` header with a brief implementation summary.
+All entries are DONE except: TODO 117 (endnote TEXT rendering —
+gated on a real fixture to resolve the EndnoteTextRange reference
+chain) and TODO 13's final stretch goal (full class-based mojikumi
+tables; script spacing and line-end compression are in). Vertical
+writing, kinsoku, ruby, and tate-chu-yoko all landed (TODOs
+122-125). TODO 61 is the live known-limitations index. Each file
+carries a `## Status:` header with a brief implementation summary.
