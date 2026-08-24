@@ -75,9 +75,12 @@ module Idml
         # Widow/orphan control: KeepAllLinesTogether pushes the whole
         # paragraph to the next frame when it cannot fully fit;
         # KeepWithNext binds this paragraph to the next paragraph's
-        # first line.
+        # first line; KeepFirstLines / KeepLastLines are partial
+        # keep windows (approximated via measured line counts).
         :keep_all_lines_together,
         :keep_with_next,
+        :keep_first_lines,
+        :keep_last_lines,
         :bullets_and_numbering_list_type,
         :bullet_character_value,
         :bullets_text_after,
@@ -216,6 +219,10 @@ module Idml
             ),
             keep_with_next: resolve_attr(style_lookup, psr,
                                          :keep_with_next),
+            keep_first_lines: resolve_attr(style_lookup, psr,
+                                           :keep_first_lines),
+            keep_last_lines: resolve_attr(style_lookup, psr,
+                                          :keep_last_lines),
             drop_cap_lines: resolve_attr(style_lookup, psr, :drop_cap_lines),
             drop_cap_characters: resolve_attr(style_lookup, psr,
                                               :drop_cap_characters),
