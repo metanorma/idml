@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-# rubocop:disable RSpec/SpecFilePathFormat
+# rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Elements::CharacterStyleRange do
   describe "story-embedded anchored page items" do
     let(:anchored_rect_xml) do
@@ -91,4 +91,3 @@ RSpec.describe Idml::Elements::CharacterStyleRange do
     end
   end
 end
-# rubocop:enable RSpec/SpecFilePathFormat

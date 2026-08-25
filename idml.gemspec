@@ -12,7 +12,14 @@ Gem::Specification.new do |spec|
   spec.authors = ["Ribose"]
   spec.email = ["open.source@ribose.com"]
 
-  spec.summary = "Parse, manipulate, and round-trip Adobe IDML files."
+  spec.summary = "Parse, validate, compose, and render Adobe IDML files to PDF."
+  spec.description = "Pure-Ruby toolkit for Adobe InDesign IDML: " \
+                     "schema-faithful models with byte-faithful " \
+                     "round-trip, RelaxNG validation, composition " \
+                     "operations, and a full " \
+                     "IDML-to-PDF rendering pipeline (text layout, " \
+                     "tables, CJK " \
+                     "vertical writing, text wrap, footnotes, PDF/A)."
   spec.homepage      = "https://github.com/metanorma/idml"
   spec.license       = "BSD-2-Clause"
   spec.required_ruby_version = Gem::Requirement.new(">= 3.3.0")

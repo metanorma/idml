@@ -18,7 +18,7 @@ ContourRecordingCanvas = Struct.new(:ops, keyword_init: true) do
   end
 end
 
-# rubocop:disable RSpec/SpecFilePathFormat
+# rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Contour do
   def geometry(points:, path_open: "false")
     points_xml = points.map do |anchor, left, right|
@@ -220,4 +220,3 @@ RSpec.describe Idml::Render::Contour do
     end
   end
 end
-# rubocop:enable RSpec/SpecFilePathFormat

@@ -12,7 +12,7 @@ VERTICAL_FONT_CANDIDATES = [
   "C:/Windows/Fonts/arial.ttf",
 ].freeze
 
-# rubocop:disable RSpec/SpecFilePathFormat
+# rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   def font_path
     VERTICAL_FONT_CANDIDATES.find { |p| File.exist?(p) }
@@ -120,4 +120,3 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     expect(bt_count(with_ruby)).to eq(bt_count(without_ruby) + 2)
   end
 end
-# rubocop:enable RSpec/SpecFilePathFormat

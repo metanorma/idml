@@ -12,7 +12,7 @@ FOOTNOTE_FONT_CANDIDATES = [
   "C:/Windows/Fonts/arial.ttf",
 ].freeze
 
-# rubocop:disable RSpec/SpecFilePathFormat
+# rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   def font_path
     FOOTNOTE_FONT_CANDIDATES.find { |p| File.exist?(p) }
@@ -120,4 +120,3 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     end
   end
 end
-# rubocop:enable RSpec/SpecFilePathFormat
