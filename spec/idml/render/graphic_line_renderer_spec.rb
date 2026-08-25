@@ -15,7 +15,7 @@ FakeLineColorResolver = Struct.new(:table, keyword_init: true) do
   end
 end
 
-# rubocop:disable RSpec/SpecFilePathFormat
+# rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Renderers::GraphicLineRenderer do
   let(:writer) { Idml::Render::PdfrbWriter.new }
   let(:canvas) { writer.add_page(width: 400, height: 400) }
@@ -77,4 +77,3 @@ RSpec.describe Idml::Render::Renderers::GraphicLineRenderer do
     end
   end
 end
-# rubocop:enable RSpec/SpecFilePathFormat

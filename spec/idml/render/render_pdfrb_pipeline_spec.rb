@@ -3,7 +3,7 @@
 require "spec_helper"
 require "tmpdir"
 
-# rubocop:disable RSpec/SpecFilePathFormat
+# rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render do
   let(:fixture_path) do
     File.expand_path("../../fixtures/sample-with-image/sample-with-image.idml",
@@ -215,4 +215,3 @@ RSpec.describe Idml::Render do
     end
   end
 end
-# rubocop:enable RSpec/SpecFilePathFormat

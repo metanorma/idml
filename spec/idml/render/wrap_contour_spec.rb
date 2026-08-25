@@ -42,7 +42,7 @@ RSpec.describe Idml::Render::WrapContour do
     XML
   end
 
-  # rubocop:disable Metrics/AbcSize -- pure fixture geometry math
+  # rubocop:disable-next Metrics/AbcSize -- pure fixture geometry math
   def ellipse_points(center_x, center_y, radius_x, radius_y, kappa)
     [
       [[center_x, center_y + radius_y],
@@ -59,7 +59,6 @@ RSpec.describe Idml::Render::WrapContour do
        [center_x - radius_x, center_y + (kappa * radius_y)]],
     ]
   end
-  # rubocop:enable Metrics/AbcSize
 
   def fmt(pair)
     pair.map { |v| format("%<v>g", v: v) }.join(" ")

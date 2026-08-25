@@ -15,7 +15,7 @@ FootnoteFakeMetrics = Struct.new(:upem, keyword_init: true) do
   end
 end
 
-# rubocop:disable RSpec/SpecFilePathFormat
+# rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Footnote do
   let(:metrics) { FootnoteFakeMetrics.new(upem: 1000) }
   let(:frame) do
@@ -283,4 +283,3 @@ RSpec.describe Idml::Render::Footnote do
     end
   end
 end
-# rubocop:enable RSpec/SpecFilePathFormat

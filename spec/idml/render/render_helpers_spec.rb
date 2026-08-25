@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-# rubocop:disable RSpec/SpecFilePathFormat
+# rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render do
   describe Idml::Render::ColorHelper do
     describe ".to_canvas" do
@@ -335,4 +335,3 @@ RSpec.describe Idml::Render do
     end
   end
 end
-# rubocop:enable RSpec/SpecFilePathFormat

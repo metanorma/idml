@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-# rubocop:disable RSpec/DescribeClass
+# rubocop:disable-next RSpec/DescribeClass
 RSpec.describe "sample-with-table-more fixture" do
   let(:fixture_path) do
     File.expand_path(
@@ -249,4 +249,3 @@ RSpec.describe "sample-with-table-more fixture" do
     end
   end
 end
-# rubocop:enable RSpec/DescribeClass

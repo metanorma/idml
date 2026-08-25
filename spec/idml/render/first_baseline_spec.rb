@@ -12,7 +12,7 @@ FBO_FONT_CANDIDATES = [
   "C:/Windows/Fonts/arial.ttf",
 ].freeze
 
-# rubocop:disable RSpec/SpecFilePathFormat
+# rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   def font_path
     FBO_FONT_CANDIDATES.find { |p| File.exist?(p) }
@@ -96,4 +96,3 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
       .of(first_baseline_y("LeadingOffset"))
   end
 end
-# rubocop:enable RSpec/SpecFilePathFormat

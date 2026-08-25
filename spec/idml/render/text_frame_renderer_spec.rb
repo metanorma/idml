@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-# rubocop:disable RSpec/SpecFilePathFormat
+# rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   let(:fixture_path) do
     File.expand_path("../../fixtures/sample-with-image/sample-with-image.idml",
@@ -63,4 +63,3 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     end
   end
 end
-# rubocop:enable RSpec/SpecFilePathFormat
