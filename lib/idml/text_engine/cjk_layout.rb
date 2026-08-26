@@ -74,6 +74,68 @@ module Idml
         TRAILING_COMPRESSION_CODEPOINTS.include?(codepoint)
       end
 
+      # Class-based mojikumi pair compression: a full-width
+      # closing/middle glyph followed by another full-width
+      # punctuation glyph compresses to half advance within the
+      # line (。」、ー） … pairs), matching InDesign's default
+      # mojikumi behavior for consecutive 約物.
+      OPENING_CODEPOINTS = [
+        0x300C, # 「
+        0x300E, # 『
+        0x3008, # 〈
+        0x300A, # 《
+        0x3010, # 【
+        0x3014, # 〔
+        0xFF08, # （fullwidth left paren
+        0xFF3B, # ［
+        0xFF5B, # ｛
+      ].freeze
+
+      MIDDLE_CODEPOINTS = [
+        0x30FB, # ・ fullwidth middle dot
+        0x30FC, # ー prolonged sound mark
+        0x2025, # ‥ two-dot leader
+        0x2026, # … ellipsis
+      ].freeze
+
+      def apply_pair_compression(lines)
+        lines.each do |line|
+          glyphs = line.glyphs
+          (0...(glyphs.length - 1)).each do |index|
+            leading = glyphs[index]
+            following = glyphs[index + 1]
+            next unless pair_compressible?(leading, following)
+
+            leading.width /= 2.0
+          end
+          line.width = glyphs.sum(&:width)
+        end
+        lines
+      end
+
+      # Closing/middle glyph followed by full-width punctuation
+      # compresses the leading glyph to half advance.
+      def pair_compressible?(leading, following)
+        return false unless fullwidth_punct?(following.codepoint)
+
+        closing?(leading.codepoint) ||
+          (middle?(leading.codepoint) &&
+           !OPENING_CODEPOINTS.include?(following.codepoint))
+      end
+
+      def closing?(codepoint)
+        TRAILING_COMPRESSION_CODEPOINTS.include?(codepoint)
+      end
+
+      def middle?(codepoint)
+        MIDDLE_CODEPOINTS.include?(codepoint)
+      end
+
+      def fullwidth_punct?(codepoint)
+        closing?(codepoint) || middle?(codepoint) ||
+          OPENING_CODEPOINTS.include?(codepoint)
+      end
+
       CJK_RANGES = [
         0x3000..0x303F, # CJK Symbols and Punctuation
         0x3040..0x309F, # Hiragana

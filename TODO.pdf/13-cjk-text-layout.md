@@ -1,8 +1,9 @@
 # TODO PDF 13: CJK text layout
 
-## Status: PARTIAL — vertical writing mode implemented 2026-08-19
-(horizontal-mode CJK was complete 2026-08-17: glyph measurement,
-kinsoku shori, ruby annotations).
+## Status: COMPLETE — final mojikumi pair compression landed
+2026-08-26. Vertical writing (2026-08-19), kinsoku shori, ruby,
+tate-chu-yoko, script spacing, and line-end compression were
+already in.
 
 ## Vertical mode (2026-08-19)
 
@@ -22,10 +23,12 @@ kinsoku shori, ruby annotations).
 
 2026-08-20 completions: tate-chu-yoko (TODO 124), Latin rotation
 and vertical ruby (TODO 122), CJK/Latin automatic script spacing
-(TODO 125, a mojikumi subset wired into Shaper). The remaining
-stretch goal is full class-based mojikumi (per-pair punctuation
-compression tables); line-end punctuation compression landed
-2026-08-23 as TODO 132. See `lib/idml/text_engine/cjk_layout.rb` and
+(TODO 125, a mojikumi subset wired into Shaper). Final piece (2026-08-26): class-based pair compression — a
+full-width closing/middle glyph followed by another full-width
+punctuation compresses to half advance within the line (。」、
+ー）… pairs), completing the three real mojikumi behaviors of
+InDesign's default sets alongside script spacing (TODO 125) and
+line-end compression (TODO 132). See `lib/idml/text_engine/cjk_layout.rb` and
 `lib/idml/text_engine/vertical_text_layout.rb`.
 
 ## Progress 2026-08-17
