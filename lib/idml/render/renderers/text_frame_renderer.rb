@@ -77,6 +77,7 @@ module Idml
                    style_lookup: context.style_lookup,
                    footnote_option: Footnote.option(context.package)
           )
+          paragraphs.concat(endnote_paragraphs(story, context))
           tables = tables_in_story(story).map { |table| [table, 0] }
           return nil if paragraphs.empty? && tables.empty?
 
@@ -113,6 +114,55 @@ module Idml
           end
         end
         private_class_method :render_inline_tables
+
+        # End-of-story endnote text (TODO 117): when the main
+        # story carries endnote markers, the package's endnote
+        # stories (IsEndnoteStory="true", in designmap StoryList
+        # order) append after the main flow, each prefixed with
+        # its ordinal so it reads as numbered. Multi-story linkage
+        # (which endnotes belong to which main story) is not
+        # modeled — all endnote stories follow the marker-bearing
+        # story, which matches single-article documents.
+        def self.endnote_paragraphs(story, context)
+          return [] unless endnotes_marked?(story, context)
+
+          number = 0
+          context.package.stories.filter_map do |endnote_story|
+            next unless endnote_story.inner&.is_endnote_story
+
+            number += 1
+            paragraphs = StyleResolver.extract_paragraphs(
+              endnote_story,
+              condition_filter: context.condition_filter,
+              style_lookup: context.style_lookup,
+              footnote_option: Footnote.option(context.package),
+            )
+            prefix_endnote_number(paragraphs, number)
+            paragraphs
+          end.flatten
+        end
+        private_class_method :endnote_paragraphs
+
+        def self.endnotes_marked?(story, context)
+          return false unless context.package
+          return false unless story_csrs(story).any? do |csr|
+            !csr.endnote_range.empty?
+          end
+
+          context.package.stories.any? do |candidate|
+            candidate.inner&.is_endnote_story
+          end
+        end
+        private_class_method :endnotes_marked?
+
+        def self.prefix_endnote_number(paragraphs, number)
+          return if paragraphs.empty?
+          return if paragraphs.first.runs.empty?
+
+          first_run = paragraphs.first.runs.first
+          first_run.text = "#{number} #{first_run.text}"
+        end
+        private_class_method :prefix_endnote_number
 
         def self.tables_in_story(story)
           story_csrs(story).flat_map(&:table).compact
