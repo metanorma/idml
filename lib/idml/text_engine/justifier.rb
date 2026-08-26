@@ -11,12 +11,14 @@ module Idml
       # InDesign defaults: word spacing max 133%, letter spacing 0%.
       SpacingLimits = Struct.new(
         :max_word_spacing, :max_letter_spacing, :max_glyph_scaling,
+        :min_glyph_scaling,
         keyword_init: true
       )
 
       DEFAULT_MAX_WORD_SPACING = 133.0
       DEFAULT_MAX_LETTER_SPACING = 0.0
       DEFAULT_MAX_GLYPH_SCALING = 100.0
+      DEFAULT_MIN_GLYPH_SCALING = 100.0
 
       def self.justify(line:, frame_width:, alignment: :left,
                        last_line: false, limits: nil)
@@ -55,6 +57,8 @@ module Idml
       def justify_line(line)
         spaces = line.glyphs.count(&:is_space)
         slack = @frame_width - line.width
+        return compress_glyphs(line, slack) if slack.negative?
+
         return if spaces.zero? || slack <= 0
 
         word_share = [slack, word_capacity(line, spaces)].min
@@ -98,6 +102,23 @@ module Idml
         line.glyphs.each { |glyph| glyph.width += add }
       end
       private :distribute_letter_spacing
+
+      # Overlong justified line: compress all glyphs uniformly,
+      # capped at min_glyph_scaling percent. InDesign's default cap
+      # (100%) disables it; only documents that lower the cap get
+      # squeezed glyphs.
+      def compress_glyphs(line, slack)
+        min_pct = @limits&.min_glyph_scaling || DEFAULT_MIN_GLYPH_SCALING
+        shrink = (100 - min_pct) / 100.0
+        return unless shrink.positive?
+
+        total = line.glyphs.sum(&:width)
+        return unless total.positive?
+
+        factor = [-slack / total, shrink].min
+        line.glyphs.each { |glyph| glyph.width *= (1 - factor) }
+      end
+      private :compress_glyphs
 
       # Last resort: uniform glyph scaling for any remaining slack,
       # capped at max_glyph_scaling percent. InDesign's default cap

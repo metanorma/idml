@@ -215,6 +215,46 @@ RSpec.describe Idml::TextEngine::Justifier do
     end
   end
 
+  describe "MinimumGlyphScaling compression of overlong lines" do
+    def synthetic_line(widths)
+      glyphs = widths.map do |w|
+        Idml::TextEngine::ShapedGlyph.new(97, w, false)
+      end
+      Idml::TextEngine::Line.new(glyphs, widths.sum, 0)
+    end
+
+    it "compresses an overlong justified line uniformly" do
+      line = synthetic_line([10.0, 10.0, 10.0, 10.0])
+      limits = described_class::SpacingLimits.new(min_glyph_scaling: 50)
+
+      described_class.justify(line: line, frame_width: 36.0,
+                              alignment: :justified, limits: limits)
+
+      expect(line.glyphs.map(&:width)).to all(eq(9.0))
+      expect(line.glyphs.sum(&:width)).to eq(36.0)
+    end
+
+    it "caps compression at MinimumGlyphScaling percent" do
+      line = synthetic_line([10.0, 10.0, 10.0, 10.0])
+      limits = described_class::SpacingLimits.new(min_glyph_scaling: 95)
+
+      described_class.justify(line: line, frame_width: 30.0,
+                              alignment: :justified, limits: limits)
+
+      expect(line.glyphs.map(&:width)).to all(eq(9.5))
+    end
+
+    it "does not compress under the default 100% floor" do
+      line = synthetic_line([10.0, 10.0, 10.0, 10.0])
+      limits = described_class::SpacingLimits.new
+
+      described_class.justify(line: line, frame_width: 30.0,
+                              alignment: :justified, limits: limits)
+
+      expect(line.glyphs.map(&:width)).to all(eq(10.0))
+    end
+  end
+
   it "keeps the last line ragged under :justified" do
     shaper = Idml::TextEngine::Shaper.new(font, 12)
     glyphs = shaper.shape("aa bb cc")

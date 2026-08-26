@@ -9,12 +9,16 @@ module Idml
     # text line to compute the effective wrap width — lines that
     # overlap a contour get their width reduced by the overlap.
     #
-    # Supported: BoundingBox mode (rectangle intersection).
-    # Unsupported: Shape mode (contour following), Inverse mode.
+    # Supported: BoundingBox mode (rectangle intersection) with
+    # TextWrapSide awareness (LeftSide / RightSide / LargestArea
+    # pick the side text flows on; BothSides and the spine variants
+    # narrow by the full overlap). Shape contours (Contour mode)
+    # narrow by polygon overlap without side awareness.
+    # Unsupported: Inverse mode's side behavior.
     class TextWrapResolver
       # A wrap contour: a PDF-coordinate rectangle the text avoids.
       Contour = Struct.new(
-        :x, :y, :width, :height, :inverse,
+        :x, :y, :width, :height, :inverse, :side,
         keyword_init: true
       )
 
@@ -36,6 +40,80 @@ module Idml
       end
 
       attr_reader :contours
+
+      # Side-aware adjustment for a text line: returns
+      # [width_reduction, x_shift]. LeftSide keeps text left of the
+      # contour (reduce, no shift); RightSide moves text past the
+      # contour's right edge (reduce + shift); LargestArea picks the
+      # roomier side; BothSides and the spine variants (which need
+      # binding-side context) reduce by the full overlap. Multiple
+      # contours combine by max — the per-run approximation.
+      def wrap_adjustment(line_y, line_height, frame_x, frame_right)
+        reduction = 0.0
+        shift = 0.0
+        @contours.each do |contour|
+          unless contour.is_a?(WrapContour::Shape)
+            r, s = box_adjustment(contour, line_y, line_height,
+                                  frame_x, frame_right)
+            reduction = [reduction, r].max
+            shift = [shift, s].max
+            next
+          end
+
+          width = WrapContour.overlap_width(contour, line_y,
+                                            line_height, frame_x,
+                                            frame_right)
+          next unless contour.inverse
+
+          reduction = [reduction,
+                       (frame_right - frame_x) - width].max
+        end
+        [reduction, shift]
+      end
+
+      def box_adjustment(contour, line_y, line_height, frame_x,
+                         frame_right)
+        overlap = if y_overlap?(contour, line_y, line_height) &&
+            x_overlap?(contour, frame_x, frame_right)
+                    x_overlap_width(contour, frame_x, frame_right)
+                  else
+                    0.0
+                  end
+        # Inverse contours: text flows only inside, so the reduction
+        # is the frame width minus the covered part (the full width
+        # when the line misses the object entirely).
+        return [(frame_right - frame_x) - overlap, 0.0] if contour.inverse
+
+        return [0.0, 0.0] if overlap.zero?
+
+        side_adjustment(contour, overlap, frame_x, frame_right)
+      end
+      private :box_adjustment
+
+      def side_adjustment(contour, overlap, frame_x, frame_right)
+        case contour.side
+        when "LeftSide"
+          [frame_right - contour.x, 0.0]
+        when "RightSide"
+          shift = contour.x + contour.width - frame_x
+          [shift, shift]
+        when "LargestArea"
+          largest_side_adjustment(contour, frame_x, frame_right)
+        else
+          [overlap, 0.0]
+        end
+      end
+      private :side_adjustment
+
+      def largest_side_adjustment(contour, frame_x, frame_right)
+        left_free = contour.x - frame_x
+        right_free = frame_right - (contour.x + contour.width)
+        return [frame_right - contour.x, 0.0] if left_free >= right_free
+
+        shift = contour.x + contour.width - frame_x
+        [shift, shift]
+      end
+      private :largest_side_adjustment
 
       # Returns the total horizontal overlap of all contours with a
       # text line at the given y range within the given x range.
@@ -73,12 +151,12 @@ module Idml
         if contour_mode?(pref)
           WrapContour.shape(item, pref, page_height)
         else
-          box_contour(item, page_height)
+          box_contour(item, page_height, pref)
         end
       end
       private_class_method :contour_for
 
-      def self.box_contour(item, page_height)
+      def self.box_contour(item, page_height, pref = nil)
         bounds = item.geometric_bounds
         return nil unless bounds
 
@@ -86,7 +164,8 @@ module Idml
                                        page_height)
         Contour.new(
           x: rect[:x], y: rect[:y],
-          width: rect[:width], height: rect[:height]
+          width: rect[:width], height: rect[:height],
+          side: pref&.text_wrap_side
         )
       end
       private_class_method :box_contour

@@ -69,6 +69,7 @@ module Idml
         :maximum_word_spacing,
         :maximum_letter_spacing,
         :maximum_glyph_scaling,
+        :minimum_glyph_scaling,
         # Forced paragraph break (StartParagraph: NextPage /
         # NextColumn / NextFrame / NextOddPage / NextEvenPage).
         :start_paragraph,
@@ -211,6 +212,9 @@ module Idml
             ),
             maximum_glyph_scaling: resolve_attr(
               style_lookup, psr, :maximum_glyph_scaling
+            ),
+            minimum_glyph_scaling: resolve_attr(
+              style_lookup, psr, :minimum_glyph_scaling
             ),
             start_paragraph: resolve_attr(style_lookup, psr,
                                           :start_paragraph),

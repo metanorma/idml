@@ -4,7 +4,8 @@ require "spec_helper"
 
 RSpec.describe Idml::Render::TextWrapResolver do
   describe ".build mode dispatch" do
-    def wrap_item(mode)
+    def wrap_item(mode, side: nil)
+      side_attr = side ? %( TextWrapSide="#{side}") : ""
       Idml::Elements::Oval.from_xml(<<~XML)
         <Oval Self="o1">
           <Properties>
@@ -19,7 +20,7 @@ RSpec.describe Idml::Render::TextWrapResolver do
               </GeometryPathType>
             </PathGeometry>
           </Properties>
-          <TextWrapPreference TextWrapMode="#{mode}"/>
+          <TextWrapPreference TextWrapMode="#{mode}"#{side_attr}/>
         </Oval>
       XML
     end
@@ -32,8 +33,17 @@ RSpec.describe Idml::Render::TextWrapResolver do
       end.new([item])
     end
 
-    def resolver_for(mode)
-      described_class.build(spread_like(wrap_item(mode)), page_height: 400)
+    def resolver_for(mode, side: nil)
+      described_class.build(
+        spread_like(wrap_item(mode, side: side)), page_height: 400
+      )
+    end
+
+    it "carries TextWrapSide from XML into wrap_adjustment" do
+      resolver = resolver_for("BoundingBoxTextWrap", side: "RightSide")
+      # Oval spans x 40..160 in a 0..400 frame: text shifts past 160.
+      expect(resolver.wrap_adjustment(300, 12, 0, 400))
+        .to eq([160.0, 160.0])
     end
 
     it "accepts the schema spelling BoundingBoxTextWrap" do
@@ -112,6 +122,55 @@ RSpec.describe Idml::Render::TextWrapResolver do
 
       # Inside width 120 → avoid-region 280.
       expect(resolver.overlap_width(300, 12, 0, 400)).to eq(280)
+    end
+  end
+
+  describe "#wrap_adjustment" do
+    def contour_at(side)
+      described_class::Contour.new(
+        x: 100, y: 300, width: 50, height: 100, side: side,
+      )
+    end
+
+    it "narrows by the full overlap for BothSides without shifting" do
+      resolver = described_class.new([contour_at("BothSides")])
+      expect(resolver.wrap_adjustment(350, 12, 0, 400)).to eq([50.0, 0.0])
+    end
+
+    it "treats a missing side as BothSides" do
+      resolver = described_class.new([contour_at(nil)])
+      expect(resolver.wrap_adjustment(350, 12, 0, 400)).to eq([50.0, 0.0])
+    end
+
+    it "keeps text left of the contour for LeftSide" do
+      resolver = described_class.new([contour_at("LeftSide")])
+      expect(resolver.wrap_adjustment(350, 12, 0, 400)).to eq([300.0, 0.0])
+    end
+
+    it "shifts text past the contour for RightSide" do
+      resolver = described_class.new([contour_at("RightSide")])
+      expect(resolver.wrap_adjustment(350, 12, 0, 400)).to eq([150.0, 150.0])
+    end
+
+    it "picks the roomier side for LargestArea" do
+      resolver = described_class.new([contour_at("LargestArea")])
+      expect(resolver.wrap_adjustment(350, 12, 0, 400)).to eq([150.0, 150.0])
+
+      left_roomier = described_class::Contour.new(
+        x: 250, y: 300, width: 50, height: 100, side: "LargestArea",
+      )
+      resolver = described_class.new([left_roomier])
+      expect(resolver.wrap_adjustment(350, 12, 0, 400)).to eq([150.0, 0.0])
+    end
+
+    it "returns zero adjustment when the line misses the contour" do
+      resolver = described_class.new([contour_at("RightSide")])
+      expect(resolver.wrap_adjustment(100, 12, 0, 400)).to eq([0.0, 0.0])
+    end
+
+    it "approximates spine sides as BothSides" do
+      resolver = described_class.new([contour_at("SideTowardsSpine")])
+      expect(resolver.wrap_adjustment(350, 12, 0, 400)).to eq([50.0, 0.0])
     end
   end
 

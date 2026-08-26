@@ -839,14 +839,17 @@ module Idml
                                                   rendered_count)
             run_wrap = drop_cap_wrap_width(wrap_width, dc_width,
                                            dc_lines, rendered_count)
-            run_wrap -= text_wrap_overlap(context, layout_frame, cursor_y,
-                                          run)
+            wrap_reduction, wrap_shift = text_wrap_adjust(
+              context, layout_frame, cursor_y, run
+            )
+            run_wrap -= wrap_reduction
             positioned, next_y = layout_run(
               canvas, run, paragraph, context, layout_frame, font,
               run_wrap, cursor_y, space_before,
               para_attrs[:first_line_indent], para_attrs[:left_indent],
               char_cursor, bottom_limit,
-              paragraph_last: run.equal?(runs.last)
+              paragraph_last: run.equal?(runs.last),
+              wrap_shift: wrap_shift
             )
             char_cursor += positioned.length
             cursor_y = next_y
@@ -905,26 +908,27 @@ module Idml
         end
         private_class_method :render_footnote_entries
 
-        # Computes the text-wrap overlap for a run at its current y
-        # position. Uses the run's point_size as the line height
-        # approximation. Returns 0.0 when no resolver is wired or no
-        # contours overlap. Per-run approximation: all lines in the
-        # run get the same reduced width (correct when the run is
-        # fully inside or outside the contour; approximate when it
-        # spans the boundary).
-        def self.text_wrap_overlap(context, layout_frame, cursor_y, run)
+        # Computes the text-wrap adjustment for a run at its current y
+        # position: [width_reduction, x_shift]. The reduction narrows
+        # the wrap width; the shift moves wrapped lines right past a
+        # contour the text must flow around (TextWrapSide RightSide /
+        # LargestArea). Uses the run's point_size as the line height
+        # approximation. Returns [0.0, 0.0] when no resolver is wired
+        # or no contours overlap. Per-run approximation: all lines in
+        # the run get the same reduced width and shift (correct when
+        # the run is fully inside or outside the contour; approximate
+        # when it spans the boundary).
+        def self.text_wrap_adjust(context, layout_frame, cursor_y, run)
           resolver = context.text_wrap_resolver
-          return 0.0 unless resolver
+          return [0.0, 0.0] unless resolver
 
           size = run.point_size || DEFAULT_SIZE
           frame_x = layout_frame.x + (layout_frame.inset_left || 0)
           frame_right = layout_frame.x + layout_frame.width -
             (layout_frame.inset_right || 0)
-          overlap = resolver.overlap_width(cursor_y, size,
-                                           frame_x, frame_right)
-          [overlap, 0.0].max
+          resolver.wrap_adjustment(cursor_y, size, frame_x, frame_right)
         end
-        private_class_method :text_wrap_overlap
+        private_class_method :text_wrap_adjust
 
         # Strips drop cap characters from the first run so they don't
         # render twice (once as the enlarged drop cap, once as normal
@@ -1047,7 +1051,8 @@ module Idml
         def self.layout_run(canvas, run, paragraph, context, layout_frame,
                             font, wrap_width, cursor_y, space_before,
                             first_line_indent, left_indent,
-                            char_cursor, bottom_limit, paragraph_last: false)
+                            char_cursor, bottom_limit, paragraph_last: false,
+                            wrap_shift: 0.0)
           size = run.point_size || DEFAULT_SIZE
           glyphs = TextEngine::Shaper.shape(
             text: run.text, font: font, size: size,
@@ -1056,6 +1061,7 @@ module Idml
             glyphs: glyphs, frame_width: wrap_width,
           )
           justify_lines(lines, paragraph, wrap_width, paragraph_last)
+          lines.each { |line| line.x_offset += wrap_shift }
           leading = leading_for(paragraph, size)
 
           positioned, next_y = TextEngine::VerticalLayout.layout_block(
@@ -1208,6 +1214,7 @@ module Idml
             max_word_spacing: paragraph.maximum_word_spacing,
             max_letter_spacing: paragraph.maximum_letter_spacing,
             max_glyph_scaling: paragraph.maximum_glyph_scaling,
+            min_glyph_scaling: paragraph.minimum_glyph_scaling,
           )
           lines.each_with_index do |line, index|
             TextEngine::Justifier.justify(
@@ -1351,11 +1358,37 @@ module Idml
             runs_for,
             at: [box[:x], box[:y] + box[:height] - first_size],
           )
+          emit_simple_footnotes(canvas, runs, context, box)
           state.paragraphs = []
           state.current_paragraph = nil
           state.runs_remaining = []
         end
         private_class_method :simple_render
+
+        # Footnote text for the rough (no-metrics) path: one line
+        # per footnote paragraph, stacked upward from the frame's
+        # bottom edge below a hairline separator. Paragraphs are
+        # already marker-prefixed at extraction.
+        def self.emit_simple_footnotes(canvas, runs, context, box)
+          paragraphs = runs.flat_map(&:footnote_paragraphs).compact
+          return if paragraphs.empty?
+
+          size = paragraphs.first.runs.first&.point_size || DEFAULT_SIZE
+          block_top = box[:y] + (paragraphs.length * size)
+          canvas.line_width = 0.5
+          canvas.stroke_color([:gray, 0.0])
+          canvas.move_to(box[:x], block_top + (size * 0.3))
+          canvas.line_to(box[:x] + (box[:width] * 0.25), block_top + (size * 0.3))
+          canvas.stroke
+
+          paragraphs.reverse_each.with_index do |paragraph, index|
+            canvas.text_rich(
+              build_rich_runs(paragraph.runs, context),
+              at: [box[:x], box[:y] + ((index + 1) * size)],
+            )
+          end
+        end
+        private_class_method :emit_simple_footnotes
 
         def self.collect_runs(state)
           runs = state.runs_remaining || []
