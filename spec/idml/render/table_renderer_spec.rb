@@ -148,6 +148,55 @@ RSpec.describe Idml::Render::Renderers::TableRenderer do
       end
     end
 
+    describe "diagonal cell strokes" do
+      let(:diagonal_table_xml) do
+        <<~XML
+          <Table Self="t1" ItemTransform="1 0 0 1 0 0">
+            <Properties>
+              <PathGeometry>
+                <GeometryPathType PathOpen="false">
+                  <PathPointArray>
+                    <PathPointType Anchor="-10 -10" LeftDirection="-10 -10" RightDirection="-10 -10"/>
+                    <PathPointType Anchor="110 -10" LeftDirection="110 -10" RightDirection="110 -10"/>
+                    <PathPointType Anchor="110 110" LeftDirection="110 110" RightDirection="110 110"/>
+                    <PathPointType Anchor="-10 110" LeftDirection="-10 110" RightDirection="-10 110"/>
+                  </PathPointArray>
+                </GeometryPathType>
+              </PathGeometry>
+            </Properties>
+            <Row Self="t1Row0" Name="0" SingleRowHeight="60" MinimumHeight="60"/>
+            <Row Self="t1Row1" Name="1" SingleRowHeight="60" MinimumHeight="60"/>
+            <Cell Self="t1c0" Name="0:0" TopLeftDiagonalLine="true"
+                  TopRightDiagonalLine="true" DiagonalLineStrokeWeight="2"/>
+            <Cell Self="t1c1" Name="1:0"/>
+            <Cell Self="t1c2" Name="0:1"/>
+            <Cell Self="t1c3" Name="1:1"/>
+          </Table>
+        XML
+      end
+
+      it "draws both diagonals as line ops with the declared weight" do
+        table = table_from_xml(diagonal_table_xml)
+        described_class.render(canvas, build_context(table))
+        write_to_temp_pdf(writer, "diag-both") do |path|
+          raw = File.binread(path)
+          # 4 cell border strokes + 2 diagonals
+          expect(raw.scan(/\bS\b/).length).to eq(6)
+          expect(raw).to include("2 w")
+        end
+      end
+
+      it "draws one line when only TopLeftDiagonalLine is set" do
+        xml = diagonal_table_xml.sub(' TopRightDiagonalLine="true"', "")
+        table = table_from_xml(xml)
+        described_class.render(canvas, build_context(table))
+        write_to_temp_pdf(writer, "diag-single") do |path|
+          # 4 cell border strokes + 1 diagonal
+          expect(File.binread(path).scan(/\bS\b/).length).to eq(5)
+        end
+      end
+    end
+
     describe "column widths from Table#single_column_width" do
       let(:uneven_table_xml) do
         <<~XML

@@ -104,6 +104,8 @@ module Idml
                                    cell_h, context)
             render_cell_border(canvas, cell, table, cell_x, cell_y,
                                cell_w, cell_h, context)
+            render_cell_diagonals(canvas, cell, cell_x, cell_y,
+                                  cell_w, cell_h, context)
             render_cell_text(canvas, cell, cell_x, cell_y, cell_h, context)
           end
         end
@@ -219,6 +221,56 @@ module Idml
           end
         end
         private_class_method :render_cell_border
+
+        # TopLeftDiagonalLine runs from the cell's top-left to its
+        # bottom-right corner; TopRightDiagonalLine from top-right
+        # to bottom-left. Stroke weight defaults to 1pt and color
+        # to black when the flags are set without explicit stroke
+        # attributes (InDesign defaults). DiagonalLineInFront is
+        # accepted; diagonals always paint after the cell fill.
+        def self.render_cell_diagonals(canvas, cell, x, y, w, h, context)
+          return unless cell.top_left_diagonal_line ||
+            cell.top_right_diagonal_line
+
+          weight = cell.diagonal_line_stroke_weight
+          thickness = weight.nil? ? 1.0 : weight.to_f
+          return unless thickness.positive?
+
+          canvas.line_width = thickness
+          canvas.stroke_color(diagonal_color(cell, context))
+          diagonals_for(cell, x, y, w, h).each do |from, to|
+            canvas.move_to(from[0], from[1])
+            canvas.line_to(to[0], to[1])
+            canvas.stroke
+          end
+        end
+        private_class_method :render_cell_diagonals
+
+        def self.diagonals_for(cell, x, y, w, h)
+          [].tap do |diagonals|
+            diagonals << [[x, y + h], [x + w, y]] if cell.top_left_diagonal_line
+            diagonals << [[x + w, y + h], [x, y]] if cell.top_right_diagonal_line
+          end
+        end
+        private_class_method :diagonals_for
+
+        def self.diagonal_color(cell, context)
+          color = diagonal_resolved_color(cell, context)
+          color ? ColorHelper.to_canvas(color) : [:gray, 0.0]
+        end
+        private_class_method :diagonal_color
+
+        def self.diagonal_resolved_color(cell, context)
+          name = cell.diagonal_line_stroke_color
+          return nil if name.nil? || name == "Color/None"
+
+          resolved = context.color_resolver&.resolve(name)
+          return nil unless resolved
+
+          tint = cell.diagonal_line_stroke_tint
+          tint ? ColorHelper.apply_tint(resolved, tint) : resolved
+        end
+        private_class_method :diagonal_resolved_color
 
         # [top, right, bottom, left] effective weights, or nil when
         # neither cell edges nor table defaults declare any stroke

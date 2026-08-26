@@ -132,6 +132,7 @@ module Idml
             max_word_spacing: paragraph.maximum_word_spacing,
             max_letter_spacing: paragraph.maximum_letter_spacing,
             max_glyph_scaling: paragraph.maximum_glyph_scaling,
+            min_glyph_scaling: paragraph.minimum_glyph_scaling,
           )
           lines.each_with_index do |line, index|
             TextEngine::Justifier.justify(
