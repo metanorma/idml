@@ -178,4 +178,38 @@ RSpec.describe Idml::TextEngine::CjkLayout do
       expect(widths).to eq([10.0, 10.0, 10.0, 10.0, 5.0])
     end
   end
+
+  describe ".apply_pair_compression" do
+    def line_of(text, width = 10.0)
+      glyphs = text.each_char.map { |c| Idml::TextEngine::ShapedGlyph.new(c.ord, width, false) }
+      Idml::TextEngine::Line.new(glyphs, glyphs.sum(&:width), 0)
+    end
+
+    it "halves a closing glyph followed by another full-width punct" do
+      lines = [line_of("言。」")]
+      described_class.apply_pair_compression(lines)
+
+      widths = lines.first.glyphs.map(&:width)
+      expect(widths).to eq([10.0, 5.0, 10.0])
+      expect(lines.first.width).to eq(25.0)
+    end
+
+    it "halves a middle glyph before closing/middle punctuation" do
+      lines = [line_of("長ー、")]
+      described_class.apply_pair_compression(lines)
+      expect(lines.first.glyphs.map(&:width)).to eq([10.0, 5.0, 10.0])
+    end
+
+    it "leaves punctuation followed by ideographs uncompressed" do
+      lines = [line_of("言。日")]
+      described_class.apply_pair_compression(lines)
+      expect(lines.first.glyphs.map(&:width)).to eq([10.0, 10.0, 10.0])
+    end
+
+    it "leaves opening brackets after closing glyphs at full width" do
+      lines = [line_of("言「日")]
+      described_class.apply_pair_compression(lines)
+      expect(lines.first.glyphs.map(&:width)).to eq([10.0, 10.0, 10.0])
+    end
+  end
 end

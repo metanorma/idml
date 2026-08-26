@@ -27,9 +27,9 @@ this list reflects the current state.
   the box; side-aware narrowing is not implemented.
 
 ### CJK
-- **Mojikumi**: CJK/Latin auto script spacing (TODO 125) and
-  line-end punctuation compression (TODO 132) are applied; full
-  class-based compression tables are not.
+- **Mojikumi**: script spacing (TODO 125), line-end compression
+  (TODO 132), and class-based pair compression (2026-08-26) are
+  applied; named mojikumi sets (詳細 etc.) are not modeled.
 - **Vertical mode**: Latin rotation is per glyph (not run-grouped);
   ruby placement is beside-column; keep options do not apply.
 

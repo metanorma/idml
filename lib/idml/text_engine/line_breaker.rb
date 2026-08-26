@@ -15,6 +15,7 @@ module Idml
         return lines unless cjk_run?(glyphs)
 
         lines = CjkLayout.apply_kinsoku(lines)
+        CjkLayout.apply_pair_compression(lines)
         CjkLayout.apply_line_end_compression(lines)
       end
 
