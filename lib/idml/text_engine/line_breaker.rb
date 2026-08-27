@@ -6,10 +6,16 @@ module Idml
     Line = Struct.new(:glyphs, :width, :x_offset)
 
     # Greedy word-wrap line breaker. Accumulates glyphs until
-    # exceeding the frame width, then breaks at the last space.
-    # CJK runs get a kinsoku shori post-pass (no line starts or
-    # ends with a forbidden character).
+    # exceeding the frame width, then breaks at the last break
+    # opportunity: a space, or a hyphen (compound words wrap after
+    # the hyphen, which stays on the first line). CJK runs get a
+    # kinsoku shori post-pass (no line starts or ends with a
+    # forbidden character).
     class LineBreaker
+      # Break-after opportunities besides spaces: hyphen-minus,
+      # the Unicode hyphens, and the soft hyphen (which breaks
+      # without adding a visible hyphen).
+      HYPHEN_CODEPOINTS = [0x2D, 0x2010, 0x2011, 0x00AD].freeze
       def self.break(glyphs:, frame_width:)
         lines = new(frame_width).break(glyphs)
         return lines unless cjk_run?(glyphs)
@@ -44,26 +50,26 @@ module Idml
         lines = []
         current = []
         current_width = 0
-        last_space_idx = -1
-        width_at_space = 0
+        break_idx = -1
+        width_at_break = 0
 
         glyphs.each_with_index do |glyph, _idx|
           current << glyph
           current_width += glyph.width
 
-          if glyph.is_space
-            last_space_idx = current.length - 1
-            width_at_space = current_width
+          if break_after?(glyph)
+            break_idx = current.length - 1
+            width_at_break = current_width
           end
 
           next unless current_width > @frame_width && current.length > 1
 
-          if last_space_idx >= 0
-            line_glyphs = current[0..last_space_idx]
-            lines << Line.new(line_glyphs, width_at_space, 0)
-            current = current[(last_space_idx + 1)..]
+          if break_idx >= 0
+            line_glyphs = current[0..break_idx]
+            lines << Line.new(line_glyphs, width_at_break, 0)
+            current = current[(break_idx + 1)..]
             current_width = current.sum(&:width)
-            last_space_idx = -1
+            break_idx = -1
           elsif cjk_break?(current)
             lines << Line.new(current[0..-2], current_width - glyph.width, 0)
             current = [glyph]
@@ -78,6 +84,11 @@ module Idml
         lines << Line.new(current, current_width, 0) if current.any?
         lines
       end
+
+      def break_after?(glyph)
+        glyph.is_space || HYPHEN_CODEPOINTS.include?(glyph.codepoint)
+      end
+      private :break_after?
     end
   end
 end

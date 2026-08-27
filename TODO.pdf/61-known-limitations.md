@@ -1,6 +1,6 @@
 # TODO PDF 61: Known limitations and future work
 
-## Status: DOCUMENTED — refreshed 2026-08-26
+## Status: DOCUMENTED — refreshed 2026-08-27
 
 Previously listed limitations (font embedding, tagged PDF, per-run
 styling, dead code) were resolved by TODOs 52/53/55/67/76 long ago;
@@ -9,8 +9,9 @@ this list reflects the current state.
 ## Known limitations
 
 ### Text layout
-- **Hyphenation** is not implemented (Hyphenation* attributes are
-  parsed but unused); a hyphenation dictionary would be required.
+- **Hyphenation**: dictionary-based hyphenation is not implemented
+  (Hyphenation* attributes are parsed but unused); compound words
+  wrap after explicit hyphens (TODO 139).
 - **Justification**: word/letter spacing caps apply (TODO 119),
   MaximumGlyphScaling stretches (TODO 129) and MinimumGlyphScaling
   compresses overlong lines (TODO 135); ToBinding / RTL binding
@@ -18,8 +19,9 @@ this list reflects the current state.
 - **Keep options**: KeepAllLinesTogether (TODO 123), KeepWithNext
   (TODO 127), and the KeepFirstLines / KeepLastLines windows
   (TODO 133, line-count approximation) are honored.
-- **First baseline**: AscentOffset and FixedHeight are honored
-  (TODO 128); CapHeight / XHeight approximate as leading.
+- **First baseline**: all five modes honor their metrics (TODOs
+  128/140); CapHeight / XHeight use standard font proportions
+  (0.72 / 0.52 em) until a metrics provider fills them.
 - **StartParagraph** breaks act at frame/column granularity — no
   odd/even page parity.
 - **Text wrap**: BoundingBoxTextWrap, Contour, and Inverse modes
@@ -54,4 +56,6 @@ this list reflects the current state.
 
 - Hyphenation dictionary integration
 - Shape-mode text wrap contours (side-aware)
-- Performance benchmark for 100+ page documents
+- Named mojikumi sets (詳細 etc.)
+- ToBinding / RTL binding alignment
+- Vertical-mode keep options and run-grouped Latin rotation

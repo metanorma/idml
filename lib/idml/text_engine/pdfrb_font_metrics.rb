@@ -37,6 +37,12 @@ module Idml
         0
       end
 
+      # Cap height in font units; nil when the font tables don't
+      # report one (some pdfrb-loaded fonts).
+      def cap_height
+        metrics_data[:cap_height]
+      end
+
       # Returns raw advance width in font units (not scaled by size).
       def glyph_width(codepoint)
         cp = codepoint.is_a?(String) ? codepoint.each_codepoint.first : codepoint

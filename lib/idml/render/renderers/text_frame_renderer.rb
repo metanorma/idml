@@ -629,12 +629,19 @@ module Idml
         # the first line's baseline sits. The layout's default is
         # leading-based; AscentOffset shifts by (ascent − leading)
         # and FixedHeight by (MinimumFirstBaselineOffset − leading).
-        # CapHeight / XHeight / EmboxHeight approximate as leading.
-        # Returns the extra shift to subtract from the cursor.
+        # CapHeight uses the font's cap-height metric (leading
+        # fallback when the font reports none); XHeight approximates
+        # as 70% of cap height; EmboxHeight uses the em box (the
+        # first paragraph's point size). Returns the extra shift to
+        # subtract from the cursor.
+        FIRST_BASELINE_MODES = %w[
+          AscentOffset FixedHeight CapHeight XHeight EmboxHeight
+        ].freeze
+
         def self.first_baseline_offset(context, state, font)
           pref = context.item&.text_frame_preference&.first
           mode = pref&.first_baseline_offset
-          return 0.0 unless %w[AscentOffset FixedHeight].include?(mode)
+          return 0.0 unless FIRST_BASELINE_MODES.include?(mode)
 
           baseline_target(pref, mode, state, font) -
             first_paragraph_leading(state)
@@ -643,21 +650,52 @@ module Idml
 
         # Distance from the top inset to the first baseline under
         # the given mode.
+        # pdfrb 0.7.1 never fills the cap_height metric, so
+        # CapHeight / XHeight fall back to standard font
+        # proportions (cap ≈ 0.72 em, x ≈ 0.52 em — Arial and
+        # Helvetica both sit within 1% of these).
+        CAP_HEIGHT_RATIO = 0.72
+        X_HEIGHT_RATIO = 0.52
+
         def self.baseline_target(pref, mode, state, font)
-          if mode == "AscentOffset"
-            ascent_scaled(font) * first_paragraph_leading(state)
+          leading = first_paragraph_leading(state)
+          case mode
+          when "AscentOffset"
+            ratio_scaled(font.ascent, font) * leading
+          when "CapHeight"
+            cap_ratio(font) * leading
+          when "XHeight"
+            X_HEIGHT_RATIO * leading
+          when "EmboxHeight"
+            first_paragraph_size(state)
           else
-            pref.minimum_first_baseline_offset ||
-              first_paragraph_leading(state)
+            pref.minimum_first_baseline_offset || leading
           end
         end
         private_class_method :baseline_target
 
-        def self.ascent_scaled(font)
-          upem = font.units_per_em.zero? ? 1 : font.units_per_em
-          font.ascent / upem
+        def self.cap_ratio(font)
+          cap = font.cap_height
+          return CAP_HEIGHT_RATIO unless cap
+
+          ratio_scaled(cap, font)
         end
-        private_class_method :ascent_scaled
+        private_class_method :cap_ratio
+
+        def self.ratio_scaled(metric, font)
+          upem = font.units_per_em
+          return 1.0 if upem.zero?
+
+          metric / upem
+        end
+        private_class_method :ratio_scaled
+
+        def self.first_paragraph_size(state)
+          paragraph = state.current_paragraph || state.paragraphs.first
+          first_run = paragraph&.runs&.first
+          first_run&.point_size || DEFAULT_SIZE
+        end
+        private_class_method :first_paragraph_size
 
         def self.first_paragraph_leading(state)
           paragraph = state.current_paragraph || state.paragraphs.first
