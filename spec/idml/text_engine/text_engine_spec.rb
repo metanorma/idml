@@ -68,6 +68,51 @@ RSpec.describe Idml::TextEngine::LineBreaker do
     expect(lines.length).to eq(1)
   end
 
+  describe "hyphen break opportunities" do
+    def glyph(char, width = 10.0)
+      Idml::TextEngine::ShapedGlyph.new(char.ord, width, char == " ")
+    end
+
+    it "breaks a compound word after the hyphen" do
+      glyphs = "abcdefgh-ijklmnop".each_char.map { |c| glyph(c) }
+      lines = described_class.break(glyphs: glyphs, frame_width: 100)
+
+      expect(lines.length).to eq(2)
+      expect(lines.first.glyphs.map { |g| g.codepoint.chr }.join)
+        .to eq("abcdefgh-")
+      expect(lines.last.glyphs.map { |g| g.codepoint.chr }.join)
+        .to eq("ijklmnop")
+    end
+
+    it "breaks after a Unicode hyphen (U+2010)" do
+      glyphs = "abcdef-ghijkl".each_char.map { |c| glyph(c) }
+      glyphs[6] = Idml::TextEngine::ShapedGlyph.new(0x2010, 10.0, false)
+      lines = described_class.break(glyphs: glyphs, frame_width: 100)
+
+      expect(lines.length).to eq(2)
+      expect(lines.first.glyphs.last.codepoint).to eq(0x2010)
+    end
+
+    it "breaks after a soft hyphen without a visible hyphen" do
+      glyphs = "abcdef-ghijkl".each_char.map { |c| glyph(c) }
+      glyphs[6] = Idml::TextEngine::ShapedGlyph.new(0x00AD, 10.0, false)
+      lines = described_class.break(glyphs: glyphs, frame_width: 100)
+
+      expect(lines.length).to eq(2)
+      expect(lines.first.glyphs.last.codepoint).to eq(0x00AD)
+      expect(lines.last.glyphs.map { |g| g.codepoint.chr }.join)
+        .to eq("ghijkl")
+    end
+
+    it "hard-breaks an unbroken word at the frame width" do
+      glyphs = "abcdefghijklmnop".each_char.map { |c| glyph(c) }
+      lines = described_class.break(glyphs: glyphs, frame_width: 100)
+
+      expect(lines.length).to eq(2)
+      expect(lines.first.glyphs.length).to eq(11)
+    end
+  end
+
   describe "kinsoku shori for CJK runs" do
     def glyph(char, width = 10.0)
       Idml::TextEngine::ShapedGlyph.new(char.ord, width, char == " ")

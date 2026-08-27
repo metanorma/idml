@@ -95,4 +95,27 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     expect(first_baseline_y(nil)).to be_within(0.01)
       .of(first_baseline_y("LeadingOffset"))
   end
+
+  it "raises the first baseline under CapHeight (0.72 em fallback)" do
+    default_y = first_baseline_y(nil)
+    cap_y = first_baseline_y("CapHeight")
+    # cap (0.72 em) < leading (1.2 em) → target below leading →
+    # offset = target - leading is negative → baseline higher.
+    expect(cap_y).to be > default_y
+  end
+
+  it "raises the first baseline further under XHeight than CapHeight" do
+    x_y = first_baseline_y("XHeight")
+    cap_y = first_baseline_y("CapHeight")
+    expect(x_y).to be > cap_y
+  end
+
+  it "uses the em box (point size) under EmboxHeight" do
+    default_y = first_baseline_y(nil)
+    embox_y = first_baseline_y("EmboxHeight")
+    # em (1.0 em) is below leading (1.2 em) but above cap height
+    # (0.72 em): higher than default, lower than CapHeight.
+    expect(embox_y).to be > default_y
+    expect(embox_y).to be < first_baseline_y("CapHeight")
+  end
 end
