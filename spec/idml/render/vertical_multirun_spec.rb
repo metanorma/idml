@@ -115,8 +115,9 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
       raw = render_vertical_raw(csrs)
 
       # Latin digits without Tatechuyoko go through the rotated
-      # glyph path (one matrix per glyph).
-      expect(raw.scan("0 -1 1 0").length).to eq(2)
+      # path — run-grouped, so the consecutive digits share one
+      # rotation matrix.
+      expect(raw.scan("0 -1 1 0").length).to eq(1)
     end
   end
 end

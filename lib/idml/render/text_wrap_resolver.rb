@@ -18,7 +18,7 @@ module Idml
     class TextWrapResolver
       # A wrap contour: a PDF-coordinate rectangle the text avoids.
       Contour = Struct.new(
-        :x, :y, :width, :height, :inverse, :side,
+        :x, :y, :width, :height, :inverse, :side, :jump,
         keyword_init: true
       )
 
@@ -86,9 +86,33 @@ module Idml
 
         return [0.0, 0.0] if overlap.zero?
 
+        # JumpObject: text never flows beside the object — the full
+        # frame width is blocked and the renderer skips the run
+        # below the object's bottom edge.
+        return [frame_right - frame_x, 0.0] if contour.jump
+
         side_adjustment(contour, overlap, frame_x, frame_right)
       end
       private :box_adjustment
+
+      # Bottom edge of the lowest jump contour overlapping the given
+      # band — where text resumes below a JumpObject. nil when no
+      # jump contour blocks the band.
+      def jump_contour_bottom(line_y, line_height, frame_x, frame_right)
+        bottoms = @contours.filter_map do |contour|
+          next unless box_contour?(contour) && contour.jump
+          next unless y_overlap?(contour, line_y, line_height) &&
+            x_overlap?(contour, frame_x, frame_right)
+
+          contour.y
+        end
+        bottoms.min
+      end
+
+      def box_contour?(contour)
+        !contour.is_a?(WrapContour::Shape)
+      end
+      private :box_contour?
 
       def side_adjustment(contour, overlap, frame_x, frame_right)
         case contour.side
@@ -165,7 +189,8 @@ module Idml
         Contour.new(
           x: rect[:x], y: rect[:y],
           width: rect[:width], height: rect[:height],
-          side: pref&.text_wrap_side
+          side: pref&.text_wrap_side,
+          jump: pref&.text_wrap_mode == "JumpObjectTextWrap"
         )
       end
       private_class_method :box_contour
