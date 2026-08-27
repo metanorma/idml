@@ -102,14 +102,26 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     expect(text_op_count("Horizontal")).to eq(1)
   end
 
-  it "rotates Latin glyphs clockwise and keeps CJK upright" do
+  it "rotates Latin runs as one group and keeps CJK upright" do
     skip "no system font available" unless font_path
 
     raw = vertical_raw("Ab")
-    expect(raw.scan("0 -1 1 0").length).to eq(2)
+    # Consecutive Latin glyphs share one rotated graphics state.
+    expect(raw.scan("0 -1 1 0").length).to eq(1)
+
+    # Latin groups separated by CJK rotate separately.
+    mixed_raw = vertical_raw("A日B")
+    expect(mixed_raw.scan("0 -1 1 0").length).to eq(2)
 
     cjk_raw = vertical_raw("日本")
     expect(cjk_raw.scan("0 -1 1 0").length).to eq(0)
+  end
+
+  it "renders a Latin group as a single text op in vertical mode" do
+    skip "no system font available" unless font_path
+
+    raw = vertical_raw("Ab")
+    expect(raw.scan("\nBT\n").length).to eq(1)
   end
 
   it "emits vertical ruby beside the base glyphs" do

@@ -332,12 +332,59 @@ module Idml
               emit_upright_glyph(canvas, glyph, run, context, size)
             end
           else
-            positioned.each do |glyph|
-              emit_vertical_glyph(canvas, glyph, run, context, size)
-            end
+            emit_vertical_stack(canvas, positioned, run, context, size)
           end
         end
         private_class_method :emit_vertical_run
+
+        # Vertical-stack emission: CJK glyphs stand upright per
+        # glyph; consecutive non-CJK glyphs rotate as ONE group
+        # (the whole Latin word sideways, as InDesign does). The
+        # group's string renders as a single text op inside one
+        # rotated graphics state — the font's advances land each
+        # glyph exactly where per-glyph rotation placed it. A group
+        # never spans columns (x reset) and shares the run's
+        # styling, so one text op is lossless.
+        def self.emit_vertical_stack(canvas, positioned, run, context,
+                                     size)
+          segment = []
+          positioned.each do |glyph|
+            if TextEngine::CjkLayout.cjk?(glyph.codepoint)
+              flush_vertical_segment(canvas, segment, run, context, size)
+              emit_upright_glyph(canvas, glyph, run, context, size)
+            else
+              if !segment.empty? && segment.last.x != glyph.x
+                flush_vertical_segment(canvas, segment, run, context, size)
+              end
+              segment << glyph
+            end
+          end
+          flush_vertical_segment(canvas, segment, run, context, size)
+        end
+        private_class_method :emit_vertical_stack
+
+        def self.flush_vertical_segment(canvas, segment, run, context,
+                                        size)
+          return if segment.empty?
+
+          text = segment.map { |g| [g.codepoint].pack("U") }.join
+          first = segment.first
+          canvas.save_graphics_state do
+            # 90° clockwise: exact matrix (rotate would emit
+            # cos/sin float noise like 6.1e-17).
+            canvas.concat(0, -1, 1, 0, first.x, first.y)
+            text_kwargs = CharacterStyle.text_kwargs(
+              run,
+              {
+                at: [0, 0],
+                font: font_for_run(run, context),
+                size: size,
+              },
+            )
+            canvas.text(text, **text_kwargs)
+          end
+        end
+        private_class_method :flush_vertical_segment
 
         def self.emit_upright_glyph(canvas, positioned, run, context,
                                     size)
@@ -360,43 +407,6 @@ module Idml
           (right - (columns * leading)) >= left_limit
         end
         private_class_method :vertical_fits?
-
-        # Emits one upright glyph at its vertical position with the
-        # run's character styling.
-        # Emits one glyph in vertical mode: CJK upright; Latin
-        # (non-CJK) rotated 90° clockwise per the vertical-writing
-        # convention, via a graphics-state transform.
-        def self.emit_vertical_glyph(canvas, positioned, run, context,
-                                     size)
-          text = [positioned.codepoint].pack("U")
-          if TextEngine::CjkLayout.cjk?(positioned.codepoint)
-            text_kwargs = CharacterStyle.text_kwargs(
-              run,
-              {
-                at: [positioned.x, positioned.y],
-                font: font_for_run(run, context),
-                size: size,
-              },
-            )
-            canvas.text(text, **text_kwargs)
-          else
-            canvas.save_graphics_state do
-              # 90° clockwise: exact matrix (rotate would emit
-              # cos/sin float noise like 6.1e-17).
-              canvas.concat(0, -1, 1, 0, positioned.x, positioned.y)
-              text_kwargs = CharacterStyle.text_kwargs(
-                run,
-                {
-                  at: [0, 0],
-                  font: font_for_run(run, context),
-                  size: size,
-                },
-              )
-              canvas.text(text, **text_kwargs)
-            end
-          end
-        end
-        private_class_method :emit_vertical_glyph
 
         # Emits the run's ruby alongside its vertical glyphs:
         # stacked top-to-bottom beside the column — right side by
@@ -881,6 +891,10 @@ module Idml
               context, layout_frame, cursor_y, run
             )
             run_wrap -= wrap_reduction
+            cursor_y, run_wrap, wrap_shift = skip_below_jump_object(
+              context, layout_frame, cursor_y, run, run_wrap, wrap_shift,
+              wrap_reduction, bottom_limit
+            )
             positioned, next_y = layout_run(
               canvas, run, paragraph, context, layout_frame, font,
               run_wrap, cursor_y, space_before,
@@ -945,6 +959,42 @@ module Idml
           end
         end
         private_class_method :render_footnote_entries
+
+        # JumpObjectTextWrap blocks the full column width: when the
+        # run's band is fully blocked, move the cursor below the
+        # object's bottom edge and re-measure once. InDesign's
+        # semantics — text flows under the object, never beside it.
+        # Returns the (possibly skipped) cursor and re-measured
+        # wrap geometry.
+        def self.skip_below_jump_object(context, layout_frame, cursor_y,
+                                        run, run_wrap, wrap_shift,
+                                        wrap_reduction, bottom_limit)
+          min_width = run.point_size || DEFAULT_SIZE
+          return [cursor_y, run_wrap, wrap_shift] if run_wrap >= min_width
+
+          skip_y = text_wrap_jump_below(context, layout_frame, cursor_y, run)
+          return [cursor_y, run_wrap, wrap_shift] unless skip_y
+          return [cursor_y, run_wrap, wrap_shift] if skip_y >= cursor_y
+          return [cursor_y, run_wrap, wrap_shift] if skip_y <= bottom_limit
+
+          reduction, shift = text_wrap_adjust(context, layout_frame,
+                                              skip_y, run)
+          [skip_y, [run_wrap + wrap_reduction - reduction, 0].max, shift]
+        end
+        private_class_method :skip_below_jump_object
+
+        def self.text_wrap_jump_below(context, layout_frame, cursor_y, run)
+          resolver = context.text_wrap_resolver
+          return nil unless resolver
+
+          size = run.point_size || DEFAULT_SIZE
+          frame_x = layout_frame.x + (layout_frame.inset_left || 0)
+          frame_right = layout_frame.x + layout_frame.width -
+            (layout_frame.inset_right || 0)
+          resolver.jump_contour_bottom(cursor_y, size, frame_x,
+                                       frame_right)
+        end
+        private_class_method :text_wrap_jump_below
 
         # Computes the text-wrap adjustment for a run at its current y
         # position: [width_reduction, x_shift]. The reduction narrows

@@ -33,6 +33,7 @@ RSpec.describe Idml::Parts::Designmap do
         active_process layer
         bookmark condition
         hyperlink hyperlink_page_destination hyperlink_url_destination
+        mojikumi_table
       ].each(&:to_s)
       expect(described_class.attributes.keys).to match_array(expected)
     end

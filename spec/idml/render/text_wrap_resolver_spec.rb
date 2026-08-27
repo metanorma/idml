@@ -69,6 +69,13 @@ RSpec.describe Idml::Render::TextWrapResolver do
       expect(resolver.overlap_width(300, 12, 0, 400)).to eq(120)
     end
 
+    it "wires the jump flag from JumpObjectTextWrap XML" do
+      resolver = resolver_for("JumpObjectTextWrap")
+      expect(resolver.wrap_adjustment(300, 12, 0, 400)).to eq([400.0, 0.0])
+      expect(resolver.jump_contour_bottom(300, 12, 0, 400))
+        .to eq(400 - 140)
+    end
+
     it "ignores None mode" do
       resolver = resolver_for("None")
       expect(resolver.overlap_width(300, 12, 0, 400)).to eq(0)
@@ -171,6 +178,31 @@ RSpec.describe Idml::Render::TextWrapResolver do
     it "approximates spine sides as BothSides" do
       resolver = described_class.new([contour_at("SideTowardsSpine")])
       expect(resolver.wrap_adjustment(350, 12, 0, 400)).to eq([50.0, 0.0])
+    end
+  end
+
+  describe "JumpObject semantics" do
+    def jump_contour
+      described_class::Contour.new(
+        x: 100, y: 200, width: 50, height: 100, jump: true,
+      )
+    end
+
+    it "blocks the full frame width" do
+      resolver = described_class.new([jump_contour])
+      expect(resolver.wrap_adjustment(250, 12, 0, 400))
+        .to eq([400.0, 0.0])
+    end
+
+    it "reports the object's bottom edge for text resumption" do
+      resolver = described_class.new([jump_contour])
+      expect(resolver.jump_contour_bottom(250, 12, 0, 400)).to eq(200)
+    end
+
+    it "ignores bands the object does not overlap" do
+      resolver = described_class.new([jump_contour])
+      expect(resolver.jump_contour_bottom(100, 12, 0, 400)).to be_nil
+      expect(resolver.wrap_adjustment(100, 12, 0, 400)).to eq([0.0, 0.0])
     end
   end
 

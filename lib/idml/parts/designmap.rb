@@ -54,6 +54,8 @@ module Idml
                 Idml::Elements::HyperlinkPageDestination, collection: true
       attribute :hyperlink_url_destination,
                 Idml::Elements::HyperlinkURLDestination, collection: true
+      attribute :mojikumi_table, Idml::Elements::MojikumiTable,
+                collection: true
 
       xml do
         root "Document"
@@ -99,6 +101,7 @@ module Idml
                     to: :hyperlink_page_destination
         map_element "HyperlinkURLDestination",
                     to: :hyperlink_url_destination
+        map_element "MojikumiTable", to: :mojikumi_table
       end
     end
   end

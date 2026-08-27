@@ -1,6 +1,6 @@
 # TODO PDF 61: Known limitations and future work
 
-## Status: DOCUMENTED — refreshed 2026-08-27
+## Status: DOCUMENTED — refreshed 2026-08-27 (second refresh)
 
 Previously listed limitations (font embedding, tagged PDF, per-run
 styling, dead code) were resolved by TODOs 52/53/55/67/76 long ago;
@@ -27,15 +27,19 @@ this list reflects the current state.
 - **Text wrap**: BoundingBoxTextWrap, Contour, and Inverse modes
   render (TODOs 130-131) with TextWrapSide side-awareness (TODO 138:
   LeftSide / RightSide / LargestArea pick the flow side; spine
-  variants approximate as BothSides); JumpObject/NextColumn
-  approximate as the box; Contour-mode shapes are not side-aware.
+  variants approximate as BothSides); JumpObject moves text below
+  the object (TODO 143); NextColumn approximates as the box;
+  Contour-mode shapes are not side-aware.
 
 ### CJK
 - **Mojikumi**: script spacing (TODO 125), line-end compression
-  (TODO 132), and class-based pair compression (2026-08-26) are
-  applied; named mojikumi sets (詳細 etc.) are not modeled.
-- **Vertical mode**: Latin rotation is per glyph (not run-grouped);
-  ruby placement is beside-column; keep options do not apply.
+  (TODO 132), and class-based pair compression are applied; named
+  mojikumi sets are modeled (TODO 144: MojikumiTable +
+  OverrideMojikumiAki parse and round-trip) but not yet APPLIED to
+  layout — the built-in class-based aki rules stand in.
+- **Vertical mode**: Latin runs rotate as one group per segment
+  (TODO 142); ruby placement is beside-column; keep options do
+  not apply.
 
 ### Structural features
 - **Endnotes** (TODO 117): reference markers render and endnote TEXT
@@ -56,6 +60,7 @@ this list reflects the current state.
 
 - Hyphenation dictionary integration
 - Shape-mode text wrap contours (side-aware)
-- Named mojikumi sets (詳細 etc.)
+- Apply named mojikumi sets to CJK layout (consume TODO 144's model)
+- NextColumn wrap via column-jump chaining
 - ToBinding / RTL binding alignment
-- Vertical-mode keep options and run-grouped Latin rotation
+- Vertical-mode keep options
