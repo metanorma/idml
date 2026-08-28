@@ -1145,6 +1145,9 @@ module Idml
           glyphs = TextEngine::Shaper.shape(
             text: run.text, font: font, size: size,
           )
+          glyphs = TextEngine::CjkLayout.apply_script_spacing(
+            glyphs, size, mojikumi_aki_overrides(context)
+          )
           lines = TextEngine::LineBreaker.break(
             glyphs: glyphs, frame_width: wrap_width,
           )
@@ -1168,6 +1171,19 @@ module Idml
           [positioned, next_y]
         end
         private_class_method :layout_run
+
+        # Aki overrides from the document's first named mojikumi
+        # set, when the designmap declares one (TODO 145). Empty
+        # otherwise — apply_script_spacing then uses the default
+        # CJK/Latin script spacing.
+        def self.mojikumi_aki_overrides(context)
+          package = context.package
+          return [] unless package&.has_part?("designmap.xml")
+
+          table = package.designmap.mojikumi_table.first
+          table&.aki_overrides || []
+        end
+        private_class_method :mojikumi_aki_overrides
 
         # True when the paragraph should move wholly to the next
         # frame: a StartParagraph forced break, or KeepAllLines-

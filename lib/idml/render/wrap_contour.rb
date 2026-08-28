@@ -13,8 +13,9 @@ module Idml
 
       # A wrap shape: flattened polygons (one per subpath) plus the
       # TextWrapOffset bounds. `inverse` flips the wrap region:
-      # text may only flow INSIDE the shape.
-      Shape = Struct.new(:polygons, :offset, :inverse,
+      # text may only flow INSIDE the shape. `side` carries
+      # TextWrapSide for side-aware narrowing (TODO 147).
+      Shape = Struct.new(:polygons, :offset, :inverse, :side,
                          keyword_init: true)
 
       # Builds the wrap shape for an item's PathGeometry and wrap
@@ -24,7 +25,16 @@ module Idml
         return nil if polygons.empty?
 
         Shape.new(polygons: polygons, offset: wrap_offset(pref),
-                  inverse: pref.inverse)
+                  inverse: pref.inverse, side: pref.text_wrap_side)
+      end
+
+      # The shape's bounding box: [left, bottom, right, top] in
+      # PDF coordinates, flattened across subpaths.
+      def self.bounding_box(shape)
+        points = shape.polygons.flatten(1)
+        xs = points.map(&:first)
+        ys = points.map(&:last)
+        [xs.min, ys.min, xs.max, ys.max]
       end
 
       def self.polygons_for(item, page_height)

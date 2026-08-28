@@ -149,6 +149,74 @@ RSpec.describe Idml::TextEngine::CjkLayout do
       described_class.apply_script_spacing(glyphs, 12.0)
       expect(glyphs.map(&:width)).to eq([10.0, 10.0])
     end
+
+    describe "with named mojikumi set overrides (TODO 145)" do
+      def override(target, side, desired, after: true)
+        Idml::Elements::OverrideMojikumiAki.new(
+          target_mojikumi_class: target,
+          side_mojikumi_class: side,
+          side_is_after_target: after,
+          minimum: 0.0, desired: desired, maximum: desired
+        )
+      end
+
+      it "applies the override's Desired aki to matching pairs" do
+        glyphs = "日A".each_char.map { |c| glyph(c.ord) }
+        described_class.apply_script_spacing(
+          glyphs, 12.0, [override(1, 7, 0.25)]
+        )
+        # ideograph → latin override (0.25 em) replaces the
+        # default 0.125 em.
+        expect(glyphs[0].width).to eq(10.0 + (12.0 * 0.25))
+      end
+
+      it "applies aki between punctuation classes too" do
+        glyphs = "日。".each_char.map { |c| glyph(c.ord) }
+        described_class.apply_script_spacing(
+          glyphs, 12.0, [override(1, 4, 0.5)]
+        )
+        expect(glyphs[0].width).to eq(10.0 + 6.0)
+      end
+
+      it "ignores overrides whose SideIsAfterTarget is false" do
+        glyphs = "日A".each_char.map { |c| glyph(c.ord) }
+        described_class.apply_script_spacing(
+          glyphs, 12.0, [override(1, 7, 0.25, after: false)]
+        )
+        # Falls back to the default script spacing.
+        expect(glyphs[0].width).to eq(10.0 + (12.0 * 0.125))
+      end
+
+      it "falls back to default spacing for unlisted pairs" do
+        glyphs = "日A".each_char.map { |c| glyph(c.ord) }
+        described_class.apply_script_spacing(
+          glyphs, 12.0, [override(2, 3, 0.5)]
+        )
+        expect(glyphs[0].width).to eq(10.0 + (12.0 * 0.125))
+      end
+    end
+  end
+
+  describe ".mojikumi_class" do
+    it "classifies ideographs, brackets, and punctuation classes" do
+      expect(described_class.mojikumi_class("文".ord)).to eq(1)
+      expect(described_class.mojikumi_class("「".ord)).to eq(2)
+      expect(described_class.mojikumi_class("」".ord)).to eq(3)
+      expect(described_class.mojikumi_class("。".ord)).to eq(4)
+      expect(described_class.mojikumi_class("・".ord)).to eq(5)
+    end
+
+    it "classifies digits and Latin" do
+      expect(described_class.mojikumi_class("5".ord)).to eq(6)
+      expect(described_class.mojikumi_class("A".ord)).to eq(7)
+      expect(described_class.mojikumi_class("５".ord)).to eq(6)
+      expect(described_class.mojikumi_class("Ａ".ord)).to eq(7)
+    end
+
+    it "returns nil outside the mojikumi classes" do
+      expect(described_class.mojikumi_class("!".ord)).to be_nil
+      expect(described_class.mojikumi_class("é".ord)).to be_nil
+    end
   end
 
   describe ".apply_line_end_compression" do

@@ -63,10 +63,23 @@ module Idml
           width = WrapContour.overlap_width(contour, line_y,
                                             line_height, frame_x,
                                             frame_right)
-          next unless contour.inverse
+          if contour.inverse
+            reduction = [reduction,
+                         (frame_right - frame_x) - width].max
+            next
+          end
 
-          reduction = [reduction,
-                       (frame_right - frame_x) - width].max
+          # Side-aware shapes (TODO 147): the side dispatch uses
+          # the polygon's bounding box; narrowing itself keeps the
+          # exact polygon overlap for BothSides.
+          bbox_left, _bottom, bbox_right, = WrapContour.bounding_box(
+            contour,
+          )
+          r, s = interval_side_adjustment(contour.side, bbox_left,
+                                          bbox_right, width,
+                                          frame_x, frame_right)
+          reduction = [reduction, r].max
+          shift = [shift, s].max
         end
         [reduction, shift]
       end
@@ -86,12 +99,14 @@ module Idml
 
         return [0.0, 0.0] if overlap.zero?
 
-        # JumpObject: text never flows beside the object — the full
-        # frame width is blocked and the renderer skips the run
-        # below the object's bottom edge.
+        # JumpObject / NextColumn: text never flows beside the
+        # object — the full frame width is blocked and the renderer
+        # skips the run below the object's bottom edge.
         return [frame_right - frame_x, 0.0] if contour.jump
 
-        side_adjustment(contour, overlap, frame_x, frame_right)
+        interval_side_adjustment(contour.side, contour.x,
+                                 contour.x + contour.width, overlap,
+                                 frame_x, frame_right)
       end
       private :box_adjustment
 
@@ -114,30 +129,35 @@ module Idml
       end
       private :box_contour?
 
-      def side_adjustment(contour, overlap, frame_x, frame_right)
-        case contour.side
+      # Side dispatch over an object's horizontal extent
+      # [obj_left, obj_right] (TODO 138/147 — shared by box
+      # contours and Contour shapes' bounding boxes): LeftSide
+      # keeps text left of the object (reduce to its left edge, no
+      # shift); RightSide moves text past its right edge (reduce +
+      # shift); LargestArea picks the roomier side; BothSides and
+      # the spine variants reduce by `overlap` only.
+      def interval_side_adjustment(side, obj_left, obj_right, overlap,
+                                   frame_x, frame_right)
+        case side
         when "LeftSide"
-          [frame_right - contour.x, 0.0]
+          [frame_right - obj_left, 0.0]
         when "RightSide"
-          shift = contour.x + contour.width - frame_x
+          shift = obj_right - frame_x
           [shift, shift]
         when "LargestArea"
-          largest_side_adjustment(contour, frame_x, frame_right)
+          left_free = obj_left - frame_x
+          right_free = frame_right - obj_right
+          if left_free >= right_free
+            [frame_right - obj_left, 0.0]
+          else
+            shift = obj_right - frame_x
+            [shift, shift]
+          end
         else
           [overlap, 0.0]
         end
       end
-      private :side_adjustment
-
-      def largest_side_adjustment(contour, frame_x, frame_right)
-        left_free = contour.x - frame_x
-        right_free = frame_right - (contour.x + contour.width)
-        return [frame_right - contour.x, 0.0] if left_free >= right_free
-
-        shift = contour.x + contour.width - frame_x
-        [shift, shift]
-      end
-      private :largest_side_adjustment
+      private :interval_side_adjustment
 
       # Returns the total horizontal overlap of all contours with a
       # text line at the given y range within the given x range.
@@ -164,10 +184,11 @@ module Idml
       # The wrap shape for an item: a bounding-box rectangle
       # (BoundingBoxTextWrap — the legacy "BoundingBox" spelling is
       # also accepted from early synthetic fixtures) or a flattened
-      # PathGeometry polygon (Contour mode). JumpObject /
-      # NextColumn modes approximate as the bounding box (the
-      # per-run width reduction already pushes text past the
-      # object).
+      # PathGeometry polygon (Contour mode). JumpObject moves text
+      # below the object; NextColumn approximates as the same
+      # jump-below in a single-column frame (true column jumping
+      # needs chain integration, documented in TODO.pdf/61).
+      JUMP_MODES = %w[JumpObjectTextWrap NextColumnTextWrap].freeze
       def self.contour_for(item, page_height)
         pref = wrap_preference(item)
         return nil unless pref
@@ -190,7 +211,7 @@ module Idml
           x: rect[:x], y: rect[:y],
           width: rect[:width], height: rect[:height],
           side: pref&.text_wrap_side,
-          jump: pref&.text_wrap_mode == "JumpObjectTextWrap"
+          jump: JUMP_MODES.include?(pref&.text_wrap_mode)
         )
       end
       private_class_method :box_contour
