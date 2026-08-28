@@ -1,6 +1,6 @@
 # TODO PDF 61: Known limitations and future work
 
-## Status: DOCUMENTED — refreshed 2026-08-27 (second refresh)
+## Status: DOCUMENTED — refreshed 2026-08-28
 
 Previously listed limitations (font embedding, tagged PDF, per-run
 styling, dead code) were resolved by TODOs 52/53/55/67/76 long ago;
@@ -25,18 +25,19 @@ this list reflects the current state.
 - **StartParagraph** breaks act at frame/column granularity — no
   odd/even page parity.
 - **Text wrap**: BoundingBoxTextWrap, Contour, and Inverse modes
-  render (TODOs 130-131) with TextWrapSide side-awareness (TODO 138:
-  LeftSide / RightSide / LargestArea pick the flow side; spine
-  variants approximate as BothSides); JumpObject moves text below
-  the object (TODO 143); NextColumn approximates as the box;
-  Contour-mode shapes are not side-aware.
+  render (TODOs 130-131) with TextWrapSide side-awareness for both
+  box contours and Contour shapes (TODOs 138/147); JumpObject and
+  NextColumn move text below the object (TODOs 143/146) — NextColumn
+  in a MULTI-column frame should jump to the next column instead
+  (chain integration, future); spine variants approximate as
+  BothSides.
 
 ### CJK
-- **Mojikumi**: script spacing (TODO 125), line-end compression
-  (TODO 132), and class-based pair compression are applied; named
-  mojikumi sets are modeled (TODO 144: MojikumiTable +
-  OverrideMojikumiAki parse and round-trip) but not yet APPLIED to
-  layout — the built-in class-based aki rules stand in.
+- **Mojikumi**: script spacing (TODO 125, now actually wired),
+  line-end compression (TODO 132), class-based pair compression,
+  and named-set aki overrides (TODO 145: OverrideMojikumiAki
+  Desired applies per class pair) are applied; Minimum/Maximum
+  aki bounds and CompressionPriority are parsed but unused.
 - **Vertical mode**: Latin runs rotate as one group per segment
   (TODO 142); ruby placement is beside-column; keep options do
   not apply.
@@ -59,8 +60,7 @@ this list reflects the current state.
 ## Future enhancements
 
 - Hyphenation dictionary integration
-- Shape-mode text wrap contours (side-aware)
-- Apply named mojikumi sets to CJK layout (consume TODO 144's model)
-- NextColumn wrap via column-jump chaining
+- NextColumn wrap via column-jump chaining (multi-column frames)
+- Minimum/Maximum mojikumi aki bounds + CompressionPriority
 - ToBinding / RTL binding alignment
 - Vertical-mode keep options

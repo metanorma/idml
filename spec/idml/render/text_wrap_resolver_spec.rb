@@ -76,6 +76,44 @@ RSpec.describe Idml::Render::TextWrapResolver do
         .to eq(400 - 140)
     end
 
+    it "treats NextColumnTextWrap as jump-below (single-column frame)" do
+      resolver = resolver_for("NextColumnTextWrap")
+      expect(resolver.wrap_adjustment(300, 12, 0, 400)).to eq([400.0, 0.0])
+      expect(resolver.jump_contour_bottom(300, 12, 0, 400))
+        .to eq(400 - 140)
+    end
+
+    describe "Contour shapes with TextWrapSide (TODO 147)" do
+      def shape_resolver(side)
+        resolver_for("Contour", side: side)
+      end
+
+      it "narrows by polygon overlap for BothSides without shifting" do
+        resolver = shape_resolver("BothSides")
+        # Oval spans x 40..160; polygon overlap at mid-height = 120.
+        expect(resolver.wrap_adjustment(400 - 100, 12, 0, 400))
+          .to eq([120.0, 0.0])
+      end
+
+      it "keeps text left of the shape for LeftSide" do
+        resolver = shape_resolver("LeftSide")
+        expect(resolver.wrap_adjustment(400 - 100, 12, 0, 400))
+          .to eq([400.0 - 40.0, 0.0])
+      end
+
+      it "shifts text past the shape for RightSide" do
+        resolver = shape_resolver("RightSide")
+        expect(resolver.wrap_adjustment(400 - 100, 12, 0, 400))
+          .to eq([160.0, 160.0])
+      end
+
+      it "picks the roomier side for LargestArea" do
+        resolver = shape_resolver("LargestArea")
+        expect(resolver.wrap_adjustment(400 - 100, 12, 0, 400))
+          .to eq([160.0, 160.0])
+      end
+    end
+
     it "ignores None mode" do
       resolver = resolver_for("None")
       expect(resolver.overlap_width(300, 12, 0, 400)).to eq(0)

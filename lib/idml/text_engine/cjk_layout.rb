@@ -10,20 +10,93 @@ module Idml
       # Mojikumi subset: automatic inter-script spacing — an eighth
       # em is inserted between adjacent CJK and ASCII alphanumeric
       # glyphs (widenning the leading glyph of each pair), matching
-      # InDesign's default CJK/Latin auto spacing.
+      # InDesign's default CJK/Latin auto spacing. A named
+      # mojikumi set's OverrideMojikumiAki entries take precedence
+      # when given: the Desired value (em units) applies to each
+      # matching class pair (TODO 145).
       SCRIPT_SPACING_EM = 0.125
 
-      def apply_script_spacing(glyphs, size)
-        spacing = size * SCRIPT_SPACING_EM
+      # Mojikumi character classes (InDesign mojikumi table rows).
+      CLASS_IDEOGRAPH = 1
+      CLASS_OPENING = 2
+      CLASS_CLOSING = 3
+      CLASS_COMMA_PERIOD = 4
+      CLASS_MIDDLE_DOT = 5
+      CLASS_DIGIT = 6
+      CLASS_LATIN = 7
+
+      COMMA_PERIOD_CODEPOINTS = [
+        0x3001, # 、 ideographic comma
+        0x3002, # 。 ideographic full stop
+      ].freeze
+
+      CLOSING_CODEPOINTS = [
+        0x3009, # 〉
+        0x300B, # 》
+        0x300D, # 」
+        0x300F, # 』
+        0x3011, # 】
+        0x3015, # 〕
+        0xFF09, # ）fullwidth right paren
+        0xFF3D, # ］
+        0xFF5D, # ｝
+      ].freeze
+
+      def apply_script_spacing(glyphs, size, aki_overrides = [])
         (0...(glyphs.length - 1)).each do |index|
           leading = glyphs[index]
           following = glyphs[index + 1]
-          next unless script_boundary?(leading.codepoint,
-                                       following.codepoint)
+          em = aki_em(leading.codepoint, following.codepoint,
+                      aki_overrides)
+          next unless em&.positive?
 
-          leading.width += spacing
+          leading.width += em * size
         end
         glyphs
+      end
+
+      # Spacing (em units) between an adjacent pair: the named
+      # set's Desired aki for a matching class-pair override, else
+      # the default eighth-em at CJK/Latin script boundaries, else
+      # none.
+      def aki_em(left, right, aki_overrides)
+        override = aki_overrides.find do |entry|
+          entry.side_is_after_target &&
+            entry.target_mojikumi_class == mojikumi_class(left) &&
+            entry.side_mojikumi_class == mojikumi_class(right)
+        end
+        return override.desired if override&.desired
+
+        return SCRIPT_SPACING_EM if script_boundary?(left, right)
+
+        nil
+      end
+
+      # The mojikumi class of a codepoint, or nil outside the
+      # CJK punctuation / script classes. Ideographs (the default
+      # CJK class) win only when no special class matches.
+      def mojikumi_class(codepoint)
+        return CLASS_OPENING if OPENING_CODEPOINTS.include?(codepoint)
+        return CLASS_COMMA_PERIOD if COMMA_PERIOD_CODEPOINTS.include?(codepoint)
+        return CLASS_CLOSING if CLOSING_CODEPOINTS.include?(codepoint)
+        return CLASS_MIDDLE_DOT if MIDDLE_CODEPOINTS.include?(codepoint)
+        return CLASS_DIGIT if digit_class?(codepoint)
+        return CLASS_LATIN if latin_class?(codepoint)
+        return CLASS_IDEOGRAPH if cjk?(codepoint)
+
+        nil
+      end
+
+      def digit_class?(codepoint)
+        (0x30..0x39).cover?(codepoint) ||
+          (0xFF10..0xFF19).cover?(codepoint)
+      end
+
+      def latin_class?(codepoint)
+        (0x41..0x5A).cover?(codepoint) ||
+          (0x61..0x7A).cover?(codepoint) ||
+          (0xFF21..0xFF3A).cover?(codepoint) ||
+          (0xFF41..0xFF5A).cover?(codepoint)
       end
 
       # True when exactly one of the pair is CJK and the other is
