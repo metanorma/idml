@@ -5,12 +5,6 @@ require "spec_helper"
 # StartParagraph forced breaks (TODO 120) and per-side cell edge
 # strokes (TODO 121), verified end-to-end through synthetic
 # packages / tables.
-BREAK_FONT_CANDIDATES = [
-  "/System/Library/Fonts/Supplemental/Arial.ttf",
-  "/System/Library/Fonts/Helvetica.ttc",
-  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-  "C:/Windows/Fonts/arial.ttf",
-].freeze
 
 BreakStrokeColorResolver = Struct.new(:table, keyword_init: true) do
   def resolve(name)
@@ -40,7 +34,7 @@ XML
 # rubocop:disable RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   def font_path
-    BREAK_FONT_CANDIDATES.find { |p| File.exist?(p) }
+    spec_font_path
   end
 
   def break_render_context(package, writer)

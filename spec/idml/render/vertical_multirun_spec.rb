@@ -5,18 +5,11 @@ require "spec_helper"
 # Vertical multi-run column continuity (regression: every run used
 # to restart at column 0, overlapping) and tate-chu-yoko, verified
 # end-to-end through synthetic packages.
-VERTICAL2_FONT_CANDIDATES = [
-  "/System/Library/Fonts/Supplemental/Arial.ttf",
-  "/System/Library/Fonts/Hiragino Sans.ttc",
-  "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-  "C:/Windows/Fonts/arial.ttf",
-].freeze
 
 # rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   def font_path
-    VERTICAL2_FONT_CANDIDATES.find { |p| File.exist?(p) }
+    spec_font_path
   end
 
   def vertical_story_xml(csrs)

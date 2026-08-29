@@ -7,17 +7,11 @@ require "tmpdir"
 # wrapping object, never beside it. The object spans the frame's
 # full width in its top band; all text baselines must land under
 # the object's bottom edge, vs near the frame top without wrap.
-JUMP_FONT_CANDIDATES = [
-  "/System/Library/Fonts/Supplemental/Arial.ttf",
-  "/System/Library/Fonts/Helvetica.ttc",
-  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-  "C:/Windows/Fonts/arial.ttf",
-].freeze
 
 # rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render do
   def font_path
-    JUMP_FONT_CANDIDATES.find { |p| File.exist?(p) }
+    spec_font_path
   end
 
   # The candidate's PostScript name resolvable within its own

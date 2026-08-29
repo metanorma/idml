@@ -5,17 +5,11 @@ require "spec_helper"
 # End-to-end: a synthetic package whose story embeds an anchored
 # Rectangle (Story > PSR > CSR > Rectangle) renders the item via the
 # standard page-item dispatch at its stored geometry.
-ANCHORED_FONT_CANDIDATES = [
-  "/System/Library/Fonts/Supplemental/Arial.ttf",
-  "/System/Library/Fonts/Helvetica.ttc",
-  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-  "C:/Windows/Fonts/arial.ttf",
-].freeze
 
 # rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   def font_path
-    ANCHORED_FONT_CANDIDATES.find { |p| File.exist?(p) }
+    spec_font_path
   end
 
   def graphic_xml
