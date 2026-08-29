@@ -76,17 +76,13 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     end
   end
 
-  def bt_count(raw)
-    raw.scan(/BT\b/).length
-  end
-
   it "emits the footnote text below the body block in the simple path" do
     skip "no system font available" unless font_path
 
     render_raw(story_xml(footnote: false)) do |raw_without|
       render_raw(story_xml(footnote: true)) do |raw_with|
         # Body block + one footnote paragraph block.
-        expect(bt_count(raw_with)).to eq(bt_count(raw_without) + 1)
+        expect(PdfStream.bt_count(raw_with)).to eq(PdfStream.bt_count(raw_without) + 1)
         # Hairline separator rule.
         expect(raw_with).to include("0.5 w")
       end

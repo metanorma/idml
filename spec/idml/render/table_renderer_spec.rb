@@ -73,7 +73,7 @@ RSpec.describe Idml::Render::Renderers::TableRenderer do
     write_to_temp_pdf(writer, "table-grid") do |path|
       raw = File.binread(path)
       # 2 rows × 2 cells = 4 rectangle ops
-      expect(raw.scan(/ re\b/).length).to eq(4)
+      expect(PdfStream.rect_count(raw)).to eq(4)
     end
   end
 
@@ -126,7 +126,7 @@ RSpec.describe Idml::Render::Renderers::TableRenderer do
       write_to_temp_pdf(writer, "schema-table") do |path|
         raw = File.binread(path)
         # 2x2 grid = 4 cells = 4 rectangle ops
-        expect(raw.scan(/ re\b/).length).to eq(4)
+        expect(PdfStream.rect_count(raw)).to eq(4)
       end
     end
 
@@ -181,7 +181,7 @@ RSpec.describe Idml::Render::Renderers::TableRenderer do
         write_to_temp_pdf(writer, "diag-both") do |path|
           raw = File.binread(path)
           # 4 cell border strokes + 2 diagonals
-          expect(raw.scan(/\bS\b/).length).to eq(6)
+          expect(PdfStream.stroke_count(raw)).to eq(6)
           expect(raw).to include("2 w")
         end
       end
@@ -192,7 +192,7 @@ RSpec.describe Idml::Render::Renderers::TableRenderer do
         described_class.render(canvas, build_context(table))
         write_to_temp_pdf(writer, "diag-single") do |path|
           # 4 cell border strokes + 1 diagonal
-          expect(File.binread(path).scan(/\bS\b/).length).to eq(5)
+          expect(PdfStream.stroke_count(File.binread(path))).to eq(5)
         end
       end
     end
@@ -321,7 +321,7 @@ RSpec.describe Idml::Render::Renderers::TableRenderer do
         write_to_temp_pdf(writer, "schema-spans") do |path|
           raw = File.binread(path)
           # 1 merged (spanning 2 cols) + 2 singles = 3 cell rectangles.
-          expect(raw.scan(/ re\b/).length).to eq(3)
+          expect(PdfStream.rect_count(raw)).to eq(3)
         end
       end
 
@@ -449,7 +449,7 @@ RSpec.describe Idml::Render::Renderers::TableRenderer do
       )
       count = nil
       write_to_temp_pdf(writer, "table-flow") do |pdf_path|
-        count = File.binread(pdf_path).scan(/ re\b/).length
+        count = PdfStream.rect_count(File.binread(pdf_path))
       end
       [next_row, count]
     end

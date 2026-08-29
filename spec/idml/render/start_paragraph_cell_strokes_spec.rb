@@ -184,7 +184,7 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
 
     it "keeps the legacy uniform border when nothing is declared" do
       render_cell_strokes("", "") do |raw|
-        expect(raw.scan(/ re\b/).length).to eq(4)
+        expect(PdfStream.rect_count(raw)).to eq(4)
       end
     end
   end

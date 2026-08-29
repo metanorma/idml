@@ -40,6 +40,37 @@ def spec_font_path
   SPEC_FONT_CANDIDATES.find { |p| File.exist?(p) }
 end
 
+# Parses PDF content streams for render-spec assertions. The
+# content stream IS the render specs' interface — one named
+# parser, single-sourced, instead of copy-pasted scan() regexes.
+module PdfStream
+  TM_POSITION = /1 0 0 1 (-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?) Tm\n/
+
+  module_function
+
+  # [[x, y], ...] for every text-matrix op.
+  def text_positions(raw)
+    raw.scan(TM_POSITION).map { |x, y| [x.to_f, y.to_f] }
+  end
+
+  # Y baselines of every text op.
+  def text_ys(raw)
+    text_positions(raw).map(&:last)
+  end
+
+  def bt_count(raw)
+    raw.scan(/BT\b/).length
+  end
+
+  def stroke_count(raw)
+    raw.scan(/\bS\b/).length
+  end
+
+  def rect_count(raw)
+    raw.scan(/ re\b/).length
+  end
+end
+
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true
