@@ -90,10 +90,6 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     end
   end
 
-  def bt_count(raw)
-    raw.scan(/BT\b/).length
-  end
-
   it "renders the separator rule and an extra text block for the footnote" do
     body_only = footnote_story_xml.gsub(
       %r{<Footnote>.*</Footnote>}m,
@@ -103,7 +99,7 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
       render_to_raw(footnote_story_xml, preferences_xml) do |raw_with|
         expect(raw_with).to include("1 w")
         expect(raw_with).to match(/S\b| S/)
-        expect(bt_count(raw_with)).to be > bt_count(raw_without)
+        expect(PdfStream.bt_count(raw_with)).to be > PdfStream.bt_count(raw_without)
       end
     end
   end

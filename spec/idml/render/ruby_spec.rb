@@ -71,7 +71,7 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     described_class.render(canvas, render_context(writer, path))
 
     write_to_temp_pdf(writer, "ruby-e2e") do |pdf_path|
-      File.binread(pdf_path).scan(/BT\b/).length
+      PdfStream.bt_count(File.binread(pdf_path))
     end
   end
 

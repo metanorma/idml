@@ -100,3 +100,11 @@ Idml::Render::Renderers.autoload(
   :SimpleText,
   "#{__dir__}/render/renderers/simple_text",
 )
+Idml::Render::Renderers.autoload(
+  :FrameMetrics,
+  "#{__dir__}/render/renderers/frame_metrics",
+)
+Idml::Render::Renderers.autoload(
+  :KeepPolicy,
+  "#{__dir__}/render/renderers/keep_policy",
+)

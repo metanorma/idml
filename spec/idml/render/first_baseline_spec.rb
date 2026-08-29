@@ -72,9 +72,7 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   def text_ys(writer)
     ys = []
     write_to_temp_pdf(writer, "first-baseline") do |pdf_path|
-      ys = File.binread(pdf_path)
-        .scan(/1 0 0 1 (-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?) Tm\n/)
-        .map { |_x, yy| yy.to_f }
+      ys = PdfStream.text_ys(File.binread(pdf_path))
     end
     ys
   end

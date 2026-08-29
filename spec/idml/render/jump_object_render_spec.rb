@@ -119,9 +119,7 @@ RSpec.describe Idml::Render do
         package: package, to: pdf,
         font_search_paths: [File.dirname(font_path)]
       )
-      return File.binread(pdf)
-          .scan(/1 0 0 1 (-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?) Tm\n/)
-          .map { |_x, y| y.to_f }
+      return PdfStream.text_ys(File.binread(pdf))
     end
   end
 

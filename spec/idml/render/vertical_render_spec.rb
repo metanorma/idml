@@ -28,10 +28,6 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     XML
   end
 
-  def bt_count(raw)
-    raw.scan("\nBT\n").length
-  end
-
   def vertical_raw(content, ruby: "")
     package = vertical_package("Vertical", content, ruby)
     writer = Idml::Render::PdfrbWriter.new
@@ -122,6 +118,6 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
 
     with_ruby = vertical_raw("漢", ruby: 'RubyString="かな"')
     without_ruby = vertical_raw("漢")
-    expect(bt_count(with_ruby)).to eq(bt_count(without_ruby) + 2)
+    expect(PdfStream.bt_count(with_ruby)).to eq(PdfStream.bt_count(without_ruby) + 2)
   end
 end

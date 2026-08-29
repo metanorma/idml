@@ -284,8 +284,10 @@ module Idml
             (layout_frame.inset_top || 0)
           bottom_limit = TextEngine::VerticalLayout.bottom_limit(layout_frame)
           footnotes = []
-          cursor_y = vertical_justify_top(top_y, bottom_limit, state, context)
-          cursor_y -= first_baseline_offset(context, state, font)
+          cursor_y = FrameMetrics.vertical_justify_top(top_y, bottom_limit,
+                                                       state, context)
+          cursor_y -= FrameMetrics.first_baseline_offset(context, state,
+                                                         font)
           char_cursor = state.char_cursor
 
           if state.current_paragraph
@@ -326,7 +328,9 @@ module Idml
           top_y = col_frame.y + col_frame.height - (col_frame.inset_top || 0)
           bottom_limit = TextEngine::VerticalLayout.bottom_limit(col_frame)
           footnotes = []
-          cursor_y = top_y - first_baseline_offset(context, state, font)
+          cursor_y = top_y - FrameMetrics.first_baseline_offset(
+            context, state, font
+          )
           char_cursor = state.char_cursor
 
           if state.current_paragraph
@@ -389,160 +393,6 @@ module Idml
         private_class_method :build_column_frames
 
         # Computes the starting cursor_y for vertical justification.
-        # IDML's TextFramePreference.VerticalJustification can be:
-        # - TopAlign (default): start at frame top, no offset
-        # - CenterAlign: center the content block vertically
-        # - BottomAlign: align content to the frame bottom
-        # - JustifyAlign: distribute extra space between paragraphs
-        #   (deferred — falls back to TopAlign behavior)
-        #
-        # Content height is estimated by walking paragraphs and
-        # summing leading × lines + space_before/after. Without
-        # shaping/wrapping we can't know exact line count, so we
-        # approximate by treating each run as one line.
-        def self.vertical_justify_top(top_y, bottom_limit, state, context)
-          justification = text_frame_vertical_justification(context)
-          return top_y unless %w[CenterAlign BottomAlign].include?(justification)
-
-          content_height = estimate_content_height(state)
-          available = top_y - bottom_limit
-          slack = [available - content_height, 0].max
-          return top_y if slack.zero?
-
-          case justification
-          when "CenterAlign" then top_y - (slack / 2)
-          when "BottomAlign" then top_y - slack
-          else top_y
-          end
-        end
-        private_class_method :vertical_justify_top
-
-        # FirstBaselineOffset: how far below the frame's top inset
-        # the first line's baseline sits. The layout's default is
-        # leading-based; AscentOffset shifts by (ascent − leading)
-        # and FixedHeight by (MinimumFirstBaselineOffset − leading).
-        # CapHeight uses the font's cap-height metric (leading
-        # fallback when the font reports none); XHeight approximates
-        # as 70% of cap height; EmboxHeight uses the em box (the
-        # first paragraph's point size). Returns the extra shift to
-        # subtract from the cursor.
-        FIRST_BASELINE_MODES = %w[
-          AscentOffset FixedHeight CapHeight XHeight EmboxHeight
-        ].freeze
-
-        def self.first_baseline_offset(context, state, font)
-          pref = context.item&.text_frame_preference&.first
-          mode = pref&.first_baseline_offset
-          return 0.0 unless FIRST_BASELINE_MODES.include?(mode)
-
-          baseline_target(pref, mode, state, font) -
-            first_paragraph_leading(state)
-        end
-        private_class_method :first_baseline_offset
-
-        # Distance from the top inset to the first baseline under
-        # the given mode.
-        # pdfrb 0.7.1 never fills the cap_height metric, so
-        # CapHeight / XHeight fall back to standard font
-        # proportions (cap ≈ 0.72 em, x ≈ 0.52 em — Arial and
-        # Helvetica both sit within 1% of these).
-        CAP_HEIGHT_RATIO = 0.72
-        X_HEIGHT_RATIO = 0.52
-
-        def self.baseline_target(pref, mode, state, font)
-          leading = first_paragraph_leading(state)
-          case mode
-          when "AscentOffset"
-            ratio_scaled(font.ascent, font) * leading
-          when "CapHeight"
-            cap_ratio(font) * leading
-          when "XHeight"
-            X_HEIGHT_RATIO * leading
-          when "EmboxHeight"
-            first_paragraph_size(state)
-          else
-            pref.minimum_first_baseline_offset || leading
-          end
-        end
-        private_class_method :baseline_target
-
-        def self.cap_ratio(font)
-          cap = font.cap_height
-          return CAP_HEIGHT_RATIO unless cap
-
-          ratio_scaled(cap, font)
-        end
-        private_class_method :cap_ratio
-
-        def self.ratio_scaled(metric, font)
-          upem = font.units_per_em
-          return 1.0 if upem.zero?
-
-          metric / upem
-        end
-        private_class_method :ratio_scaled
-
-        def self.first_paragraph_size(state)
-          paragraph = state.current_paragraph || state.paragraphs.first
-          first_run = paragraph&.runs&.first
-          first_run&.point_size || DEFAULT_SIZE
-        end
-        private_class_method :first_paragraph_size
-
-        def self.first_paragraph_leading(state)
-          paragraph = state.current_paragraph || state.paragraphs.first
-          unless paragraph
-            return DEFAULT_SIZE *
-                TextEngine::VerticalLayout::DEFAULT_LEADING_FACTOR
-          end
-
-          size = paragraph.runs.first&.point_size || DEFAULT_SIZE
-          TextEngine::VerticalLayout.leading_for(paragraph.auto_leading,
-                                                 size)
-        end
-        private_class_method :first_paragraph_leading
-
-        def self.text_frame_vertical_justification(context)
-          pref = context.item&.text_frame_preference&.first
-          pref&.vertical_justification
-        end
-        private_class_method :text_frame_vertical_justification
-
-        # Estimates total renderable content height for vertical
-        # justification. Walks paragraphs and runs, summing leading
-        # per run plus paragraph space_before/after. Approximation:
-        # treats each run as one line (wrap may produce more lines,
-        # which would over-estimate slack; acceptable for
-        # justification since we'd rather under-offset than overflow).
-        def self.estimate_content_height(state)
-          paragraphs = paragraphs_for_estimate(state)
-          return 0 if paragraphs.empty?
-
-          paragraphs.sum do |paragraph|
-            paragraph_height(paragraph)
-          end
-        end
-        private_class_method :estimate_content_height
-
-        def self.paragraphs_for_estimate(state)
-          result = []
-          result << state.current_paragraph if state.current_paragraph
-          result + state.paragraphs
-        end
-        private_class_method :paragraphs_for_estimate
-
-        def self.paragraph_height(paragraph)
-          size = paragraph.runs.first&.point_size || DEFAULT_SIZE
-          leading = leading_for(paragraph, size)
-          line_count = [paragraph.runs.length, 1].max
-          (leading * line_count) + space_before_after(paragraph)
-        end
-        private_class_method :paragraph_height
-
-        def self.space_before_after(paragraph)
-          (paragraph.space_before || 0) + (paragraph.space_after || 0)
-        end
-        private_class_method :space_before_after
 
         def self.resume_paragraph(canvas, state, context, layout_frame, font,
                                   cursor_y, bottom_limit, char_cursor,
@@ -571,9 +421,9 @@ module Idml
             break if cursor_y < bottom_limit
 
             next_paragraph = state.paragraphs[index + 1]
-            break if paragraph_deferred?(paragraph, next_paragraph,
-                                         layout_frame, font, cursor_y,
-                                         bottom_limit, pending.positive?)
+            break if KeepPolicy.paragraph_deferred?(paragraph, next_paragraph,
+                                                    layout_frame, font, cursor_y,
+                                                    bottom_limit, pending.positive?)
 
             remaining_runs, cursor_y, char_cursor = render_runs_for_paragraph(
               canvas, paragraph, paragraph.runs, context,
@@ -966,130 +816,6 @@ module Idml
           table&.aki_overrides || []
         end
         private_class_method :mojikumi_aki_overrides
-
-        # True when the paragraph should move wholly to the next
-        # frame: a StartParagraph forced break, or KeepAllLines-
-        # Together with insufficient remaining space (never for the
-        # frame's first paragraph, so progress is always made).
-        def self.paragraph_deferred?(paragraph, next_paragraph,
-                                     layout_frame, font, cursor_y,
-                                     bottom_limit, placed_any)
-          return true if paragraph_break?(paragraph) && placed_any
-          return false unless placed_any
-          return true if keep_with_next_break?(paragraph, next_paragraph,
-                                               layout_frame, font,
-                                               cursor_y, bottom_limit)
-
-          keep_all_lines_break?(paragraph, layout_frame, font,
-                                cursor_y, bottom_limit) ||
-            keep_windows_break?(paragraph, layout_frame, font,
-                                cursor_y, bottom_limit)
-        end
-        private_class_method :paragraph_deferred?
-
-        # KeepAllLinesTogether: defer when the paragraph cannot
-        # fully fit the remaining space.
-        def self.keep_all_lines_break?(paragraph, layout_frame, font,
-                                       cursor_y, bottom_limit)
-          return false unless paragraph.keep_all_lines_together
-
-          wrap_width = TextEngine::VerticalLayout.wrap_width(
-            layout_frame, paragraph.right_indent || 0
-          )
-          height = TextEngine::Measurement.paragraph_height(
-            paragraph, font, wrap_width
-          )
-          (cursor_y - height) < bottom_limit
-        end
-        private_class_method :keep_all_lines_break?
-
-        # Partial keep windows, approximated by measured line
-        # counts: KeepFirstLines defers when fewer than N lines
-        # fit; KeepLastLines defers when the overflow tail for the
-        # next frame would strand fewer than N lines.
-        def self.keep_windows_break?(paragraph, layout_frame, font,
-                                     cursor_y, bottom_limit)
-          return false unless paragraph.keep_first_lines ||
-            paragraph.keep_last_lines
-
-          wrap_width = TextEngine::VerticalLayout.wrap_width(
-            layout_frame, paragraph.right_indent || 0
-          )
-          height = TextEngine::Measurement.paragraph_height(
-            paragraph, font, wrap_width
-          )
-          return false if (cursor_y - height) >= bottom_limit
-
-          leading = first_paragraph_leading_for(paragraph)
-          lines_fit = [((cursor_y - bottom_limit) / leading).floor, 0].max
-          first_window_break?(paragraph, lines_fit) ||
-            last_window_break?(paragraph, lines_fit, height, leading)
-        end
-        private_class_method :keep_windows_break?
-
-        def self.first_window_break?(paragraph, lines_fit)
-          paragraph.keep_first_lines &&
-            lines_fit < paragraph.keep_first_lines
-        end
-        private_class_method :first_window_break?
-
-        def self.last_window_break?(paragraph, lines_fit, height, leading)
-          return false unless paragraph.keep_last_lines
-
-          total_lines = [(height / leading).ceil, 1].max
-          lines_fit.positive? &&
-            (total_lines - lines_fit) < paragraph.keep_last_lines
-        end
-        private_class_method :last_window_break?
-
-        def self.first_paragraph_leading_for(paragraph)
-          size = paragraph.runs.first&.point_size || DEFAULT_SIZE
-          TextEngine::VerticalLayout.leading_for(paragraph.auto_leading,
-                                                 size)
-        end
-        private_class_method :first_paragraph_leading_for
-
-        # KeepWithNext: this paragraph defers when the next
-        # paragraph is forced to the next frame, or when the next
-        # paragraph's first line would not fit after this one.
-        def self.keep_with_next_break?(paragraph, next_paragraph,
-                                       layout_frame, font, cursor_y,
-                                       bottom_limit)
-          return false unless keepable_pair?(paragraph, next_paragraph)
-          return true if paragraph_break?(next_paragraph)
-
-          wrap_width = TextEngine::VerticalLayout.wrap_width(
-            layout_frame, paragraph.right_indent || 0
-          )
-          height = TextEngine::Measurement.paragraph_height(
-            paragraph, font, wrap_width
-          )
-          (cursor_y - height - follower_leading(next_paragraph)) <
-            bottom_limit
-        end
-        private_class_method :keep_with_next_break?
-
-        def self.keepable_pair?(paragraph, next_paragraph)
-          !paragraph.keep_with_next.nil? && !next_paragraph.nil?
-        end
-        private_class_method :keepable_pair?
-
-        def self.follower_leading(next_paragraph)
-          size = next_paragraph.runs.first&.point_size || DEFAULT_SIZE
-          TextEngine::VerticalLayout.leading_for(
-            next_paragraph.auto_leading, size
-          )
-        end
-        private_class_method :follower_leading
-
-        # True when the paragraph requests a forced break to the
-        # next frame/column (StartParagraph). All break flavors act
-        # at frame/column granularity.
-        def self.paragraph_break?(paragraph)
-          %w[NextPage NextColumn NextFrame NextOddPage NextEvenPage]
-            .include?(paragraph.start_paragraph)
-        end
-        private_class_method :paragraph_break?
 
         # Justifies the run's lines; only the final line of the
         # paragraph's final run stays ragged under full

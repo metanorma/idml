@@ -28,7 +28,7 @@ RSpec.describe Idml::Render::ParagraphRules do
       write_to_temp_pdf(writer, "rule-skipped") do |path|
         # No stroke ops should appear (only the page's default ops).
         raw = File.binread(path)
-        expect(raw.scan(/\bS\b/).length).to eq(0)
+        expect(PdfStream.stroke_count(raw)).to eq(0)
       end
     end
 
@@ -69,7 +69,7 @@ RSpec.describe Idml::Render::ParagraphRules do
                                       300, 50, 350)
       write_to_temp_pdf(writer, "rule-zero-weight") do |path|
         raw = File.binread(path)
-        expect(raw.scan(/\bS\b/).length).to eq(0)
+        expect(PdfStream.stroke_count(raw)).to eq(0)
       end
     end
   end
@@ -131,7 +131,7 @@ RSpec.describe Idml::Render::ParagraphRules do
       described_class.emit_border(canvas, paragraph(paragraph_border_on: nil),
                                   context_without_color, 300, 200, 50, 350)
       write_to_temp_pdf(writer, "border-off") do |path|
-        expect(File.binread(path).scan(/\bS\b/).length).to eq(0)
+        expect(PdfStream.stroke_count(File.binread(path))).to eq(0)
       end
     end
 
@@ -147,7 +147,7 @@ RSpec.describe Idml::Render::ParagraphRules do
                                   300, 200, 50, 350)
       write_to_temp_pdf(writer, "border-sides") do |path|
         raw = File.binread(path)
-        expect(raw.scan(/\bS\b/).length).to eq(4)
+        expect(PdfStream.stroke_count(raw)).to eq(4)
         expect(raw.scan(/\b2 w\b/).length).to eq(1)
       end
     end
@@ -163,7 +163,7 @@ RSpec.describe Idml::Render::ParagraphRules do
       described_class.emit_border(canvas, para, context_without_color,
                                   300, 200, 50, 350)
       write_to_temp_pdf(writer, "border-partial") do |path|
-        expect(File.binread(path).scan(/\bS\b/).length).to eq(1)
+        expect(PdfStream.stroke_count(File.binread(path))).to eq(1)
       end
     end
   end

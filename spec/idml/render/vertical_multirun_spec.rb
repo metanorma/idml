@@ -70,10 +70,6 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   end
 
   # Text matrix ops (1 0 0 1 x y Tm) per text block.
-  def text_positions(raw)
-    raw.scan(/1 0 0 1 (-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?) Tm\n/)
-      .map { |x, y| [x.to_f, y.to_f] }
-  end
 
   it "places the second run's column to the left of the first" do
     csrs = <<~XML
@@ -81,7 +77,7 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
       <CharacterStyleRange PointSize="12"><Content>本</Content></CharacterStyleRange>
     XML
     raw = render_vertical_raw(csrs)
-    xs = text_positions(raw).map(&:first).uniq.sort.reverse
+    xs = PdfStream.text_positions(raw).map(&:first).uniq.sort.reverse
 
     expect(xs.length).to eq(2)
     expect(xs[1]).to be < xs[0]
@@ -94,7 +90,7 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
       XML
       raw = render_vertical_raw(csrs)
 
-      positions = text_positions(raw)
+      positions = PdfStream.text_positions(raw)
       expect(positions.length).to eq(2)
       expect(positions[0][1]).to eq(positions[1][1])
       expect(positions[1][0]).to be > positions[0][0]
