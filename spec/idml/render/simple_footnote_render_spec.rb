@@ -6,17 +6,11 @@ require "spec_helper"
 # rough fallback emits footnote paragraphs stacked at the frame
 # bottom below a hairline separator, instead of dropping the
 # footnote text entirely.
-SIMPLE_FOOTNOTE_FONT_CANDIDATES = [
-  "/System/Library/Fonts/Supplemental/Arial.ttf",
-  "/System/Library/Fonts/Helvetica.ttc",
-  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-  "C:/Windows/Fonts/arial.ttf",
-].freeze
 
 # rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   def font_path
-    SIMPLE_FOOTNOTE_FONT_CANDIDATES.find { |p| File.exist?(p) }
+    spec_font_path
   end
 
   def story_xml(footnote: true)

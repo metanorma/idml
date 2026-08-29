@@ -92,3 +92,11 @@ Idml::Render::Renderers.autoload(
   :TableRenderer,
   "#{__dir__}/render/renderers/table_renderer",
 )
+Idml::Render::Renderers.autoload(
+  :VerticalEmit,
+  "#{__dir__}/render/renderers/vertical_emit",
+)
+Idml::Render::Renderers.autoload(
+  :SimpleText,
+  "#{__dir__}/render/renderers/simple_text",
+)

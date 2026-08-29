@@ -23,6 +23,23 @@ def write_to_temp_pdf(writer, prefix = "idml-spec")
   end
 end
 
+# System font candidates for engine-path specs (shaping needs real
+# metrics). Includes CJK-capable fonts so CJK specs run on more
+# platforms; specs skip when none exists.
+SPEC_FONT_CANDIDATES = [
+  "/System/Library/Fonts/Supplemental/Arial.ttf",
+  "/System/Library/Fonts/Helvetica.ttc",
+  "/System/Library/Fonts/Hiragino Sans.ttc",
+  "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+  "C:/Windows/Fonts/arial.ttf",
+].freeze
+
+# First existing system font path, or nil.
+def spec_font_path
+  SPEC_FONT_CANDIDATES.find { |p| File.exist?(p) }
+end
+
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true

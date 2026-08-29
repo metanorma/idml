@@ -5,17 +5,11 @@ require "spec_helper"
 # End-to-end: a synthetic package with a footnoted story renders the
 # footnote area (separator rule + footnote text block) at the frame
 # bottom via TextFrameRenderer's engine path.
-FOOTNOTE_FONT_CANDIDATES = [
-  "/System/Library/Fonts/Supplemental/Arial.ttf",
-  "/System/Library/Fonts/Helvetica.ttc",
-  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-  "C:/Windows/Fonts/arial.ttf",
-].freeze
 
 # rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   def font_path
-    FOOTNOTE_FONT_CANDIDATES.find { |p| File.exist?(p) }
+    spec_font_path
   end
 
   def footnote_story_xml

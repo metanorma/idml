@@ -3,19 +3,12 @@
 require "spec_helper"
 
 # Ruby (phonetic annotation) extraction and rendering.
-RUBY_FONT_CANDIDATES = [
-  "/System/Library/Fonts/Supplemental/Arial.ttf",
-  "/System/Library/Fonts/Hiragino Sans.ttc",
-  "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-  "C:/Windows/Fonts/arial.ttf",
-].freeze
 
 # rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   describe "ruby annotations" do
     def font_path
-      RUBY_FONT_CANDIDATES.find { |p| File.exist?(p) }
+      spec_font_path
     end
 
     def ruby_story_xml(ruby_attrs)

@@ -5,17 +5,11 @@ require "spec_helper"
 # FirstBaselineOffset (TODO 128): the first line's baseline sits
 # ascent-below the top inset under AscentOffset, vs the default
 # leading-based position.
-FBO_FONT_CANDIDATES = [
-  "/System/Library/Fonts/Supplemental/Arial.ttf",
-  "/System/Library/Fonts/Helvetica.ttc",
-  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-  "C:/Windows/Fonts/arial.ttf",
-].freeze
 
 # rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   def font_path
-    FBO_FONT_CANDIDATES.find { |p| File.exist?(p) }
+    spec_font_path
   end
 
   def fbo_story_xml

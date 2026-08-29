@@ -7,19 +7,13 @@ require "tmpdir"
 # document renders end-to-end in bounded time. The generous 60s
 # ceiling only trips on pathological complexity blowups (e.g. a
 # per-page O(document) regression), not on machine noise.
-PERF_FONT_CANDIDATES = [
-  "/System/Library/Fonts/Supplemental/Arial.ttf",
-  "/System/Library/Fonts/Helvetica.ttc",
-  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-  "C:/Windows/Fonts/arial.ttf",
-].freeze
 PERF_PAGE_COUNT = 120
 PERF_TIME_CEILING = 60.0
 
 # rubocop:disable-next RSpec/SpecFilePathFormat
 RSpec.describe Idml::Render do
   def font_path
-    PERF_FONT_CANDIDATES.find { |p| File.exist?(p) }
+    spec_font_path
   end
 
   def perf_story_xml
