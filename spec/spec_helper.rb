@@ -71,6 +71,20 @@ module PdfStream
   end
 end
 
+# Builds a synthetic IDML package from a parts hash (the
+# mimetype is always included) and returns a ready Idml::Package.
+# The one way specs stand up a Story/Spread fixture — no scattered
+# mktmpdir/write/new triplets.
+def build_package(parts, name = "fixture")
+  require "tmpdir"
+  dir = Dir.mktmpdir(name)
+  path = File.join(dir, "#{name}.idml")
+  merged = { "mimetype" => "application/vnd.adobe.indesign-idml-package" }
+  merged.merge!(parts)
+  Idml::Package.write(parts: merged, to: path)
+  Idml::Package.new(path)
+end
+
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true

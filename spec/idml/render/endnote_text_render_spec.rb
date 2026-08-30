@@ -44,18 +44,13 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     XML
   end
 
-  def build_package(with_marker:)
-    dir = Dir.mktmpdir
-    path = File.join(dir, "endnote.idml")
-    Idml::Package.write(
-      parts: {
-        "mimetype" => "application/vnd.adobe.indesign-idml-package",
-        "Stories/Story_u1.xml" => main_story_xml(with_marker: with_marker),
-        "Stories/Story_u2.xml" => endnote_story_xml,
-      },
-      to: path,
-    )
-    Idml::Package.new(path)
+  def endnote_fixture(with_marker:)
+    build_package({
+                    "mimetype" => "application/vnd.adobe.indesign-idml-package",
+                    "Stories/Story_u1.xml" => main_story_xml(with_marker: with_marker),
+                    "Stories/Story_u2.xml" => endnote_story_xml,
+                  },
+                  "endnote")
   end
 
   def endnote_context(writer, package)
@@ -85,8 +80,8 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   end
 
   it "appends endnote-story text after the marked main flow" do
-    with_marker = text_block_count(build_package(with_marker: true))
-    without_marker = text_block_count(build_package(with_marker: false))
+    with_marker = text_block_count(endnote_fixture(with_marker: true))
+    without_marker = text_block_count(endnote_fixture(with_marker: false))
     # With the marker: main text + marker + endnote text (3 blocks);
     # without: main text only (1) — the endnote story is ignored.
     expect(with_marker).to eq(3)

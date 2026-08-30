@@ -57,16 +57,13 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     XML
   end
 
-  def build_package(story_markup)
-    dir = Dir.mktmpdir
-    path = File.join(dir, "anchored.idml")
-    Idml::Package.write(
-      parts: {
-        "mimetype" => "application/vnd.adobe.indesign-idml-package",
+  def anchored_fixture(story_markup)
+    build_package(
+      {
         "Stories/Story_u1.xml" => story_xml(story_markup),
         "Resources/Graphic.xml" => graphic_xml,
       },
-      to: path,
+      "anchored",
     )
   end
 
@@ -106,7 +103,7 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
 
   %w[InlinePosition AboveLine Anchored].each do |anchor_position|
     it "renders an anchored Rectangle for #{anchor_position}" do
-      render_story_to_raw(build_package(anchored_rect_xml(anchor_position))) do |raw|
+      render_story_to_raw(anchored_fixture(anchored_rect_xml(anchor_position))) do |raw|
         expect(rect_fill_count(raw)).to be >= 1
         expect(raw).to match(/f\b/)
       end
@@ -114,7 +111,7 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   end
 
   it "renders nothing extra when the story has no embedded items" do
-    render_story_to_raw(build_package("")) do |raw|
+    render_story_to_raw(anchored_fixture("")) do |raw|
       expect(rect_fill_count(raw)).to eq(0)
     end
   end

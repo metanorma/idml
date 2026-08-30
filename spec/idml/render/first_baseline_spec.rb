@@ -33,16 +33,11 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   end
 
   def fbo_package
-    dir = Dir.mktmpdir
-    path = File.join(dir, "fbo.idml")
-    Idml::Package.write(
-      parts: {
-        "mimetype" => "application/vnd.adobe.indesign-idml-package",
-        "Stories/Story_u1.xml" => fbo_story_xml,
-      },
-      to: path,
-    )
-    Idml::Package.new(path)
+    build_package({
+                    "mimetype" => "application/vnd.adobe.indesign-idml-package",
+                    "Stories/Story_u1.xml" => fbo_story_xml,
+                  },
+                  "fbo")
   end
 
   def fbo_context(writer, package, offset)

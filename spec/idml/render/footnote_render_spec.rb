@@ -43,16 +43,13 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     XML
   end
 
-  def build_package(story_xml, prefs_xml)
-    dir = Dir.mktmpdir
-    path = File.join(dir, "footnote.idml")
-    Idml::Package.write(
-      parts: {
-        "mimetype" => "application/vnd.adobe.indesign-idml-package",
+  def footnote_fixture(story_xml, prefs_xml)
+    build_package(
+      {
         "Stories/Story_u1.xml" => story_xml,
         "Resources/Preferences.xml" => prefs_xml,
       },
-      to: path,
+      "footnote",
     )
   end
 
@@ -81,7 +78,7 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   def render_to_raw(story_xml, prefs_xml)
     skip "no system font available" unless font_path
 
-    package = build_package(story_xml, prefs_xml)
+    package = footnote_fixture(story_xml, prefs_xml)
     writer = Idml::Render::PdfrbWriter.new
     render_footnoted_frame(writer, package)
 

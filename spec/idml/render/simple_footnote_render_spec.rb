@@ -38,17 +38,12 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     XML
   end
 
-  def build_package(xml)
-    dir = Dir.mktmpdir
-    path = File.join(dir, "simple-footnote.idml")
-    Idml::Package.write(
-      parts: {
-        "mimetype" => "application/vnd.adobe.indesign-idml-package",
-        "Stories/Story_u1.xml" => xml,
-      },
-      to: path,
-    )
-    Idml::Package.new(path)
+  def footnote_package(xml)
+    build_package({
+                    "mimetype" => "application/vnd.adobe.indesign-idml-package",
+                    "Stories/Story_u1.xml" => xml,
+                  },
+                  "simple-footnote")
   end
 
   def build_context(package)
@@ -67,7 +62,7 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   end
 
   def render_raw(xml)
-    package = build_package(xml)
+    package = footnote_package(xml)
     writer = Idml::Render::PdfrbWriter.new
     canvas = writer.add_page(width: 400, height: 400)
     described_class.render(canvas, build_context(package))

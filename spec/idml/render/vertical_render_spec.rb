@@ -42,17 +42,12 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   end
 
   def vertical_package(orientation, content = "日本語", ruby_attrs = "")
-    dir = Dir.mktmpdir
-    path = File.join(dir, "vertical.idml")
-    Idml::Package.write(
-      parts: {
-        "mimetype" => "application/vnd.adobe.indesign-idml-package",
-        "Stories/Story_u1.xml" => story_xml(orientation, content,
-                                            ruby_attrs),
-      },
-      to: path,
-    )
-    Idml::Package.new(path)
+    build_package({
+                    "mimetype" => "application/vnd.adobe.indesign-idml-package",
+                    "Stories/Story_u1.xml" => story_xml(orientation, content,
+                                                        ruby_attrs),
+                  },
+                  "vertical")
   end
 
   def vertical_context(writer, package)

@@ -64,10 +64,7 @@ RSpec.describe Idml::Render do
     Array.new(PERF_PAGE_COUNT) do |index|
       parts["Spreads/Spread_s#{index}.xml"] = perf_spread_xml(index)
     end
-    dir = Dir.mktmpdir
-    path = File.join(dir, "perf.idml")
-    Idml::Package.write(parts: parts, to: path)
-    Idml::Package.new(path)
+    build_package(parts, "perf")
   end
 
   it "renders a 120-page document within the time ceiling" do
