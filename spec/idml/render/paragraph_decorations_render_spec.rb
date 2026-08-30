@@ -27,16 +27,8 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     XML
   end
 
-  def build_package(markup)
-    dir = Dir.mktmpdir
-    path = File.join(dir, "decorated.idml")
-    Idml::Package.write(
-      parts: {
-        "mimetype" => "application/vnd.adobe.indesign-idml-package",
-        "Stories/Story_u1.xml" => markup,
-      },
-      to: path,
-    )
+  def decorated_fixture(markup)
+    build_package({ "Stories/Story_u1.xml" => markup }, "decorated")
   end
 
   def build_render_context(writer, package)
@@ -70,7 +62,7 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
 
   it "renders shading behind the paragraph text" do
     markup = story_xml('ParagraphShadingOn="true" ParagraphShadingTint="100"')
-    render_to_raw(build_package(markup)) do |raw|
+    render_to_raw(decorated_fixture(markup)) do |raw|
       expect(raw).to match(/\d re\b/)
       expect(raw).to match(/ f\b/)
     end
@@ -82,13 +74,13 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
       'ParagraphBorderBottomLineWeight="1" ' \
       'ParagraphBorderLeftLineWeight="1" ParagraphBorderRightLineWeight="1"',
     )
-    render_to_raw(build_package(markup)) do |raw|
+    render_to_raw(decorated_fixture(markup)) do |raw|
       expect(raw.scan(" l\nS\n").length).to eq(4)
     end
   end
 
   it "renders no decoration when the PSR declares none" do
-    render_to_raw(build_package(story_xml(""))) do |raw|
+    render_to_raw(decorated_fixture(story_xml(""))) do |raw|
       expect(raw).not_to match(/\d re\b/)
       expect(raw.scan(" l\nS\n").length).to eq(0)
     end

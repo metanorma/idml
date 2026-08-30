@@ -159,28 +159,6 @@ module Idml
       end
       private :interval_side_adjustment
 
-      # Returns the total horizontal overlap of all contours with a
-      # text line at the given y range within the given x range.
-      # Sum, not max — multiple overlapping contours compound.
-      # Returns 0.0 when there's no overlap. Inverse contours
-      # reduce by the frame width minus their own width (text may
-      # only flow inside).
-      def overlap_width(line_y, line_height, frame_x, frame_right)
-        @contours.sum do |contour|
-          width = if contour.is_a?(WrapContour::Shape)
-                    WrapContour.overlap_width(contour, line_y,
-                                              line_height, frame_x,
-                                              frame_right)
-                  else
-                    line_overlap(contour, line_y, line_height,
-                                 frame_x, frame_right)[:width]
-                  end
-          next width unless contour.inverse
-
-          (frame_right - frame_x) - width
-        end
-      end
-
       # The wrap shape for an item: a bounding-box rectangle
       # (BoundingBoxTextWrap — the legacy "BoundingBox" spelling is
       # also accepted from early synthetic fixtures) or a flattened
@@ -249,13 +227,6 @@ module Idml
         pref.text_wrap_mode == "Contour"
       end
       private_class_method :contour_mode?
-
-      def line_overlap(contour, line_y, line_height, frame_x, frame_right)
-        return { width: 0.0 } unless y_overlap?(contour, line_y, line_height)
-        return { width: 0.0 } unless x_overlap?(contour, frame_x, frame_right)
-
-        { width: x_overlap_width(contour, frame_x, frame_right) }
-      end
 
       def y_overlap?(contour, line_y, line_height)
         line_top = line_y + line_height

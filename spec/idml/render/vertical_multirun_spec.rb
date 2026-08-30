@@ -27,16 +27,11 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   end
 
   def vertical2_package(csrs)
-    dir = Dir.mktmpdir
-    path = File.join(dir, "vertical2.idml")
-    Idml::Package.write(
-      parts: {
-        "mimetype" => "application/vnd.adobe.indesign-idml-package",
-        "Stories/Story_u1.xml" => vertical_story_xml(csrs),
-      },
-      to: path,
-    )
-    Idml::Package.new(path)
+    build_package({
+                    "mimetype" => "application/vnd.adobe.indesign-idml-package",
+                    "Stories/Story_u1.xml" => vertical_story_xml(csrs),
+                  },
+                  "vertical2")
   end
 
   def vertical2_context(writer, package)

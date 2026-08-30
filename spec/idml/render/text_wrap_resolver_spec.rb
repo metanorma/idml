@@ -48,25 +48,21 @@ RSpec.describe Idml::Render::TextWrapResolver do
 
     it "accepts the schema spelling BoundingBoxTextWrap" do
       resolver = resolver_for("BoundingBoxTextWrap")
-      expect(resolver.overlap_width(300, 12, 0, 400)).to eq(120)
+      expect(resolver.wrap_adjustment(300, 12, 0, 400)).to eq([120.0, 0.0])
     end
 
     it "keeps accepting the legacy BoundingBox spelling" do
       resolver = resolver_for("BoundingBox")
-      expect(resolver.overlap_width(300, 12, 0, 400)).to eq(120)
+      expect(resolver.wrap_adjustment(300, 12, 0, 400)).to eq([120.0, 0.0])
     end
 
     it "builds a contour shape for Contour mode" do
       resolver = resolver_for("Contour")
-      expect(resolver.overlap_width(400 - 100, 12, 0, 400)).to eq(120)
+      expect(resolver.wrap_adjustment(400 - 100, 12, 0, 400))
+        .to eq([120.0, 0.0])
       # The rect polygon matches the bbox at mid-height.
-      expect(resolver.overlap_width(400 - 132, 4, 0, 400))
+      expect(resolver.wrap_adjustment(400 - 132, 4, 0, 400)[0])
         .to be_within(0.01).of(120)
-    end
-
-    it "treats JumpObjectTextWrap as the bounding box" do
-      resolver = resolver_for("JumpObjectTextWrap")
-      expect(resolver.overlap_width(300, 12, 0, 400)).to eq(120)
     end
 
     it "wires the jump flag from JumpObjectTextWrap XML" do
@@ -116,7 +112,7 @@ RSpec.describe Idml::Render::TextWrapResolver do
 
     it "ignores None mode" do
       resolver = resolver_for("None")
-      expect(resolver.overlap_width(300, 12, 0, 400)).to eq(0)
+      expect(resolver.wrap_adjustment(300, 12, 0, 400)).to eq([0.0, 0.0])
     end
   end
 
@@ -127,7 +123,7 @@ RSpec.describe Idml::Render::TextWrapResolver do
       )
       resolver = described_class.new([inverse_box])
       # Band inside the contour: avoid-region is the 200pt outside.
-      expect(resolver.overlap_width(350, 12, 0, 400)).to eq(200)
+      expect(resolver.wrap_adjustment(350, 12, 0, 400)).to eq([200.0, 0.0])
     end
 
     it "blocks text entirely where the shape is absent" do
@@ -137,7 +133,7 @@ RSpec.describe Idml::Render::TextWrapResolver do
       resolver = described_class.new([inverse_box])
       # Band outside the contour's y range: inside width 0 → the
       # whole frame is avoid-region.
-      expect(resolver.overlap_width(100, 12, 0, 400)).to eq(400)
+      expect(resolver.wrap_adjustment(100, 12, 0, 400)).to eq([400.0, 0.0])
     end
 
     it "inverts a contour shape via the XML Inverse attribute" do
@@ -166,7 +162,7 @@ RSpec.describe Idml::Render::TextWrapResolver do
       resolver = described_class.build(spread, page_height: 400)
 
       # Inside width 120 → avoid-region 280.
-      expect(resolver.overlap_width(300, 12, 0, 400)).to eq(280)
+      expect(resolver.wrap_adjustment(300, 12, 0, 400)).to eq([280.0, 0.0])
     end
   end
 
@@ -244,43 +240,43 @@ RSpec.describe Idml::Render::TextWrapResolver do
     end
   end
 
-  describe "#overlap_width" do
+  describe "box geometry edge cases via #wrap_adjustment" do
     let(:contour) do
       described_class::Contour.new(x: 100, y: 300, width: 50, height: 100)
     end
 
-    it "returns 0 when line does not overlap contour vertically" do
+    it "returns zero when line does not overlap contour vertically" do
       resolver = described_class.new([contour])
-      expect(resolver.overlap_width(100, 12, 0, 400)).to eq(0)
+      expect(resolver.wrap_adjustment(100, 12, 0, 400)).to eq([0.0, 0.0])
     end
 
-    it "returns 0 when line does not overlap contour horizontally" do
+    it "returns zero when line does not overlap contour horizontally" do
       resolver = described_class.new([contour])
-      expect(resolver.overlap_width(350, 12, 0, 80)).to eq(0)
+      expect(resolver.wrap_adjustment(350, 12, 0, 80)).to eq([0.0, 0.0])
     end
 
-    it "returns full contour width when line is inside contour" do
+    it "reduces by the full contour width when line is inside" do
       resolver = described_class.new([contour])
-      expect(resolver.overlap_width(350, 12, 0, 400)).to eq(50)
+      expect(resolver.wrap_adjustment(350, 12, 0, 400)).to eq([50.0, 0.0])
     end
 
-    it "returns partial width when contour extends past frame right" do
+    it "reduces by the clipped overlap when contour extends past frame right" do
       wide = described_class::Contour.new(x: 380, y: 300, width: 100,
                                           height: 100)
       resolver = described_class.new([wide])
-      expect(resolver.overlap_width(350, 12, 0, 400)).to eq(20)
+      expect(resolver.wrap_adjustment(350, 12, 0, 400)).to eq([20.0, 0.0])
     end
 
-    it "sums multiple overlapping contours" do
+    it "combines multiple overlapping contours by max" do
       second = described_class::Contour.new(x: 200, y: 300, width: 30,
                                             height: 100)
       resolver = described_class.new([contour, second])
-      expect(resolver.overlap_width(350, 12, 0, 400)).to eq(80)
+      expect(resolver.wrap_adjustment(350, 12, 0, 400)).to eq([50.0, 0.0])
     end
 
-    it "returns 0 with no contours" do
+    it "returns zero with no contours" do
       resolver = described_class.new([])
-      expect(resolver.overlap_width(350, 12, 0, 400)).to eq(0)
+      expect(resolver.wrap_adjustment(350, 12, 0, 400)).to eq([0.0, 0.0])
     end
   end
 

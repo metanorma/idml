@@ -97,19 +97,16 @@ RSpec.describe Idml::Render do
 
   def jump_render(mode)
     ps_name = resolvable_ps_name
-    dir = Dir.mktmpdir
-    path = File.join(dir, "jump.idml")
-    Idml::Package.write(
-      parts: {
-        "mimetype" => "application/vnd.adobe.indesign-idml-package",
+    package = build_package(
+      {
         "designmap.xml" => jump_designmap_xml,
         "Resources/Fonts.xml" => jump_fonts_xml(ps_name),
         "Stories/Story_u1.xml" => jump_story_xml,
         "Spreads/Spread_s0.xml" => jump_spread_xml(mode),
       },
-      to: path,
+      "jump",
     )
-    text_ys(Idml::Package.new(path))
+    text_ys(package)
   end
 
   def text_ys(package)

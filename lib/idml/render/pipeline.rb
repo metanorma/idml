@@ -96,9 +96,6 @@ module Idml
                         position_tracker, condition_filter, style_lookup,
                         page_offset)
         pages = spread.spread.flat_map(&:page)
-        image_refs = ImageCollector.new(writer: writer,
-                                        base_dir: File.dirname(@package.path),
-                                        page_height: DEFAULT_HEIGHT).collect(spread)
         renderer = build_renderer(layer_filter, font_ref_resolver,
                                   font_resource, font_metrics, font_map,
                                   structure, position_tracker, condition_filter,
@@ -108,21 +105,26 @@ module Idml
         pages.each do |page|
           current += 1
           dims = page_dimensions_for(page)
+          image_refs = ImageCollector.new(
+            writer: writer,
+            base_dir: File.dirname(@package.path),
+            page_height: dims[:height],
+          ).collect(spread)
           canvas = writer.add_page(width: dims[:width], height: dims[:height])
           renderer.render(canvas, spread, page_width: dims[:width],
                                           page_height: dims[:height],
                                           image_refs: image_refs,
                                           page_index: current)
-          emit_hyperlinks(writer, spread, current, layer_filter,
-                          position_tracker)
+          emit_hyperlinks(writer, spread, current, dims[:height],
+                          layer_filter, position_tracker)
         end
         current
       end
 
-      def emit_hyperlinks(writer, spread, page_index, layer_filter,
-                          position_tracker)
+      def emit_hyperlinks(writer, spread, page_index, page_height,
+                          layer_filter, position_tracker)
         HyperlinkEmitter.new(writer: writer, package: @package,
-                             page_height: DEFAULT_HEIGHT,
+                             page_height: page_height,
                              layer_filter: layer_filter,
                              position_tracker: position_tracker)
           .emit_for(spread, page_index)

@@ -57,18 +57,13 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
   end
 
   def text_block_count(story)
-    dir = Dir.mktmpdir
-    path = File.join(dir, "ruby.idml")
-    Idml::Package.write(
-      parts: {
-        "mimetype" => "application/vnd.adobe.indesign-idml-package",
-        "Stories/Story_u1.xml" => Idml::Parts::Story.to_xml(story),
-      },
-      to: path,
+    package = build_package(
+      { "Stories/Story_u1.xml" => Idml::Parts::Story.to_xml(story) },
+      "ruby",
     )
     writer = Idml::Render::PdfrbWriter.new
     canvas = writer.add_page(width: 400, height: 400)
-    described_class.render(canvas, render_context(writer, path))
+    described_class.render(canvas, render_context(writer, package.path))
 
     write_to_temp_pdf(writer, "ruby-e2e") do |pdf_path|
       PdfStream.bt_count(File.binread(pdf_path))

@@ -73,16 +73,11 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     end
 
     def break_package(second_psr_attrs)
-      dir = Dir.mktmpdir
-      path = File.join(dir, "break.idml")
-      Idml::Package.write(
-        parts: {
-          "mimetype" => "application/vnd.adobe.indesign-idml-package",
-          "Stories/Story_u1.xml" => story_xml(second_psr_attrs),
-        },
-        to: path,
-      )
-      Idml::Package.new(path)
+      build_package({
+                      "mimetype" => "application/vnd.adobe.indesign-idml-package",
+                      "Stories/Story_u1.xml" => story_xml(second_psr_attrs),
+                    },
+                    "break")
     end
 
     def text_block_count(second_psr_attrs)
@@ -211,16 +206,11 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     end
 
     def keep_package(second_attrs)
-      dir = Dir.mktmpdir
-      path = File.join(dir, "keep.idml")
-      Idml::Package.write(
-        parts: {
-          "mimetype" => "application/vnd.adobe.indesign-idml-package",
-          "Stories/Story_u1.xml" => keep_story_xml(second_attrs),
-        },
-        to: path,
-      )
-      Idml::Package.new(path)
+      build_package({
+                      "mimetype" => "application/vnd.adobe.indesign-idml-package",
+                      "Stories/Story_u1.xml" => keep_story_xml(second_attrs),
+                    },
+                    "keep")
     end
 
     def rendered_text_op_count(second_attrs)
@@ -274,16 +264,11 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     end
 
     def kwn_package(second_attrs)
-      dir = Dir.mktmpdir
-      path = File.join(dir, "kwn.idml")
-      Idml::Package.write(
-        parts: {
-          "mimetype" => "application/vnd.adobe.indesign-idml-package",
-          "Stories/Story_u1.xml" => kwn_story_xml(second_attrs),
-        },
-        to: path,
-      )
-      Idml::Package.new(path)
+      build_package({
+                      "mimetype" => "application/vnd.adobe.indesign-idml-package",
+                      "Stories/Story_u1.xml" => kwn_story_xml(second_attrs),
+                    },
+                    "kwn")
     end
 
     def kwn_text_op_count(second_attrs)
@@ -332,16 +317,11 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     end
 
     def keep_window_package(second_attrs)
-      dir = Dir.mktmpdir
-      path = File.join(dir, "kw.idml")
-      Idml::Package.write(
-        parts: {
-          "mimetype" => "application/vnd.adobe.indesign-idml-package",
-          "Stories/Story_u1.xml" => keep_window_story_xml(second_attrs),
-        },
-        to: path,
-      )
-      Idml::Package.new(path)
+      build_package({
+                      "mimetype" => "application/vnd.adobe.indesign-idml-package",
+                      "Stories/Story_u1.xml" => keep_window_story_xml(second_attrs),
+                    },
+                    "kw")
     end
 
     def short_frame_context(writer, package)
