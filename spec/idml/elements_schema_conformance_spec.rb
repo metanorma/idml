@@ -22,7 +22,7 @@ RSpec.describe Idml::Elements do
 
   def schema_universe
     rnc_paths.flat_map do |path|
-      File.read(path).scan(/attribute\s+(\w+)\s*\{/)
+      File.read(path).scan(/attribute\s++(\w+)\s*+\{/)
     end.flatten.uniq
   end
 
