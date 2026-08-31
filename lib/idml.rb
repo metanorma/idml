@@ -18,6 +18,7 @@ module Idml
   autoload :Validation,         "#{__dir__}/idml/validation"
   autoload :Composition,        "#{__dir__}/idml/composition"
   autoload :Geometry,           "#{__dir__}/idml/geometry"
+  autoload :Schema,             "#{__dir__}/idml/schema"
   autoload :TextEngine,         "#{__dir__}/idml/text_engine"
   autoload :Render,             "#{__dir__}/idml/render"
   autoload :CLI,                "#{__dir__}/idml/cli"

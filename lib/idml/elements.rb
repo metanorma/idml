@@ -90,6 +90,7 @@ module Idml
     autoload :MasterSpreadObject, "idml/elements/master_spread_object"
     autoload :MixedInk, "idml/elements/mixed_ink"
     autoload :MixedInkGroup, "idml/elements/mixed_ink_group"
+    autoload :InsetSpacing, "idml/elements/inset_spacing"
     autoload :MojikumiTable, "idml/elements/mojikumi_table"
     autoload :MojikumiTableProperties, "idml/elements/mojikumi_table"
     autoload :OverrideMojikumiAki, "idml/elements/mojikumi_table"
