@@ -71,9 +71,10 @@ module Idml
           return false unless keep_flagged?(paragraph)
 
           needed = [paragraph.runs.length, 1].max
-          return true if paragraph.keep_all_lines_together &&
-            needed > vertical_room(layout_frame, paragraph, left_limit,
-                                   next_column)
+          room = vertical_room(layout_frame, paragraph, left_limit,
+                               next_column)
+          return true if keep_all_deferred?(paragraph, needed, room)
+          return true if window_deferred?(paragraph, needed, room)
 
           with_next_deferred?(paragraph, next_paragraph, layout_frame,
                               left_limit, next_column, needed)
@@ -81,7 +82,29 @@ module Idml
 
         def keep_flagged?(paragraph)
           paragraph.keep_all_lines_together ||
-            !paragraph.keep_with_next.nil?
+            !paragraph.keep_with_next.nil? ||
+            paragraph.keep_first_lines ||
+            paragraph.keep_last_lines
+        end
+
+        def keep_all_deferred?(paragraph, needed, room)
+          paragraph.keep_all_lines_together && needed > room
+        end
+
+        # Keep windows on the same column-count approximation:
+        # defer a splitting paragraph when fewer than
+        # KeepFirstLines columns fit, or when the stranded tail
+        # would hold fewer than KeepLastLines columns.
+        def window_deferred?(paragraph, needed, room)
+          return false unless needed > room
+
+          if paragraph.keep_first_lines &&
+              room < paragraph.keep_first_lines
+            return true
+          end
+
+          paragraph.keep_last_lines &&
+            (needed - room) < paragraph.keep_last_lines
         end
 
         def with_next_deferred?(paragraph, next_paragraph, layout_frame,

@@ -118,7 +118,7 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
 
   describe "keep options in vertical mode (TODO 153)" do
     def two_paragraph_story(keep_flag)
-      keep = keep_flag ? ' KeepAllLinesTogether="true"' : ""
+      keep = keep_flag.is_a?(String) ? " #{keep_flag}" : ""
       runs = Array.new(4) do
         "<CharacterStyleRange PointSize=\"12\"><Content>本</Content></CharacterStyleRange>"
       end.join
@@ -184,10 +184,21 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     it "defers a KeepAllLinesTogether paragraph wholly to the next frame" do
       skip "no system font available" unless font_path
 
-      kept = PdfStream.bt_count(narrow_keep_raw(true))
+      kept = PdfStream.bt_count(narrow_keep_raw('KeepAllLinesTogether="true"'))
       split = PdfStream.bt_count(narrow_keep_raw(false))
       # With the flag, only the fitting first paragraph renders
       # (one op); without it, the second paragraph places partially.
+      expect(kept).to eq(1)
+      expect(split).to be > kept
+    end
+
+    it "defers when fewer than KeepFirstLines columns fit (TODO 154)" do
+      skip "no system font available" unless font_path
+
+      kept = PdfStream.bt_count(
+        narrow_keep_raw('KeepFirstLines="2"'),
+      )
+      split = PdfStream.bt_count(narrow_keep_raw(false))
       expect(kept).to eq(1)
       expect(split).to be > kept
     end
