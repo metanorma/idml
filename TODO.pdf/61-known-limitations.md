@@ -1,6 +1,6 @@
 # TODO PDF 61: Known limitations and future work
 
-## Status: DOCUMENTED — refreshed 2026-08-31
+## Status: DOCUMENTED — refreshed 2026-09-01
 
 Previously listed limitations (font embedding, tagged PDF, per-run
 styling, dead code) were resolved by TODOs 52/53/55/67/76 long ago;
@@ -27,11 +27,10 @@ this list reflects the current state.
   odd/even page parity.
 - **Text wrap**: BoundingBoxTextWrap, Contour, and Inverse modes
   render (TODOs 130-131) with TextWrapSide side-awareness for both
-  box contours and Contour shapes (TODOs 138/147); JumpObject and
-  NextColumn move text below the object (TODOs 143/146) — NextColumn
-  in a MULTI-column frame should jump to the next column instead
-  (chain integration, future); spine variants approximate as
-  BothSides.
+  box contours and Contour shapes (TODOs 138/147); JumpObject moves
+  text below the object (TODO 143); NextColumn jumps to the next
+  column in multi-column frames and below the object otherwise
+  (TODOs 146/155); spine variants approximate as BothSides.
 
 ### CJK
 - **Mojikumi**: script spacing (TODO 125, now actually wired),
@@ -40,9 +39,8 @@ this list reflects the current state.
   Desired applies per class pair) are applied; Minimum/Maximum
   aki bounds and CompressionPriority are parsed but unused.
 - **Vertical mode**: Latin runs rotate as one group per segment
-  (TODO 142); ruby placement is beside-column; KeepAllLines /
-  KeepWithNext apply with a column-count approximation (TODO 153);
-  keep windows are horizontal-only.
+  (TODO 142); ruby placement is beside-column; keep options apply
+  with a column-count approximation (TODOs 153-154).
 
 ### Structural features
 - **Endnotes** (TODO 117): reference markers render and endnote TEXT
@@ -62,7 +60,5 @@ this list reflects the current state.
 ## Future enhancements
 
 - Hyphenation dictionary integration
-- NextColumn wrap via column-jump chaining (multi-column frames)
 - Minimum/Maximum mojikumi aki bounds + CompressionPriority
 - ToBinding / kashida Arabic justification
-- Vertical keep windows (KeepFirstLines / KeepLastLines)

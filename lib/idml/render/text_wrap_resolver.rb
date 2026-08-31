@@ -18,7 +18,7 @@ module Idml
     class TextWrapResolver
       # A wrap contour: a PDF-coordinate rectangle the text avoids.
       Contour = Struct.new(
-        :x, :y, :width, :height, :inverse, :side, :jump,
+        :x, :y, :width, :height, :inverse, :side, :jump, :next_column,
         keyword_init: true
       )
 
@@ -100,9 +100,10 @@ module Idml
         return [0.0, 0.0] if overlap.zero?
 
         # JumpObject / NextColumn: text never flows beside the
-        # object — the full frame width is blocked and the renderer
-        # skips the run below the object's bottom edge.
-        return [frame_right - frame_x, 0.0] if contour.jump
+        # object — the full frame width is blocked. The renderer
+        # either skips below (JumpObject) or jumps column
+        # (NextColumn in multi-column frames).
+        return [frame_right - frame_x, 0.0] if blocks_full_width?(contour)
 
         interval_side_adjustment(contour.side, contour.x,
                                  contour.x + contour.width, overlap,
@@ -115,13 +116,32 @@ module Idml
       # jump contour blocks the band.
       def jump_contour_bottom(line_y, line_height, frame_x, frame_right)
         bottoms = @contours.filter_map do |contour|
-          next unless box_contour?(contour) && contour.jump
+          next unless skip_contour?(contour)
           next unless y_overlap?(contour, line_y, line_height) &&
             x_overlap?(contour, frame_x, frame_right)
 
           contour.y
         end
         bottoms.min
+      end
+
+      # Contours whose block resolves as skip-below (both jump
+      # flavors report a resume point; the renderer chooses).
+      def skip_contour?(contour)
+        box_contour?(contour) &&
+          (contour.jump || contour.next_column)
+      end
+      private :skip_contour?
+
+      # True when a NextColumn contour blocks the given band: in a
+      # multi-column frame the renderer abandons the column and
+      # the chain resumes in the next one.
+      def next_column_block?(line_y, line_height, frame_x, frame_right)
+        @contours.any? do |contour|
+          box_contour?(contour) && contour.next_column &&
+            y_overlap?(contour, line_y, line_height) &&
+            x_overlap?(contour, frame_x, frame_right)
+        end
       end
 
       def box_contour?(contour)
@@ -136,6 +156,14 @@ module Idml
       # shift); RightSide moves text past its right edge (reduce +
       # shift); LargestArea picks the roomier side; BothSides and
       # the spine variants reduce by `overlap` only.
+      # JumpObject / NextColumn both forbid text beside the
+      # object; the renderer decides between skip-below and
+      # column jump.
+      def blocks_full_width?(contour)
+        contour.jump || contour.next_column
+      end
+      private :blocks_full_width?
+
       def interval_side_adjustment(side, obj_left, obj_right, overlap,
                                    frame_x, frame_right)
         case side
@@ -185,11 +213,13 @@ module Idml
 
         rect = Geometry.placement_rect(bounds, item.item_transform,
                                        page_height)
+        mode = pref&.text_wrap_mode
         Contour.new(
           x: rect[:x], y: rect[:y],
           width: rect[:width], height: rect[:height],
           side: pref&.text_wrap_side,
-          jump: JUMP_MODES.include?(pref&.text_wrap_mode)
+          jump: mode == "JumpObjectTextWrap",
+          next_column: mode == "NextColumnTextWrap"
         )
       end
       private_class_method :box_contour

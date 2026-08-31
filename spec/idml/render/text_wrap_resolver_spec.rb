@@ -72,11 +72,19 @@ RSpec.describe Idml::Render::TextWrapResolver do
         .to eq(400 - 140)
     end
 
-    it "treats NextColumnTextWrap as jump-below (single-column frame)" do
+    it "wires NextColumnTextWrap as a column jump (TODO 155)" do
       resolver = resolver_for("NextColumnTextWrap")
       expect(resolver.wrap_adjustment(300, 12, 0, 400)).to eq([400.0, 0.0])
+      expect(resolver.next_column_block?(300, 12, 0, 400)).to be(true)
+      # The resume-below point exists too — single-column frames
+      # use it as the fallback; multi-column frames column-jump.
       expect(resolver.jump_contour_bottom(300, 12, 0, 400))
         .to eq(400 - 140)
+    end
+
+    it "does not column-jump outside the object's band" do
+      resolver = resolver_for("NextColumnTextWrap")
+      expect(resolver.next_column_block?(100, 12, 0, 400)).to be(false)
     end
 
     describe "Contour shapes with TextWrapSide (TODO 147)" do

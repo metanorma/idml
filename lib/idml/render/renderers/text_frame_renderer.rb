@@ -543,6 +543,11 @@ module Idml
               context, layout_frame, cursor_y, run
             )
             run_wrap -= wrap_reduction
+            if next_column_jump?(context, layout_frame, cursor_y, run,
+                                 run_wrap)
+              cursor_y = bottom_limit
+              break
+            end
             cursor_y, run_wrap, wrap_shift = skip_below_jump_object(
               context, layout_frame, cursor_y, run, run_wrap, wrap_shift,
               wrap_reduction, bottom_limit
@@ -611,6 +616,37 @@ module Idml
           end
         end
         private_class_method :render_footnote_entries
+
+        # NextColumnTextWrap in a multi-column frame (TODO 155):
+        # abandon the column — the unplaced runs return to the
+        # chain state and the next column resumes them. Falls
+        # through to skip-below everywhere else (single-column
+        # frames included).
+        def self.next_column_jump?(context, layout_frame, cursor_y, run,
+                                   run_wrap)
+          size = run.point_size || DEFAULT_SIZE
+          return false unless run_wrap < size
+          return false unless multi_column_frame?(context)
+
+          blocked_in_band?(context, layout_frame, cursor_y, size)
+        end
+
+        def self.multi_column_frame?(context)
+          text_column_count(context).to_i > 1
+        end
+        private_class_method :multi_column_frame?
+
+        def self.blocked_in_band?(context, layout_frame, cursor_y, size)
+          resolver = context.text_wrap_resolver
+          return false unless resolver
+
+          frame_x = layout_frame.x + (layout_frame.inset_left || 0)
+          frame_right = layout_frame.x + layout_frame.width -
+            (layout_frame.inset_right || 0)
+          resolver.next_column_block?(cursor_y, size, frame_x, frame_right)
+        end
+        private_class_method :blocked_in_band?
+        private_class_method :next_column_jump?
 
         # JumpObjectTextWrap blocks the full column width: when the
         # run's band is fully blocked, move the cursor below the
