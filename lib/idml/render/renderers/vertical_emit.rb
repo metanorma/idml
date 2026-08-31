@@ -24,10 +24,20 @@ module Idml
           layout_frame = layout_frame(context.item, box)
           left_limit = layout_frame.x + (layout_frame.inset_left || 0)
           resume_vertical_paragraph(state)
-          next_column = state.column_offset || 0
+          entry_offset = state.column_offset || 0
+          next_column = entry_offset
           pending = 0
 
-          state.paragraphs.each do |paragraph|
+          state.paragraphs.each_with_index do |paragraph, index|
+            if vertical_keep_deferred?(paragraph, state.paragraphs[index + 1],
+                                       layout_frame, font, left_limit,
+                                       next_column, pending, entry_offset)
+              state.current_paragraph = nil
+              state.runs_remaining = []
+              state.column_offset = 0
+              break
+            end
+
             remaining_runs, next_column = vertical_paragraph(
               canvas, paragraph, context, layout_frame, font,
               left_limit, next_column
@@ -43,6 +53,64 @@ module Idml
           end
 
           state.paragraphs = state.paragraphs[pending..]
+        end
+
+        # Keep options in vertical mode (TODO 153, column-count
+        # approximation — one column per run under-estimates runs
+        # that span several columns, so deferral errs toward
+        # placing): KeepAllLinesTogether defers the paragraph
+        # wholly to the next frame; KeepWithNext also defers when
+        # the follower (or its forced break) would strand. Never
+        # defers the frame's first paragraph — the progress
+        # guarantee, shared with KeepPolicy.
+        def vertical_keep_deferred?(paragraph, next_paragraph,
+                                    layout_frame, _font, left_limit,
+                                    next_column, pending, entry_offset)
+          placed = pending.positive? || entry_offset.positive?
+          return false unless placed
+          return false unless keep_flagged?(paragraph)
+
+          needed = [paragraph.runs.length, 1].max
+          return true if paragraph.keep_all_lines_together &&
+            needed > vertical_room(layout_frame, paragraph, left_limit,
+                                   next_column)
+
+          with_next_deferred?(paragraph, next_paragraph, layout_frame,
+                              left_limit, next_column, needed)
+        end
+
+        def keep_flagged?(paragraph)
+          paragraph.keep_all_lines_together ||
+            !paragraph.keep_with_next.nil?
+        end
+
+        def with_next_deferred?(paragraph, next_paragraph, layout_frame,
+                                left_limit, next_column, needed)
+          return false if paragraph.keep_with_next.nil?
+
+          follower_needed = [next_paragraph&.runs&.length || 1, 1].max
+          follower_break = KeepPolicy.paragraph_break?(next_paragraph)
+          room = vertical_room(layout_frame, paragraph, left_limit,
+                               next_column)
+          follower_break || needed + follower_needed > room
+        end
+
+        def vertical_room(layout_frame, paragraph, left_limit,
+                          next_column)
+          leading = TextEngine::VerticalLayout.leading_for(
+            paragraph.auto_leading,
+            paragraph.runs.first&.point_size ||
+              TextFrameRenderer::DEFAULT_SIZE,
+          )
+          vertical_available_columns(layout_frame, leading, left_limit,
+                                     next_column)
+        end
+
+        def vertical_available_columns(layout_frame, leading, left_limit,
+                                       next_column)
+          right = layout_frame.x + layout_frame.width -
+            (layout_frame.inset_right || 0)
+          (((right - left_limit) / leading).floor - next_column).to_i
         end
 
         # Folds a chain-resumed paragraph (runs_remaining) back to

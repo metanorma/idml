@@ -853,7 +853,8 @@ module Idml
               line: line, frame_width: wrap_width,
               alignment: paragraph.alignment || :left,
               last_line: paragraph_last && index == lines.length - 1,
-              limits: limits
+              limits: limits,
+              direction: paragraph.paragraph_direction
             )
           end
         end

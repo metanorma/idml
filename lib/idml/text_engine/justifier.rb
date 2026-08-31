@@ -21,13 +21,13 @@ module Idml
       DEFAULT_MIN_GLYPH_SCALING = 100.0
 
       def self.justify(line:, frame_width:, alignment: :left,
-                       last_line: false, limits: nil)
-        new(frame_width, alignment, last_line, limits).justify(line)
+                       last_line: false, limits: nil, direction: nil)
+        new(frame_width, alignment, last_line, limits, direction).justify(line)
       end
 
-      def initialize(frame_width, alignment, last_line, limits)
+      def initialize(frame_width, alignment, last_line, limits, direction)
         @frame_width = frame_width
-        @alignment = alignment
+        @alignment = mirrored_alignment(alignment, direction)
         @last_line = last_line
         @limits = limits
       end
@@ -44,7 +44,18 @@ module Idml
         line
       end
 
-      private
+      RTL_ALIGNMENT_MIRROR = {
+        left: :right, right: :left,
+        start: :end, end: :start
+      }.freeze
+
+      # RightToLeftDirection mirrors the visual alignment: what is
+      # "left" in an LTR paragraph sits right in an RTL one.
+      def mirrored_alignment(alignment, direction)
+        return alignment unless direction == "RightToLeftDirection"
+
+        RTL_ALIGNMENT_MIRROR[alignment] || alignment
+      end
 
       # The paragraph's last line stays ragged under full
       # justification.
