@@ -9,8 +9,8 @@ module Idml
     # Two consumers over this seam: the class generator script and
     # the schema-conformance spec.
     module Rnc
-      ELEMENT_DEF = /(\w+)\s*=\s*element\s+([\w:]+)\s*\{/
-      ATTRIBUTE_DEF = /attribute\s+(\w+)\s*\{([^}]*)\}/
+      ELEMENT_DEF = /(\w+)\s*+=\s*+element\s*+([\w:]+)\s*+\{/
+      ATTRIBUTE_DEF = /attribute\s++(\w+)\s*+\{([^}]*)\}/
 
       module_function
 
