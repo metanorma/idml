@@ -244,19 +244,39 @@ module Idml
         # back to 0 when the preference is absent or doesn't declare
         # them.
         def self.layout_frame(frame_item, box)
-          pref = frame_item.text_frame_preference&.first
+          top, right, bottom, left = frame_insets(
+            frame_item.text_frame_preference&.first,
+          )
           TextEngine::Frame.new(
             x: box[:x],
             y: box[:y],
             width: box[:width],
             height: box[:height],
-            inset_top: pref&.inset_top,
-            inset_bottom: pref&.inset_bottom,
-            inset_left: pref&.inset_left,
-            inset_right: pref&.inset_right,
+            inset_top: top,
+            inset_bottom: bottom,
+            inset_left: left,
+            inset_right: right,
           )
         end
         private_class_method :layout_frame
+
+        # Insets from Properties > InsetSpacing (spec examples
+        # 31/32): one unit value applies to all sides; a list
+        # carries [top, right, bottom, left]. Missing sides are 0.
+        def self.frame_insets(pref)
+          props = pref&.properties
+          spacing = props.first&.inset_spacing if props
+          return Array.new(4, 0.0) unless spacing
+
+          side_or_zero(spacing)
+        end
+
+        def self.side_or_zero(spacing)
+          [0, 1, 2, 3].map do |index|
+            spacing.sides[index] || 0.0
+          end
+        end
+        private_class_method :frame_insets
 
         # Walks the chain state's paragraphs/runs and emits one
         # `canvas.text` per line via the Shaper → LineBreaker →

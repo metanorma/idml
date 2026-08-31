@@ -18,6 +18,7 @@ module Idml
       attribute :paragraph_border_color, Idml::Elements::TypedValue
       attribute :text_wrap_offset, Idml::Elements::TypedValue
       attribute :paragraph_border_gap_color, Idml::Elements::TypedValue
+      attribute :inset_spacing, Idml::Elements::InsetSpacing
 
       xml do
         root "Properties"
@@ -29,6 +30,7 @@ module Idml
         map_element "ParagraphBorderColor", to: :paragraph_border_color
         map_element "TextWrapOffset", to: :text_wrap_offset
         map_element "ParagraphBorderGapColor", to: :paragraph_border_gap_color
+        map_element "InsetSpacing", to: :inset_spacing
       end
 
       def first_geometry
