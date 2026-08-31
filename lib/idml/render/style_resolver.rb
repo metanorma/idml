@@ -70,6 +70,9 @@ module Idml
         :maximum_letter_spacing,
         :maximum_glyph_scaling,
         :minimum_glyph_scaling,
+        # ParagraphDirection (LeftToRightDirection /
+        # RightToLeftDirection) — mirrors alignment under RTL.
+        :paragraph_direction,
         # Forced paragraph break (StartParagraph: NextPage /
         # NextColumn / NextFrame / NextOddPage / NextEvenPage).
         :start_paragraph,
@@ -197,6 +200,9 @@ module Idml
           paragraph = Paragraph.new(
             runs: runs,
             alignment: runs.first.alignment,
+            paragraph_direction: resolve_attr(
+              style_lookup, psr, :paragraph_direction
+            ),
             space_before: resolve_attr(style_lookup, psr, :space_before),
             space_after: resolve_attr(style_lookup, psr, :space_after),
             first_line_indent: resolve_attr(style_lookup, psr,

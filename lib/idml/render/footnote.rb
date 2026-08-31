@@ -138,6 +138,7 @@ module Idml
             TextEngine::Justifier.justify(
               line: line, frame_width: wrap_width,
               alignment: paragraph.alignment || :left,
+              direction: paragraph.paragraph_direction,
               last_line: last_line?(paragraph, run, index, lines),
               limits: limits
             )

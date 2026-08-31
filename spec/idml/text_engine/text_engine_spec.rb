@@ -313,6 +313,47 @@ RSpec.describe Idml::TextEngine::Justifier do
       .to be < total + 20
   end
 
+  describe "RTL paragraph direction (TODO 152)" do
+    def synthetic_line(widths)
+      glyphs = widths.map do |w|
+        Idml::TextEngine::ShapedGlyph.new(97, w, false)
+      end
+      Idml::TextEngine::Line.new(glyphs, widths.sum, 0)
+    end
+
+    it "mirrors left alignment to the right under RightToLeftDirection" do
+      line = synthetic_line([10.0, 10.0])
+      described_class.justify(line: line, frame_width: 100,
+                              alignment: :left,
+                              direction: "RightToLeftDirection")
+      expect(line.x_offset).to eq(80.0)
+    end
+
+    it "mirrors right alignment to the left" do
+      line = synthetic_line([10.0, 10.0])
+      described_class.justify(line: line, frame_width: 100,
+                              alignment: :right,
+                              direction: "RightToLeftDirection")
+      expect(line.x_offset).to eq(0)
+    end
+
+    it "leaves centered alignment unchanged" do
+      line = synthetic_line([10.0, 10.0])
+      described_class.justify(line: line, frame_width: 100,
+                              alignment: :center,
+                              direction: "RightToLeftDirection")
+      expect(line.x_offset).to eq(40.0)
+    end
+
+    it "keeps LTR behavior for LeftToRightDirection" do
+      line = synthetic_line([10.0, 10.0])
+      described_class.justify(line: line, frame_width: 100,
+                              alignment: :left,
+                              direction: "LeftToRightDirection")
+      expect(line.x_offset).to eq(0)
+    end
+  end
+
   it "left-aligns by default (x_offset = 0)" do
     shaper = Idml::TextEngine::Shaper.new(font, 12)
     glyphs = shaper.shape("Hello")

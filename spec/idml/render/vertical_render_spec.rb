@@ -115,4 +115,81 @@ RSpec.describe Idml::Render::Renderers::TextFrameRenderer do
     without_ruby = vertical_raw("漢")
     expect(PdfStream.bt_count(with_ruby)).to eq(PdfStream.bt_count(without_ruby) + 2)
   end
+
+  describe "keep options in vertical mode (TODO 153)" do
+    def two_paragraph_story(keep_flag)
+      keep = keep_flag ? ' KeepAllLinesTogether="true"' : ""
+      runs = Array.new(4) do
+        "<CharacterStyleRange PointSize=\"12\"><Content>本</Content></CharacterStyleRange>"
+      end.join
+      <<~XML
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="21.5">
+          <Story Self="u1">
+            <StoryPreference StoryOrientation="Vertical"/>
+            <ParagraphStyleRange>
+              <CharacterStyleRange PointSize="12"><Content>日</Content></CharacterStyleRange>
+            </ParagraphStyleRange>
+            <ParagraphStyleRange#{keep}>
+              #{runs}
+            </ParagraphStyleRange>
+          </Story>
+        </Story>
+      XML
+    end
+
+    def narrow_keep_raw(keep_flag)
+      package = build_package(
+        { "Stories/Story_u1.xml" => two_paragraph_story(keep_flag) },
+        "vertical-keep",
+      )
+      writer = Idml::Render::PdfrbWriter.new
+      canvas = writer.add_page(width: 400, height: 400)
+      described_class.render(canvas, narrow_keep_context(writer, package))
+
+      raw = ""
+      write_to_temp_pdf(writer, "vertical-keep") do |pdf_path|
+        raw = File.binread(pdf_path)
+      end
+      raw
+    end
+
+    def narrow_keep_context(writer, package)
+      font_resource = writer.register_font(font_path)
+      metrics = Idml::TextEngine::PdfrbFontMetrics.new(
+        writer.document.fonts, font_resource
+      )
+      frame = Idml::Elements::TextFrame.from_xml(<<~XML)
+        <TextFrame Self="tf1" ParentStory="u1">
+          <Properties>
+            <PathGeometry>
+              <GeometryPathType PathOpen="false">
+                <PathPointArray>
+                  <PathPointType Anchor="50 50" LeftDirection="50 50" RightDirection="50 50"/>
+                  <PathPointType Anchor="50 350" LeftDirection="50 350" RightDirection="50 350"/>
+                  <PathPointType Anchor="90 350" LeftDirection="90 350" RightDirection="90 350"/>
+                  <PathPointType Anchor="90 50" LeftDirection="90 50" RightDirection="90 50"/>
+                </PathPointArray>
+              </GeometryPathType>
+            </PathGeometry>
+          </Properties>
+        </TextFrame>
+      XML
+      Idml::Render::RenderContext.new(
+        item: frame, package: package, font_metrics: metrics,
+        font_ps_name: font_resource, page_height: 400
+      )
+    end
+
+    it "defers a KeepAllLinesTogether paragraph wholly to the next frame" do
+      skip "no system font available" unless font_path
+
+      kept = PdfStream.bt_count(narrow_keep_raw(true))
+      split = PdfStream.bt_count(narrow_keep_raw(false))
+      # With the flag, only the fitting first paragraph renders
+      # (one op); without it, the second paragraph places partially.
+      expect(kept).to eq(1)
+      expect(split).to be > kept
+    end
+  end
 end

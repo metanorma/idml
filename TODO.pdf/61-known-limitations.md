@@ -1,6 +1,6 @@
 # TODO PDF 61: Known limitations and future work
 
-## Status: DOCUMENTED — refreshed 2026-08-28
+## Status: DOCUMENTED — refreshed 2026-08-31
 
 Previously listed limitations (font embedding, tagged PDF, per-run
 styling, dead code) were resolved by TODOs 52/53/55/67/76 long ago;
@@ -14,8 +14,9 @@ this list reflects the current state.
   wrap after explicit hyphens (TODO 139).
 - **Justification**: word/letter spacing caps apply (TODO 119),
   MaximumGlyphScaling stretches (TODO 129) and MinimumGlyphScaling
-  compresses overlong lines (TODO 135); ToBinding / RTL binding
-  alignment is not applied.
+  compresses overlong lines (TODO 135); RTL paragraphs mirror
+  left/right alignment (TODO 152); ToBinding / kashida-based
+  Arabic justification is not applied.
 - **Keep options**: KeepAllLinesTogether (TODO 123), KeepWithNext
   (TODO 127), and the KeepFirstLines / KeepLastLines windows
   (TODO 133, line-count approximation) are honored.
@@ -39,8 +40,9 @@ this list reflects the current state.
   Desired applies per class pair) are applied; Minimum/Maximum
   aki bounds and CompressionPriority are parsed but unused.
 - **Vertical mode**: Latin runs rotate as one group per segment
-  (TODO 142); ruby placement is beside-column; keep options do
-  not apply.
+  (TODO 142); ruby placement is beside-column; KeepAllLines /
+  KeepWithNext apply with a column-count approximation (TODO 153);
+  keep windows are horizontal-only.
 
 ### Structural features
 - **Endnotes** (TODO 117): reference markers render and endnote TEXT
@@ -62,5 +64,5 @@ this list reflects the current state.
 - Hyphenation dictionary integration
 - NextColumn wrap via column-jump chaining (multi-column frames)
 - Minimum/Maximum mojikumi aki bounds + CompressionPriority
-- ToBinding / RTL binding alignment
-- Vertical-mode keep options
+- ToBinding / kashida Arabic justification
+- Vertical keep windows (KeepFirstLines / KeepLastLines)
