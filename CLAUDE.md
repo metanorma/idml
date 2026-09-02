@@ -38,10 +38,14 @@ Document this clearly in the README so users know to export `.indd` → `.idml`
 before invoking the gem. Treat `.indd` direct parsing as out of scope unless a
 maintainer steps up to maintain a version-aware binary parser.
 
-Today the repo is a stub (README + `reference-docs/idml-specification.pdf`).
-The first real work is bootstrap + spec extraction.
+**Status**: shipped and released (rubygems `idml`, trusted
+publishing). The full pipeline — parse, round-trip, validate,
+compose, render to PDF — is implemented with ~3.3k specs.
+`TODO.pdf/61` is the live known-limitations index; the remaining
+future enhancements are data-dependent (hyphenation dictionary,
+mojikumi min/max aki bounds, kashida Arabic justification).
 
-## Build and test commands (target shape — mirror sts-ruby)
+## Build and test commands
 
 ```bash
 bundle exec rake                 # spec + rubocop (default task)
@@ -211,12 +215,14 @@ Use SimpleIDML's `tests/regressiontests/IDML/` fixtures as the corpus.
    `instance_variable_set/get`, `.send(`, `respond_to?` type-checks,
    `Object.const_get`, `require_relative`, internal `require`, hand-rolled
    serializers, and Nokogiri references.
-4. **Schema authority.** For any new element class, generate the attribute list
-   from `reference-docs/idml-specification.pdf` (the relevant section). Don't
-   copy from SimpleIDML/IDMLlib blindly — they disagree on edge attributes.
-5. **Attribute-set specs.** Each element class has a spec asserting its
-   attribute set, the way sts-ruby does — this is the project's defence
-   against drift, since round-trip alone cannot prove spec conformance.
+4. **Schema authority.** For any new element class, generate the
+   attribute list with `scripts/rnc_to_lutaml.rb` against the matching
+   `reference-docs/schemas/package/**/*.rnc` definition. Don't copy from
+   SimpleIDML/IDMLlib blindly — they disagree on edge attributes.
+5. **Schema conformance.** `spec/idml/elements_schema_conformance_spec.rb`
+   asserts every element class's wire attributes stay inside the RNC universe
+   and every mapping targets a declared attribute — the project's defence
+   against drift since round-trip alone cannot prove spec conformance.
 6. **`ordered` on every part's root mapping.** Child order is semantically
    meaningful throughout IDML (z-order in spreads, paragraph order in stories).
 7. **`ZIP_STORED` for the package.** IDML files are uncompressed; matching that
