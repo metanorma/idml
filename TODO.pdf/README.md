@@ -12,12 +12,15 @@ without InDesign Server. The pipeline has three layers:
    output together. IDML Package → typed model → render plan →
    pdfrb Document → PDF file.
 
-All entries are DONE — including TODO 117 (end-of-story endnote
-TEXT rendering), TODO 13's class-based mojikumi pair compression,
-and the final known-limitation sweep (TODOs 135–138:
-MinimumGlyphScaling compression, diagonal cell strokes, footnote
-text in the simple-render fallback, and side-aware TextWrapSide).
+All entries are DONE — through the 2026-09 round: vertical keep
+windows and multi-column NextColumn jumping (TODOs 154-155), RTL
+alignment and vertical keeps (152-153), schema conformance +
+InsetSpacing (151), the architecture deepening rounds (148-150),
+mojikumi aki application (145), vertical Latin run groups (142),
+hyphen breaks (139), and the known-limitation sweeps (135-138).
 Vertical writing, kinsoku, ruby, and tate-chu-yoko all landed
-(TODOs 122-125). TODO 61 is the live known-limitations index. Each
-file carries a `## Status:` header with a brief implementation
-summary.
+(TODOs 122-125). TODO 61 is the live known-limitations index; the
+remaining future enhancements are data-dependent (hyphenation
+dictionary, mojikumi min/max aki bounds, kashida Arabic
+justification). Each file carries a `## Status:` header with a
+brief implementation summary.
